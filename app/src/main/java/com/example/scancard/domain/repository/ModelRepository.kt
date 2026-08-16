@@ -1,0 +1,10 @@
+package com.example.scancard.domain.repository
+
+import com.example.scancard.domain.model.ModelState
+import kotlinx.coroutines.flow.StateFlow
+
+interface ModelRepository {
+    val modelState: StateFlow<ModelState>
+    suspend fun initializeModel()
+    suspend fun downloadModel()
+}
