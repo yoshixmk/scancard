@@ -1,0 +1,759 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create Gradle wrapper and project structure": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132090
+      },
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856158413
+      }
+    ],
+    "1.2 Create app module build configuration": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132380
+      }
+    ],
+    "1.3 Create AndroidManifest.xml": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132406
+      }
+    ],
+    "2.1.1 Create Deck entity with id, title, createdAt, updatedAt": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132436
+      }
+    ],
+    "2.1.2 Create Card entity with id, deckId (FK), term, definition, isLearned, createdAt": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132470
+      }
+    ],
+    "2.1.3 Create Scan entity with id, deckId (FK), imagePath, rawText": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132495
+      }
+    ],
+    "2.2.1 Create DeckDao with getAll, getById, insert, update, delete": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132520
+      }
+    ],
+    "2.2.2 Create CardDao with getByDeck, insert, update, delete, updateLearnedStatus": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132545
+      }
+    ],
+    "2.2.3 Create ScanDao with getByDeck, insert, delete": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132571
+      }
+    ],
+    "2.3 Create AppDatabase class": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132621
+      }
+    ],
+    "2.4.1 Create DeckRepository interface and implementation": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132680
+      }
+    ],
+    "2.4.2 Create CardRepository interface and implementation": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132706
+      }
+    ],
+    "2.4.3 Create ScanRepository interface and implementation": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132731
+      }
+    ],
+    "2.4.4 Create ModelRepository for Gemma Nano model state": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132757
+      }
+    ],
+    "3.1.1 Create DatabaseModule for Room database and DAOs": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132782
+      }
+    ],
+    "3.1.2 Create RepositoryModule for repository bindings": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132811
+      }
+    ],
+    "3.1.3 Create AppModule for Context and application-level dependencies": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132837
+      }
+    ],
+    "4.1 Create domain models": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132865
+      }
+    ],
+    "4.2 Implement ScanDocumentUseCase": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132892
+      }
+    ],
+    "4.3 Implement ExtractCardsUseCase": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132916
+      }
+    ],
+    "4.4 Implement ManageDeckUseCase": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132942
+      }
+    ],
+    "4.5 Implement StudyCardsUseCase": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132967
+      }
+    ],
+    "4.6 Implement ExportDataUseCase": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856132993
+      }
+    ],
+    "5.1 Create HomeViewModel": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133020
+      }
+    ],
+    "5.2 Create ScanViewModel": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133044
+      }
+    ],
+    "5.3 Create ExtractionViewModel": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133071
+      }
+    ],
+    "5.4 Create DeckDetailViewModel": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133097
+      }
+    ],
+    "5.5 Create StudyViewModel": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133122
+      }
+    ],
+    "5.6 Create ExportViewModel": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133147
+      }
+    ],
+    "6.1.1 Create HomeScreen composable": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133172
+      }
+    ],
+    "6.1.2 Implement deck list with LazyColumn": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133197
+      }
+    ],
+    "6.1.3 Create empty state when no decks exist": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133223
+      }
+    ],
+    "6.1.4 Add FAB with camera icon for scanning": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133247
+      }
+    ],
+    "6.2.1 Create ScanScreen composable": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133274
+      }
+    ],
+    "6.2.2 Integrate ML Kit Document Scanner launcher": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133298
+      }
+    ],
+    "6.2.3 Display thumbnail preview of captured pages": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133325
+      }
+    ],
+    "6.2.4 Allow page deletion in review mode": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133350
+      }
+    ],
+    "6.3.1 Create ExtractionPreviewScreen composable": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133380
+      }
+    ],
+    "6.3.2 Display list of extracted cards with term/definition": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133408
+      }
+    ],
+    "6.3.3 Enable editing mode on card tap": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133432
+      }
+    ],
+    "6.3.4 Add delete and add card functionality": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133458
+      }
+    ],
+    "6.3.5 Implement deck selector/prompter": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133483
+      }
+    ],
+    "6.4.1 Create DeckDetailScreen composable": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133510
+      }
+    ],
+    "6.4.2 Display deck title (editable), card count": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133535
+      }
+    ],
+    "6.4.3 Add action buttons: Start Study, Export": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133561
+      }
+    ],
+    "6.4.4 Display all cards with learned status": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133586
+      }
+    ],
+    "6.5.1 Create StudyScreen composable": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133641
+      }
+    ],
+    "6.5.2 Implement 3D flip card animation using graphicsLayer": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133671
+      }
+    ],
+    "6.5.3 Add previous/next navigation buttons": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133696
+      }
+    ],
+    "6.5.4 Display progress indicator (card X of Y)": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133722
+      }
+    ],
+    "6.5.5 Add Mark as Learned / Needs Review buttons": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133748
+      }
+    ],
+    "6.5.6 Implement filter for Learned/Needs Review": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133774
+      }
+    ],
+    "6.6.1 Create ExportScreen composable": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133804
+      }
+    ],
+    "6.6.2 Add format selector (TSV/CSV toggle)": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133831
+      }
+    ],
+    "6.6.3 Display preview of exported data": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133856
+      }
+    ],
+    "6.6.4 Implement Copy to Clipboard button": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133882
+      }
+    ],
+    "6.6.5 Implement Share button with Android Intent": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133909
+      }
+    ],
+    "7.1.1 Define Screen sealed class with routes": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133935
+      }
+    ],
+    "7.1.2 Create NavHost with all screen destinations": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133961
+      }
+    ],
+    "7.1.3 Implement navigation graph flow": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856133988
+      }
+    ],
+    "8.1.1 Create DocumentScannerLauncher": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134014
+      }
+    ],
+    "8.1.2 Configure DocumentScannerOptions for multi-page (max 100)": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134042
+      }
+    ],
+    "8.1.3 Handle scanner results and errors": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134067
+      }
+    ],
+    "8.2.1 Create TextRecognizerManager": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134093
+      }
+    ],
+    "8.2.2 Configure for Japanese and English recognition": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134119
+      }
+    ],
+    "8.2.3 Handle recognition success/failure": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134146
+      }
+    ],
+    "8.3.1 Create ImageProcessor for corrections": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134173
+      }
+    ],
+    "8.3.2 Handle perspective correction, shadow removal": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134199
+      }
+    ],
+    "8.3.3 Implement manual crop fallback UI": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134227
+      }
+    ],
+    "8.4.1 Create GemmaCardExtractor": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134253
+      }
+    ],
+    "8.4.2 Implement initializeModel with LlmInference options": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134279
+      }
+    ],
+    "8.4.3 Implement extractCards with prompt building": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134307
+      }
+    ],
+    "8.5.1 Create ModelManager for download/caching": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134333
+      }
+    ],
+    "8.5.2 Implement progress indicator updates (every 2 seconds)": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134361
+      }
+    ],
+    "8.5.3 Implement auto-retry up to 3 times for corruption": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134395
+      }
+    ],
+    "9.1.1 Implement Strategy 1: Direct JSON parse": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134422
+      }
+    ],
+    "9.1.2 Implement Strategy 2: Regex extraction pattern": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134449
+      }
+    ],
+    "9.1.3 Implement Strategy 3: Fix common JSON issues": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134476
+      }
+    ],
+    "9.1.4 Implement Strategy 4: Lenient pattern matching": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134537
+      }
+    ],
+    "9.1.5 Handle escaped quotes and newlines": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134564
+      }
+    ],
+    "10.1.1 Create exportToTsv method": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134590
+      }
+    ],
+    "10.1.2 Create exportToCsv method": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134616
+      }
+    ],
+    "10.1.3 Ensure Quizlet-compatible format (term first, definition second)": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134646
+      }
+    ],
+    "10.2.1 Create generate method with scanned images": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134673
+      }
+    ],
+    "10.2.2 Embed OCR text as searchable layer": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134701
+      }
+    ],
+    "10.2.3 Add deck title as header, page numbers as footer": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134727
+      }
+    ],
+    "10.2.4 Save to Documents folder": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134754
+      }
+    ],
+    "10.3.1 Create shareFile method with Intent": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134780
+      }
+    ],
+    "10.3.2 Handle TSV, CSV, and PDF mime types": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134808
+      }
+    ],
+    "12.1.1 Test valid JSON parsing": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134837
+      }
+    ],
+    "12.1.2 Test regex fallback with escaped quotes": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134863
+      }
+    ],
+    "12.1.3 Test JSON fixing fallback": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134891
+      }
+    ],
+    "12.1.4 Test lenient pattern fallback": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134917
+      }
+    ],
+    "12.1.5 Test empty/invalid response handling": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134945
+      }
+    ],
+    "12.2.1 Test DeckRepository CRUD operations": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134973
+      }
+    ],
+    "12.2.2 Test CardRepository CRUD with deck association": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856134999
+      }
+    ],
+    "12.2.3 Test cascade delete behavior": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135026
+      }
+    ],
+    "12.2.4 Test ScanRepository operations": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135054
+      }
+    ],
+    "12.3.1 Test ScanDocumentUseCase processing pipeline": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135087
+      }
+    ],
+    "12.3.2 Test ExtractCardsUseCase with mock LLM": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135113
+      }
+    ],
+    "12.3.3 Test ManageDeckUseCase validation": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135142
+      }
+    ],
+    "12.3.4 Test StudyCardsUseCase prioritization": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135171
+      }
+    ],
+    "12.3.5 Test ExportDataUseCase format generation": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135199
+      }
+    ],
+    "12.4.1 Test navigation between screens": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135227
+      }
+    ],
+    "12.4.2 Test flashcard flip animation": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135254
+      }
+    ],
+    "12.4.3 Test deck creation and editing": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135283
+      }
+    ],
+    "12.4.4 Test card editing in extraction preview": [
+      {
+        "executionId": "8d561380-c259-4788-81cf-71039b7a40aa",
+        "chatSessionId": "sess_496b1702-defb-493d-89f1-177f428e13b4",
+        "timestamp": 1786856135314
+      }
+    ]
+  }
+}
