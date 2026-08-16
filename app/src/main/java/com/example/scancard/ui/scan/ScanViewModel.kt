@@ -35,19 +35,23 @@ class ScanViewModel @Inject constructor(
     }
 
     fun processScans(deckId: Long, onComplete: (Long) -> Unit) {
+        android.util.Log.d("ScanVM", "Processing scans for deckId input: $deckId")
         viewModelScope.launch {
             _isProcessing.value = true
             try {
                 val targetDeckId = if (deckId <= 0) {
                     val dateStr = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-                    manageDeckUseCase.createDeck("Scan $dateStr")
+                    val newId = manageDeckUseCase.createDeck("Scan $dateStr")
+                    android.util.Log.d("ScanVM", "Created new deck with ID: $newId")
+                    newId
                 } else {
                     deckId
                 }
                 scanDocumentUseCase.processScannedPages(targetDeckId, _scannedPages.value)
+                android.util.Log.d("ScanVM", "Scan processing complete. Navigating to extraction with ID: $targetDeckId")
                 onComplete(targetDeckId)
             } catch (e: Exception) {
-                // Handle error
+                android.util.Log.e("ScanVM", "Error processing scans", e)
             } finally {
                 _isProcessing.value = false
             }

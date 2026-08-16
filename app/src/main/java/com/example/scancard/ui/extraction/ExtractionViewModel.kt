@@ -22,7 +22,7 @@ class ExtractionViewModel @Inject constructor(
 ) : ViewModel() {
 
     val modelState: StateFlow<ModelState> = modelRepository.modelState
-    val authState = authManager.authState
+    val hfToken = authManager.hfToken
 
     private val _isExtracting = MutableStateFlow(false)
     val isExtracting = _isExtracting.asStateFlow()
@@ -33,16 +33,27 @@ class ExtractionViewModel @Inject constructor(
     private val _selectedModel = MutableStateFlow(ModelConfig.GEMMA_4_E2B)
     val selectedModel = _selectedModel.asStateFlow()
 
+    init {
+        checkModelStatus()
+    }
+
     fun getAvailableModels() = modelRepository.getAvailableModels()
 
     fun selectModel(config: ModelConfig) {
         _selectedModel.value = config
+        checkModelStatus()
     }
 
-    fun getAuthIntent() = authManager.getAuthIntent()
+    fun checkModelStatus() {
+        modelRepository.checkModelStatus(_selectedModel.value)
+    }
 
-    fun handleAuthResponse(intent: android.content.Intent) {
-        authManager.handleAuthResponse(intent)
+    fun saveToken(token: String) {
+        authManager.setToken(token)
+    }
+
+    fun logout() {
+        authManager.logout()
     }
 
     fun downloadModel() {
@@ -53,6 +64,7 @@ class ExtractionViewModel @Inject constructor(
     }
 
     fun startExtraction(deckId: Long, onComplete: () -> Unit) {
+        android.util.Log.d("ExtractionVM", "Starting extraction for deck: $deckId")
         viewModelScope.launch {
             _isExtracting.value = true
             _error.value = null

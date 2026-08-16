@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -93,18 +94,43 @@ fun ScanScreen(
                     }
                 },
                 actions = {
-                    if (scannedPages.isNotEmpty()) {
-                        IconButton(onClick = { 
-                            viewModel.processScans(deckId) { newId -> onComplete(newId) } 
+                    if (scannedPages.isNotEmpty() && !isProcessing) {
+                        TextButton(onClick = { 
+                            android.util.Log.d("ScanScreen", "Top Bar Done clicked")
+                            viewModel.processScans(deckId) { newId -> onComplete(newId) }
                         }) {
-                            Icon(Icons.Default.Check, contentDescription = "Done")
+                            Text("Done", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             )
+        },
+        bottomBar = {
+            if (scannedPages.isNotEmpty() && !isProcessing) {
+                Surface(
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = { 
+                            android.util.Log.d("ScanScreen", "Bottom Finish button clicked")
+                            viewModel.processScans(deckId) { newId -> onComplete(newId) } 
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .height(56.dp)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Extract Cards (${scannedPages.size})")
+                    }
+                }
+            }
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (!hasCameraPermission) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -116,7 +142,11 @@ fun ScanScreen(
                 }
             } else if (isProcessing) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(Modifier.height(16.dp))
+                        Text("Processing images and OCR...")
+                    }
                 }
             } else if (scannedPages.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -135,7 +165,8 @@ fun ScanScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(120.dp),
-                    contentPadding = PaddingValues(8.dp)
+                    contentPadding = PaddingValues(8.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(scannedPages) { uri ->
                         Box(modifier = Modifier.padding(4.dp)) {
@@ -154,7 +185,7 @@ fun ScanScreen(
                         }
                     }
                     item {
-                        Button(
+                        OutlinedButton(
                             onClick = {
                                 val activity = context.findActivity()
                                 if (activity != null) {

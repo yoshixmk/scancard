@@ -21,6 +21,14 @@ class ModelManager @Inject constructor(
     private val _modelState = MutableStateFlow<ModelState>(ModelState.Idle)
     val modelState = _modelState.asStateFlow()
 
+    fun checkModelStatus(config: ModelConfig) {
+        if (isModelDownloaded(config)) {
+            _modelState.value = ModelState.Ready
+        } else {
+            _modelState.value = ModelState.Idle
+        }
+    }
+
     private val workManager = WorkManager.getInstance(context)
 
     fun isModelDownloaded(config: ModelConfig): Boolean {

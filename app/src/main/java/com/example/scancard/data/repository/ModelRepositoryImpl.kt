@@ -22,6 +22,10 @@ class ModelRepositoryImpl @Inject constructor(
         modelManager.downloadModel(config)
     }
 
+    override fun checkModelStatus(config: ModelConfig) {
+        modelManager.checkModelStatus(config)
+    }
+
     override fun getModelPath(config: ModelConfig): String? {
         return if (modelManager.isModelDownloaded(config)) modelManager.getModelPath(config) else null
     }

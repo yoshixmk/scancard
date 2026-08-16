@@ -3,11 +3,14 @@ package com.example.scancard.ui.extraction
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,14 +33,13 @@ fun ExtractionPreviewScreen(
     val modelState by viewModel.modelState.collectAsState()
     val error by viewModel.error.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
-    val authState by viewModel.authState.collectAsState(null)
+    val hfToken by viewModel.hfToken.collectAsState()
 
-    val authLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            result.data?.let { viewModel.handleAuthResponse(it) }
-        }
+    var showTokenDialog by remember { mutableStateOf(false) }
+    var tokenInput by remember { mutableStateOf("") }
+
+    LaunchedEffect(deckId) {
+        android.util.Log.d("ExtractionPreview", "Screen loaded with deckId: $deckId")
     }
 
     Scaffold(
@@ -48,12 +50,24 @@ fun ExtractionPreviewScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    IconButton(onClick = { 
+                        tokenInput = hfToken ?: ""
+                        showTokenDialog = true 
+                    }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
                 }
             )
         }
     ) { padding ->
         Column(
-            modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
         ) {
@@ -72,11 +86,11 @@ fun ExtractionPreviewScreen(
                 is ModelState.Idle -> {
                     Text("Model Status: Not Installed", color = MaterialTheme.colorScheme.secondary)
                     
-                    if (authState?.isAuthorized != true) {
-                        Button(onClick = { authLauncher.launch(viewModel.getAuthIntent()) }) {
-                            Text("Login to Hugging Face")
+                    if (hfToken.isNullOrBlank()) {
+                        Button(onClick = { showTokenDialog = true }) {
+                            Text("Setup Hugging Face Token")
                         }
-                        Text("Authentication is required to download gated models.", style = MaterialTheme.typography.labelSmall)
+                        Text("A Personal Access Token is required to download gated models.", style = MaterialTheme.typography.labelSmall)
                     } else {
                         Button(onClick = { viewModel.downloadModel() }) {
                             Icon(Icons.Default.Download, contentDescription = null)
@@ -120,6 +134,35 @@ fun ExtractionPreviewScreen(
                 }
             }
         }
+    }
+
+    if (showTokenDialog) {
+        AlertDialog(
+            onDismissRequest = { showTokenDialog = false },
+            title = { Text("Hugging Face Settings") },
+            text = {
+                Column {
+                    Text("Enter your Personal Access Token (PAT) from Hugging Face settings.", style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(8.dp))
+                    TextField(
+                        value = tokenInput,
+                        onValueChange = { tokenInput = it },
+                        label = { Text("Access Token") },
+                        placeholder = { Text("hf_...") },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.saveToken(tokenInput)
+                    showTokenDialog = false
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTokenDialog = false }) { Text("Cancel") }
+            }
+        )
     }
 }
 

@@ -18,32 +18,44 @@ class GemmaCardExtractor @Inject constructor(
     private var conversation: Conversation? = null
 
     suspend fun initialize(modelPath: String) = withContext(Dispatchers.IO) {
-        if (engine != null) return@withContext
+        if (engine != null && conversation != null) {
+            android.util.Log.d("GemmaExtractor", "Already initialized")
+            return@withContext
+        }
 
-        val engineConfig = EngineConfig(
-            modelPath = modelPath,
-            backend = Backend.CPU(),
-            maxNumTokens = 4096
-        )
+        try {
+            android.util.Log.d("GemmaExtractor", "Initializing engine with path: $modelPath")
+            val engineConfig = EngineConfig(
+                modelPath = modelPath,
+                backend = Backend.CPU(),
+                maxNumTokens = 4096
+            )
 
-        val newEngine = Engine(engineConfig)
-        newEngine.initialize()
-        
-        val samplerConfig = SamplerConfig(
-            topK = 40,
-            topP = 0.95,
-            temperature = 0.2
-        )
-        
-        val newConversation = newEngine.createConversation(
-            ConversationConfig(samplerConfig = samplerConfig)
-        )
-        
-        engine = newEngine
-        conversation = newConversation
+            val newEngine = Engine(engineConfig)
+            newEngine.initialize()
+            
+            val samplerConfig = SamplerConfig(
+                topK = 40,
+                topP = 0.95,
+                temperature = 0.2
+            )
+            
+            val newConversation = newEngine.createConversation(
+                ConversationConfig(samplerConfig = samplerConfig)
+            )
+            
+            engine = newEngine
+            conversation = newConversation
+            android.util.Log.d("GemmaExtractor", "Initialization successful")
+        } catch (e: Exception) {
+            android.util.Log.e("GemmaExtractor", "Initialization failed", e)
+            throw e
+        }
     }
 
     suspend fun extractCards(text: String): List<ExtractedCard> = withContext(Dispatchers.IO) {
+        val currentConversation = conversation ?: return@withContext emptyList()
+
         val prompt = """
             Extract flashcard pairs (term and definition) from the following text.
             Return ONLY a JSON array of objects with "term" and "definition" keys.
@@ -53,9 +65,9 @@ class GemmaCardExtractor @Inject constructor(
         val input = Contents.of(listOf(Content.Text(prompt)))
         
         val fullResponse = suspendCancellableCoroutine<String> { continuation ->
-            var responseBuilder = StringBuilder()
+            val responseBuilder = StringBuilder()
             
-            conversation?.sendMessageAsync(
+            currentConversation.sendMessageAsync(
                 input,
                 object : MessageCallback {
                     override fun onMessage(message: Message) {

@@ -1,3 +1,8 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.ScanCard" parent="android:Theme.Material.Light.NoActionBar" />
+<resources>
+    <!-- Use Material3 for better compatibility with modern system activities -->
+    <style name="Theme.ScanCard" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:hardwareAccelerated">true</item>
+    </style>
 </resources>

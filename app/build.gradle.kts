@@ -21,7 +21,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        manifestPlaceholders += mapOf("appAuthRedirectScheme" to "com.example.scancard.auth")
     }
 
     buildTypes {
@@ -59,6 +58,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.compose.material:material-icons-extended")
     
     // ML Kit
@@ -87,8 +87,7 @@ dependencies {
     // Coil
     implementation("io.coil-kt:coil-compose:2.6.0")
 
-    // OAuth & Network
-    implementation("net.openid:appauth:0.11.1")
+    // Network
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     
     // WorkManager

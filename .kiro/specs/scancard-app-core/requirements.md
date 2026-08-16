@@ -8,19 +8,19 @@ ScanCard is an Android application that enables users to photograph book pages u
 
 - **ScanCard**: The Android application being developed
 - **Gemma 4**: On-device LLM model family (E2B, E4B) for flashcard extraction
-- **Hugging Face OAuth**: Authentication mechanism to access gated models on Hugging Face
+- **Personal Access Token (PAT)**: A Hugging Face token required to download gated models securely.
 - **Deck**: A collection of flashcards organized by book title or chapter
 - **Card**: A flashcard containing a term (front) and definition (back)
 - **OCR**: Optical Character Recognition for text extraction from images
 - **ML Kit**: Google ML Kit for document scanning and text recognition
-- **MediaPipe**: Google's framework for on-device ML inference
+- **LiteRT LM**: Google's modern framework for on-device LLM inference (formerly MediaPipe GenAI)
 - **Quizlet**: Third-party flashcard platform supporting tab/comma-separated imports
 - **OOM**: Out of Memory - application crash due to insufficient memory
 
 ## Hardware Requirements
 
-- **Minimum RAM**: 4GB (E2B) / 8GB (E4B/Gemma 2)
-- **Storage**: Minimum 2GB - 6GB free space depending on selected model
+- **Minimum RAM**: 4GB (E2B) / 8GB (E4B)
+- **Storage**: Minimum 3GB - 6GB free space depending on selected model
 - **Android Version**: API 26 (Android 8.0) or higher
 
 ---
@@ -62,7 +62,7 @@ ScanCard is an Android application that enables users to photograph book pages u
 #### Acceptance Criteria
 
 1. WHEN a corrected image is available, THE ScanCard SHALL trigger OCR processing asynchronously.
-2. THE OCR Engine SHALL recognize both Japanese and English text.
+2. THE OCR Engine SHALL recognize both Japanese and English text using ML Kit Text Recognition.
 3. WHEN OCR completes successfully, THE ScanCard SHALL store the extracted raw text in the scans table.
 4. THE ScanCard SHALL process images from disk cache to avoid memory issues.
 
@@ -74,11 +74,11 @@ ScanCard is an Android application that enables users to photograph book pages u
 
 #### Acceptance Criteria
 
-1. THE ScanCard SHALL provide a selection of AI models: Gemma 4 E2B (Fast), Gemma 4 E4B (Balanced), and Gemma 2 2B (Legacy).
+1. THE ScanCard SHALL provide a selection of AI models from the Gemma 4 family (E2B, E4B) and legacy Gemma 2.
 2. THE ScanCard SHALL display the name, description, and storage size of each model.
-3. IF a model is not installed, THE ScanCard SHALL prompt the user to download it.
-4. THE ScanCard SHALL use Hugging Face OAuth 2.0 to authenticate the user for accessing gated models.
-5. THE ScanCard SHALL initiate model downloads using WorkManager to ensure reliability in the background.
+3. IF a model is not installed, THE ScanCard SHALL prompt the user to download it from Hugging Face.
+4. THE ScanCard SHALL allow the user to enter a Personal Access Token (PAT) from Hugging Face to access gated models.
+5. THE ScanCard SHALL initiate model downloads using WorkManager to ensure reliability in the background, handling redirects and authentication headers properly.
 6. WHILE a download is in progress, THE ScanCard SHALL display a percentage-based progress indicator.
 
 ---
@@ -89,10 +89,10 @@ ScanCard is an Android application that enables users to photograph book pages u
 
 #### Acceptance Criteria
 
-1. WHEN OCR text is available and a model is ready, THE GemmaCardExtractor SHALL send the combined text to the selected LLM.
+1. WHEN OCR text is available and a model is ready, THE GemmaCardExtractor SHALL send the combined text to the selected LiteRT LM model.
 2. THE GemmaCardExtractor SHALL generate a JSON-formatted list of term/definition pairs.
 3. THE ScanCard SHALL parse the AI response and create Card entities in the database.
-4. IF Gemma Nano returns a response that is not valid JSON, THEN the GemmaCardExtractor SHALL delegate to the Parse Fallback process (Requirement 6).
+4. IF the LLM returns a response that is not valid JSON, THEN the GemmaCardExtractor SHALL delegate to the Parse Fallback process (Requirement 6).
 
 ---
 
@@ -116,7 +116,7 @@ ScanCard is an Android application that enables users to photograph book pages u
 #### Acceptance Criteria
 
 1. WHEN extraction completes, THE ScanCard SHALL display a summary of the operation.
-2. THE ScanCard SHALL automatically create a new deck for the scan session if no deck was previously selected.
+2. THE ScanCard SHALL automatically create a new deck for the scan session (e.g., "Scan YYYY-MM-DD") if no deck was previously selected.
 3. THE user SHALL be able to navigate to the deck detail screen to review all extracted cards.
 
 ---
@@ -152,7 +152,7 @@ ScanCard is an Android application that enables users to photograph book pages u
 #### Acceptance Criteria
 
 1. THE ScanCard SHALL allow the user to mark cards as "Learned" or "Needs Review".
-2. THE user SHALL be able to filter the study session by these statuses.
+2. THE user SHALL be able to filter the study session by these statuses (All, Learned, Needs Review).
 3. A progress indicator SHALL show the current position and total cards in the deck.
 
 ---
@@ -177,3 +177,4 @@ ScanCard is an Android application that enables users to photograph book pages u
 1. THE ScanCard SHALL store all deck and card data locally in a Room database.
 2. AFTER the initial model download, all core features (scanning, OCR, AI extraction, study) SHALL work fully offline.
 3. THE ScanCard SHALL NOT transmit user data to external servers.
+4. Edge-to-edge support SHALL be implemented for Android 15+ compatibility while ensuring system bar legibility.
