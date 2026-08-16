@@ -1,6 +1,10 @@
 package com.example.scancard.ui.scan
 
+import android.Manifest
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
@@ -36,6 +41,21 @@ fun ScanScreen(
     val context = LocalContext.current
     val scannedPages by viewModel.scannedPages.collectAsState()
     val isProcessing by viewModel.isProcessing.collectAsState()
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+    }
 
     val options = GmsDocumentScannerOptions.Builder()
         .setGalleryImportAllowed(true)
@@ -57,6 +77,12 @@ fun ScanScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -69,7 +95,7 @@ fun ScanScreen(
                 actions = {
                     if (scannedPages.isNotEmpty()) {
                         IconButton(onClick = { 
-                            viewModel.processScans(deckId) { onComplete(deckId) } 
+                            viewModel.processScans(deckId) { newId -> onComplete(newId) } 
                         }) {
                             Icon(Icons.Default.Check, contentDescription = "Done")
                         }
@@ -79,17 +105,29 @@ fun ScanScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            if (isProcessing) {
+            if (!hasCameraPermission) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Camera permission is required to scan.")
+                        Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
+                            Text("Grant Permission")
+                        }
+                    }
+                }
+            } else if (isProcessing) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else if (scannedPages.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Button(onClick = {
-                        scanner.getStartScanIntent(context as Activity)
-                            .addOnSuccessListener { intentSender ->
-                                scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
-                            }
+                        val activity = context.findActivity()
+                        if (activity != null) {
+                            scanner.getStartScanIntent(activity)
+                                .addOnSuccessListener { intentSender ->
+                                    scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+                                }
+                        }
                     }) {
                         Text("Start Scanning")
                     }
@@ -118,10 +156,13 @@ fun ScanScreen(
                     item {
                         Button(
                             onClick = {
-                                scanner.getStartScanIntent(context as Activity)
-                                    .addOnSuccessListener { intentSender ->
-                                        scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
-                                    }
+                                val activity = context.findActivity()
+                                if (activity != null) {
+                                    scanner.getStartScanIntent(activity)
+                                        .addOnSuccessListener { intentSender ->
+                                            scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+                                        }
+                                }
                             },
                             modifier = Modifier.padding(4.dp).aspectRatio(0.7f)
                         ) {
@@ -132,4 +173,13 @@ fun ScanScreen(
             }
         }
     }
+}
+
+fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
 }

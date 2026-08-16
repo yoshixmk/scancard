@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.example.scancard"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.scancard"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -21,6 +21,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        manifestPlaceholders += mapOf("appAuthRedirectScheme" to "com.example.scancard.auth")
     }
 
     buildTypes {
@@ -61,13 +62,13 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     
     // ML Kit
-    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0-beta1")
+    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0")
     
-    // MediaPipe (for Gemma Nano)
-    implementation("com.google.mediapipe:tasks-genai:0.10.14")
+    // LiteRT LM (Modern on-device AI)
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.16.0")
     
     // Room
     val roomVersion = "2.8.4"
@@ -85,6 +86,14 @@ dependencies {
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // OAuth & Network
+    implementation("net.openid:appauth:0.11.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
+    // WorkManager
+    val workVersion = "2.9.0"
+    implementation("androidx.work:work-runtime-ktx:$workVersion")
 
     // Tests
     testImplementation("junit:junit:4.13.2")

@@ -86,7 +86,7 @@ fun DeckDetailScreen(
             }
 
             Text(
-                text = "${cards.size} Cards",
+                text = "${cards.size} Cards (ID: ${deck?.id ?: "N/A"})",
                 modifier = Modifier.padding(horizontal = 16.dp),
                 style = MaterialTheme.typography.labelLarge
             )
