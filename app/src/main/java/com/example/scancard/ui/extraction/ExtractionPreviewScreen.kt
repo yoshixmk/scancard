@@ -1,7 +1,5 @@
 package com.example.scancard.ui.extraction
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,7 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,10 +31,6 @@ fun ExtractionPreviewScreen(
     val modelState by viewModel.modelState.collectAsState()
     val error by viewModel.error.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
-    val hfToken by viewModel.hfToken.collectAsState()
-
-    var showTokenDialog by remember { mutableStateOf(false) }
-    var tokenInput by remember { mutableStateOf("") }
 
     LaunchedEffect(deckId) {
         android.util.Log.d("ExtractionPreview", "Screen loaded with deckId: $deckId")
@@ -49,14 +43,6 @@ fun ExtractionPreviewScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { 
-                        tokenInput = hfToken ?: ""
-                        showTokenDialog = true 
-                    }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 }
             )
@@ -72,6 +58,7 @@ fun ExtractionPreviewScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
         ) {
             Text("Select AI Model", style = MaterialTheme.typography.titleLarge)
+            Text("Delivered via Google Play AI Delivery", style = MaterialTheme.typography.bodySmall)
             
             ModelSelector(
                 selectedModel = selectedModel,
@@ -85,30 +72,35 @@ fun ExtractionPreviewScreen(
             when (val state = modelState) {
                 is ModelState.Idle -> {
                     Text("Model Status: Not Installed", color = MaterialTheme.colorScheme.secondary)
-                    
-                    if (hfToken.isNullOrBlank()) {
-                        Button(onClick = { showTokenDialog = true }) {
-                            Text("Setup Hugging Face Token")
-                        }
-                        Text("A Personal Access Token is required to download gated models.", style = MaterialTheme.typography.labelSmall)
-                    } else {
-                        Button(onClick = { viewModel.downloadModel() }) {
-                            Icon(Icons.Default.Download, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Download Selected Model")
-                        }
+                    Button(onClick = { viewModel.downloadModel() }) {
+                        Icon(Icons.Default.Download, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Download via Google Play")
                     }
                 }
                 is ModelState.Downloading -> {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(progress = { state.progress })
                         Text("Downloading ${selectedModel.name}... ${(state.progress * 100).toInt()}%")
+                        Text("Please wait, this may take a few minutes.", style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 is ModelState.Error -> {
                     Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
-                    Button(onClick = { viewModel.downloadModel() }) {
-                        Text("Retry Download")
+                    
+                    if (state.message.contains("-1")) {
+                        Text(
+                            "Dev Tip: Play AI Delivery requires Play Store installation. " +
+                            "For development, push the model file to: /data/data/com.example.scancard/files/${selectedModel.fileName}",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+
+                    Button(onClick = { viewModel.checkModelStatus() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Retry Status Check")
                     }
                 }
                 is ModelState.Ready -> {
@@ -135,35 +127,6 @@ fun ExtractionPreviewScreen(
             }
         }
     }
-
-    if (showTokenDialog) {
-        AlertDialog(
-            onDismissRequest = { showTokenDialog = false },
-            title = { Text("Hugging Face Settings") },
-            text = {
-                Column {
-                    Text("Enter your Personal Access Token (PAT) from Hugging Face settings.", style = MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.height(8.dp))
-                    TextField(
-                        value = tokenInput,
-                        onValueChange = { tokenInput = it },
-                        label = { Text("Access Token") },
-                        placeholder = { Text("hf_...") },
-                        singleLine = true
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.saveToken(tokenInput)
-                    showTokenDialog = false
-                }) { Text("Save") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTokenDialog = false }) { Text("Cancel") }
-            }
-        )
-    }
 }
 
 @Composable
@@ -188,7 +151,7 @@ fun ModelSelector(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(selectedModel.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                     Text(selectedModel.description, style = MaterialTheme.typography.bodySmall)
-                    Text("Size: ${selectedModel.sizeGb} GB", style = MaterialTheme.typography.labelSmall)
+                    Text("Estimated Size: ${selectedModel.sizeGb} GB", style = MaterialTheme.typography.labelSmall)
                 }
                 Icon(Icons.Default.ExpandMore, contentDescription = null)
             }
@@ -205,7 +168,7 @@ fun ModelSelector(
                         Column {
                             Text(model.name, fontWeight = FontWeight.Bold)
                             Text(model.description, style = MaterialTheme.typography.bodySmall)
-                            Text("Size: ${model.sizeGb} GB", style = MaterialTheme.typography.labelSmall)
+                            Text("Estimated Size: ${model.sizeGb} GB", style = MaterialTheme.typography.labelSmall)
                         }
                     },
                     onClick = {

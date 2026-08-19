@@ -2,7 +2,6 @@ package com.example.scancard.ui.extraction
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.scancard.data.auth.AuthManager
 import com.example.scancard.domain.model.ModelConfig
 import com.example.scancard.domain.model.ModelState
 import com.example.scancard.domain.repository.ModelRepository
@@ -17,12 +16,10 @@ import javax.inject.Inject
 @HiltViewModel
 class ExtractionViewModel @Inject constructor(
     private val extractCardsUseCase: ExtractCardsUseCase,
-    private val modelRepository: ModelRepository,
-    private val authManager: AuthManager
+    private val modelRepository: ModelRepository
 ) : ViewModel() {
 
     val modelState: StateFlow<ModelState> = modelRepository.modelState
-    val hfToken = authManager.hfToken
 
     private val _isExtracting = MutableStateFlow(false)
     val isExtracting = _isExtracting.asStateFlow()
@@ -46,14 +43,6 @@ class ExtractionViewModel @Inject constructor(
 
     fun checkModelStatus() {
         modelRepository.checkModelStatus(_selectedModel.value)
-    }
-
-    fun saveToken(token: String) {
-        authManager.setToken(token)
-    }
-
-    fun logout() {
-        authManager.logout()
     }
 
     fun downloadModel() {

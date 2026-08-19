@@ -23,6 +23,8 @@ android {
         }
     }
 
+    assetPacks.add(":gemma-ai-pack")
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -41,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -69,6 +72,7 @@ dependencies {
     
     // LiteRT LM (Modern on-device AI)
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.16.0")
+    implementation("com.google.android.play:ai-delivery:0.2.0-beta01")
     
     // Room
     val roomVersion = "2.8.4"

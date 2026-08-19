@@ -15,11 +15,11 @@
 - [x] 2.3 Create AppDatabase class and Hilt providers
 - [x] 2.4 Implement Repositories (Deck, Card, Scan)
 
-### 3. Authentication & Model Management
-- [x] 3.1 Implement AuthManager for Hugging Face PAT (Manual Entry)
-- [x] 3.2 Implement ModelDownloadWorker (OkHttp with redirect/auth handling)
-- [x] 3.3 Implement ModelManager with state tracking and auto-check
-- [x] 3.4 Create ModelConfig for Gemma 4 (E2B, E4B) in `.litertlm` format
+### 3. Model Management (Google Play AI Packs & Dev Fallback)
+- [x] 3.1 Setup `:gemma-ai-pack` module with `com.android.ai-pack` plugin
+- [x] 3.2 Integrate `com.google.android.play:ai-delivery` SDK
+- [x] 3.3 Implement ModelManager using `AiPackManager` with DEBUG build fallback
+- [x] 3.4 Create ModelConfig for Gemma 4 (Universal/CPU variants)
 
 ### 4. Integration - ML Kit and LiteRT
 - [x] 4.1 Implement ML Kit Document Scanner integration
@@ -37,7 +37,7 @@
 ### 6. Presentation Layer - UI Screens
 - [x] 6.1 Implement Home Screen (Deck list, manual creation)
 - [x] 6.2 Implement Scan Screen (Camera integration, fixed bottom bar processing)
-- [x] 6.3 Implement Extraction Preview Screen (Model selector, PAT dialog, scrollable UI)
+- [x] 6.3 Implement Extraction Preview Screen (Model selector, Play download UI, Scrollable)
 - [x] 6.4 Implement Deck Detail Screen (Card list, ID display for debug)
 - [x] 6.5 Implement Study Screen (3D flip card animation, filters)
 - [x] 6.6 Implement Export Screen (Preview, Copy, Share)
@@ -56,7 +56,7 @@
 
 ## Completed Milestones
 
-- Transitioned from MediaPipe to **LiteRT LM SDK**.
-- Implemented **Edge-to-Edge** for modern Android compatibility.
-- Replaced OAuth with **Personal Access Token (PAT)** for reliable downloads.
-- Core Scan-to-Study flow is fully functional with Gemma 4.
+- Migrated model delivery to **Google Play AI Delivery (AI Packs)**.
+- Implemented **LiteRT LM SDK** for on-device inference with Universal CPU support.
+- Fully implemented Edge-to-Edge support for Android 15.
+- Core Scan-to-Study flow is fully functional and verified.
