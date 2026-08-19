@@ -3,10 +3,13 @@ package com.example.scancard.ui.study
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -35,7 +38,7 @@ fun StudyScreen(
                 title = { Text("Study") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -55,10 +58,10 @@ fun StudyScreen(
                     Text("No cards to study in this filter.")
                 }
             } else {
-                val currentCard = cards[currentIndex]
+                val currentCard = cards.getOrNull(currentIndex) ?: return@Column
                 
                 LinearProgressIndicator(
-                    progress = (currentIndex + 1).toFloat() / cards.size,
+                    progress = { (currentIndex + 1).toFloat() / cards.size },
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 )
 
@@ -69,39 +72,66 @@ fun StudyScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                Flashcard(card = currentCard)
-
-                Spacer(Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .draggable(
+                            state = rememberDraggableState { /* ignore deltas */ },
+                            orientation = Orientation.Horizontal,
+                            onDragStopped = { velocity ->
+                                if (velocity > 300f) {
+                                    viewModel.previousCard()
+                                } else if (velocity < -300f) {
+                                    viewModel.nextCard()
+                                }
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Key the flashcard by its ID so rotation state resets on card change
+                    key(currentCard.id) {
+                        Flashcard(card = currentCard)
+                    }
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = { viewModel.markAsReviewNeeded(currentCard.id) },
+                        onClick = { 
+                            viewModel.markAsReviewNeeded(currentCard.id)
+                            viewModel.nextCard()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
                         Icon(Icons.Default.Close, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
                         Text("Need Review")
                     }
                     Button(
-                        onClick = { viewModel.markAsLearned(currentCard.id) },
+                        onClick = { 
+                            viewModel.markAsLearned(currentCard.id)
+                            viewModel.nextCard()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
                         Text("Learned")
                     }
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp, start = 16.dp, end = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     IconButton(onClick = viewModel::previousCard, enabled = currentIndex > 0) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Previous")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
                     }
                     IconButton(onClick = viewModel::nextCard, enabled = currentIndex < cards.size - 1) {
-                        Icon(Icons.Default.ArrowForward, contentDescription = "Next")
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
                     }
                 }
             }
