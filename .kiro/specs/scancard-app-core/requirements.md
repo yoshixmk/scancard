@@ -16,6 +16,10 @@ ScanCard is an Android application that enables users to photograph book pages u
 - **ML Kit**: Google ML Kit for document scanning and text recognition.
 - **LiteRT LM**: Google's framework for on-device LLM inference (formerly MediaPipe GenAI).
 - **OOM**: Out of Memory - application crash due to insufficient memory.
+- **E2B Translation**: English-to-Bilingual (Japanese and English) translation provided by the on-device LLM.
+- **Card Status**: The learning state of a card (NEW, LEARNING, REVIEW).
+- **Background Task**: A long-running operation that continues execution while the user interacts with other UI elements.
+- **TSV**: Tab-Separated Values format for card export.
 
 ## Hardware Requirements
 
@@ -26,9 +30,6 @@ ScanCard is an Android application that enables users to photograph book pages u
 ---
 
 ## Requirements
-
-### Requirement 1: Batch Document Scanning
-(Identical to previous)
 
 ### Requirement 4: AI Model Selection and Management (Google Play)
 
@@ -52,3 +53,101 @@ ScanCard is an Android application that enables users to photograph book pages u
 
 1. WHEN OCR text is available and a model is ready (COMPLETED status), THE GemmaCardExtractor SHALL send the combined text to the selected LiteRT LM model.
 ... (Rest same as before)
+
+---
+
+### Requirement 6: Duplicate Card Prevention
+
+**User Story:** As a user, I want the system to prevent duplicate terms from being added to my deck, so that I can avoid redundant study materials.
+
+#### Acceptance Criteria
+
+1. WHEN a new card is extracted, THE CardValidator SHALL check for existing terms with identical text in the same deck.
+2. IF a duplicate term is found, THEN THE ScanCard SHALL display a warning to the user with the option to keep or skip the duplicate.
+3. WHEN the user chooses to keep the duplicate, THE ScanCard SHALL add the card with a visual indicator distinguishing it from the original.
+4. IF multiple cards with the same term have different definitions, THEN THE ScanCard SHALL display both definitions together for comparison.
+
+---
+
+### Requirement 7: Simplified Export Function
+
+**User Story:** As a user, I want to copy my flashcards to the clipboard in a simple format, so that I can paste them anywhere without Quizlet-specific formatting.
+
+#### Acceptance Criteria
+
+1. WHEN the user requests export, THE ExportManager SHALL generate cards in TSV format (Term[TAB]Definition).
+2. THE ExportManager SHALL NOT include "(Quizlet)" labels in the exported content.
+3. WHEN export is complete, THE ScanCard SHALL copy the TSV content to the system clipboard.
+4. THE ScanCard SHALL display a success message confirming the clipboard copy.
+
+---
+
+### Requirement 8: Card List Editing
+
+**User Story:** As a user, I want to edit, add, and delete cards in my deck, so that I can maintain accurate and complete study materials.
+
+#### Acceptance Criteria
+
+1. THE CardListScreen SHALL provide an edit button for each card.
+2. WHEN the edit button is pressed, THE CardEditor SHALL allow modification of the term and definition fields.
+3. THE CardListScreen SHALL provide an add button to create new cards.
+4. WHEN the add button is pressed, THE CardEditor SHALL offer two options: capture via camera or enter manually.
+5. THE CardListScreen SHALL provide a delete button for each card.
+6. WHEN the delete button is pressed, THE ScanCard SHALL confirm the deletion before removing the card.
+7. THE CardListScreen SHALL update immediately after any edit, add, or delete operation.
+
+---
+
+### Requirement 9: Study Screen Filter Enhancement
+
+**User Story:** As a user, I want to filter study cards by their learning status, so that I can focus on specific types of cards.
+
+#### Acceptance Criteria
+
+1. THE StudyScreen SHALL provide a filter dropdown with the following options: ALL, NEW, LEARNING, REVIEW.
+2. WHEN "NEW" is selected, THE CardFilter SHALL display only cards with NEW status.
+3. WHEN "LEARNING" is selected, THE CardFilter SHALL display only cards with LEARNING status.
+4. WHEN "REVIEW" is selected, THE CardFilter SHALL display only cards with REVIEW status.
+5. WHEN "ALL" is selected, THE CardFilter SHALL display all cards regardless of status.
+6. THE CardFilter SHALL preserve the selected filter across StudyScreen sessions.
+
+---
+
+### Requirement 10: Bilingual Card Display
+
+**User Story:** As a user, I want to see both English and Japanese definitions on the card back, so that I can study with translation support.
+
+#### Acceptance Criteria
+
+1. THE CardBack SHALL display the English definition by default.
+2. THE CardBack SHALL provide a toggle button labeled "日本語" to switch to Japanese.
+3. WHEN the toggle button is pressed, THE CardDisplay SHALL show the Japanese translation of the definition.
+4. THE CardBack SHALL preserve the E2B bilingual translation (English definition with Japanese annotation) alongside the toggle feature.
+5. WHILE the toggle is active, THE CardDisplay SHALL maintain the selected language preference until changed by the user.
+
+---
+
+### Requirement 11: Translation Prompt Improvement
+
+**User Story:** As a user, I want the AI to generate accurate translations that reflect the actual term content, so that my flashcards contain meaningful study materials.
+
+#### Acceptance Criteria
+
+1. THE TranslationPromptBuilder SHALL ensure that the term content appears verbatim in the generated definition.
+2. IF the generated definition does not contain the original term or produces a generic response like "A topic to Explore", THEN THE PromptValidator SHALL flag this as an invalid translation.
+3. WHEN an invalid translation is detected, THE ScanCard SHALL retry the extraction with an improved prompt.
+4. THE improved prompt SHALL include explicit instructions to use the exact term in the definition.
+
+---
+
+### Requirement 12: Background Processing for Card Extraction
+
+**User Story:** As a user, I want the card extraction to continue in the background, so that I can continue using the app while processing completes.
+
+#### Acceptance Criteria
+
+1. WHEN extraction is initiated, THE BackgroundTaskManager SHALL register it as a long-running task.
+2. WHILE extraction is in progress, THE ScanCard SHALL display a progress indicator in the UI.
+3. THE BackgroundTaskManager SHALL allow the user to navigate away from the extraction screen without cancelling the operation.
+4. WHEN extraction completes in the background, THE BackgroundTaskManager SHALL notify the user via a system notification.
+5. IF the app is terminated while extraction is in progress, THE BackgroundTaskManager SHALL resume the task when the app restarts.
