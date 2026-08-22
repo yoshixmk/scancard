@@ -19,6 +19,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.scancard.domain.model.ModelConfig
 import com.example.scancard.domain.model.ModelState
 
+import androidx.work.WorkInfo
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExtractionPreviewScreen(
@@ -31,9 +33,18 @@ fun ExtractionPreviewScreen(
     val modelState by viewModel.modelState.collectAsState()
     val error by viewModel.error.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
+    val extractionWorkInfo by viewModel.extractionWorkInfo.collectAsState()
 
     LaunchedEffect(deckId) {
         android.util.Log.d("ExtractionPreview", "Screen loaded with deckId: $deckId")
+        viewModel.setDeckId(deckId)
+    }
+    
+    // Auto-finish when extraction completes
+    LaunchedEffect(extractionWorkInfo) {
+        if (extractionWorkInfo?.state == WorkInfo.State.SUCCEEDED) {
+            onFinish(deckId)
+        }
     }
 
     Scaffold(
@@ -106,16 +117,22 @@ fun ExtractionPreviewScreen(
                 is ModelState.Ready -> {
                     if (isExtracting) {
                         CircularProgressIndicator()
-                        Text("Gemma is extracting flashcards...")
+                        Text("Gemma is extracting flashcards in background...")
+                        Text("You can safely leave this screen.", style = MaterialTheme.typography.labelSmall)
+                    } else if (extractionWorkInfo?.state == WorkInfo.State.FAILED) {
+                        Text("Extraction failed.", color = MaterialTheme.colorScheme.error)
+                        Button(onClick = { viewModel.startExtraction(deckId) }) {
+                            Text("Retry Extraction")
+                        }
                     } else if (error != null) {
                         Text("Error: $error", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { viewModel.startExtraction(deckId) { onFinish(deckId) } }) {
+                        Button(onClick = { viewModel.startExtraction(deckId) }) {
                             Text("Retry Extraction")
                         }
                     } else {
                         Text("Model Ready: ${selectedModel.name}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         Button(
-                            onClick = { viewModel.startExtraction(deckId) { onFinish(deckId) } },
+                            onClick = { viewModel.startExtraction(deckId) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(Icons.Default.Check, contentDescription = null)

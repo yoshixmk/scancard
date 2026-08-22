@@ -8,11 +8,12 @@ class CardResponseParserTest {
 
     @Test
     fun `parse valid JSON array`() {
-        val input = """[{"term": "Apple", "definition": "A red fruit"}]"""
+        val input = """[{"term": "Apple", "definition": "A red fruit", "japaneseTranslation": "赤い果物"}]"""
         val result = parser.parse(input)
         assertEquals(1, result.size)
         assertEquals("Apple", result[0].term)
         assertEquals("A red fruit", result[0].definition)
+        assertEquals("赤い果物", result[0].japaneseTranslation)
     }
 
     @Test

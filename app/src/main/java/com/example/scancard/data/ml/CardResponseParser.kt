@@ -3,7 +3,11 @@ package com.example.scancard.data.ml
 import org.json.JSONArray
 import org.json.JSONObject
 
-data class ExtractedCard(val term: String, val definition: String)
+data class ExtractedCard(
+    val term: String,
+    val definition: String,
+    val japaneseTranslation: String = ""
+)
 
 class CardResponseParser {
     fun parse(response: String): List<ExtractedCard> {
@@ -23,12 +27,16 @@ class CardResponseParser {
             }
         } catch (e: Exception) {}
 
-        // Strategy 3: Regex for "term": "...", "definition": "..."
+        // Strategy 3: Regex for fields
         try {
             val cards = mutableListOf<ExtractedCard>()
-            val pattern = "\"term\"\\s*:\\s*\"([^\"]*)\"\\s*,\\s*\"definition\"\\s*:\\s*\"([^\"]*)\"".toRegex()
+            val pattern = "\"term\"\\s*:\\s*\"([^\"]*)\"\\s*,\\s*\"definition\"\\s*:\\s*\"([^\"]*)\"(?:\\s*,\\s*\"japaneseTranslation\"\\s*:\\s*\"([^\"]*)\")?".toRegex()
             pattern.findAll(response).forEach { match ->
-                cards.add(ExtractedCard(match.groupValues[1], match.groupValues[2]))
+                cards.add(ExtractedCard(
+                    match.groupValues[1], 
+                    match.groupValues[2],
+                    match.groupValues.getOrNull(3) ?: ""
+                ))
             }
             if (cards.isNotEmpty()) return cards
         } catch (e: Exception) {}
@@ -42,7 +50,8 @@ class CardResponseParser {
             val obj = jsonArray.getJSONObject(i)
             result.add(ExtractedCard(
                 obj.getString("term"),
-                obj.getString("definition")
+                obj.getString("definition"),
+                if (obj.has("japaneseTranslation")) obj.getString("japaneseTranslation") else ""
             ))
         }
         return result

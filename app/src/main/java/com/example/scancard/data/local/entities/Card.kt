@@ -5,6 +5,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+import com.example.scancard.domain.model.CardStatus
+
 @Entity(
     tableName = "cards",
     foreignKeys = [
@@ -23,6 +25,7 @@ data class Card(
     val deckId: Long,
     val term: String,
     val definition: String,
-    val isLearned: Boolean = false,
+    val japaneseTranslation: String = "",
+    val status: CardStatus = CardStatus.NEW,
     val createdAt: Long = System.currentTimeMillis()
 )

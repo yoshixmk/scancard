@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.scancard.data.local.entities.Card
 
+import com.example.scancard.domain.model.FilterType
+import com.example.scancard.domain.model.LanguagePreference
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudyScreen(
@@ -31,6 +34,8 @@ fun StudyScreen(
     val cards by viewModel.cards.collectAsState()
     val currentIndex by viewModel.currentIndex.collectAsState()
     val filter by viewModel.filter.collectAsState()
+    
+    var languagePreference by remember { mutableStateOf(LanguagePreference.ENGLISH) }
 
     Scaffold(
         topBar = {
@@ -61,7 +66,7 @@ fun StudyScreen(
                 val currentCard = cards.getOrNull(currentIndex) ?: return@Column
                 
                 LinearProgressIndicator(
-                    progress = { (currentIndex + 1).toFloat() / cards.size },
+                    progress = { (currentIndex + 1).toFloat() / cards.size.coerceAtLeast(1) },
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 )
 
@@ -91,7 +96,16 @@ fun StudyScreen(
                 ) {
                     // Key the flashcard by its ID so rotation state resets on card change
                     key(currentCard.id) {
-                        Flashcard(card = currentCard)
+                        Flashcard(
+                            card = currentCard,
+                            languagePreference = languagePreference,
+                            onToggleLanguage = {
+                                languagePreference = if (languagePreference == LanguagePreference.ENGLISH)
+                                    LanguagePreference.JAPANESE
+                                else
+                                    LanguagePreference.ENGLISH
+                            }
+                        )
                     }
                 }
 
@@ -140,11 +154,16 @@ fun StudyScreen(
 }
 
 @Composable
-fun Flashcard(card: Card) {
+fun Flashcard(
+    card: Card,
+    languagePreference: LanguagePreference,
+    onToggleLanguage: () -> Unit
+) {
     var rotated by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(
         targetValue = if (rotated) 180f else 0f,
-        animationSpec = tween(500)
+        animationSpec = tween(500),
+        label = "cardRotation"
     )
 
     Card(
@@ -170,28 +189,46 @@ fun Flashcard(card: Card) {
                     modifier = Modifier.padding(16.dp)
                 )
             } else {
-                Text(
-                    text = card.definition,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
+                Column(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .fillMaxSize()
                         .graphicsLayer { rotationY = 180f }
-                )
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = if (languagePreference == LanguagePreference.ENGLISH)
+                            card.definition
+                        else
+                            card.japaneseTranslation.ifBlank { "No translation available" },
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(Modifier.height(24.dp))
+                    
+                    TextButton(onClick = { 
+                        // Stop propagation of click to the card
+                        onToggleLanguage() 
+                    }) {
+                        Text(if (languagePreference == LanguagePreference.ENGLISH) "日本語" else "English")
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun FilterMenu(currentFilter: StudyFilter, onFilterSelected: (StudyFilter) -> Unit) {
+fun FilterMenu(currentFilter: FilterType, onFilterSelected: (FilterType) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         TextButton(onClick = { expanded = true }) {
             Text("Filter: ${currentFilter.name}")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            StudyFilter.values().forEach { filter ->
+            FilterType.entries.forEach { filter ->
                 DropdownMenuItem(
                     text = { Text(filter.name) },
                     onClick = {

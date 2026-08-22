@@ -46,4 +46,27 @@ class DeckDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun addCard(term: String, definition: String) {
+        viewModelScope.launch {
+            val newCard = Card(
+                deckId = deckId,
+                term = term,
+                definition = definition
+            )
+            studyCardsUseCase.insertCard(newCard)
+        }
+    }
+
+    fun updateCard(card: Card) {
+        viewModelScope.launch {
+            studyCardsUseCase.updateCard(card)
+        }
+    }
+
+    fun deleteCard(card: Card) {
+        viewModelScope.launch {
+            studyCardsUseCase.deleteCard(card)
+        }
+    }
 }

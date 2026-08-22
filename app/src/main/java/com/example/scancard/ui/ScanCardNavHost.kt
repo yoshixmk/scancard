@@ -18,15 +18,19 @@ fun ScanCardNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
             HomeScreen(
-                onScanClick = { navController.navigate(Screen.Scan.route) },
+                onScanClick = { navController.navigate(Screen.Scan.createRoute(0L)) },
                 onDeckClick = { deckId -> navController.navigate(Screen.DeckDetail.createRoute(deckId)) }
             )
         }
-        composable(Screen.Scan.route) {
+        composable(
+            route = Screen.Scan.route,
+            arguments = listOf(navArgument("deckId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val deckId = backStackEntry.arguments?.getLong("deckId") ?: 0L
             ScanScreen(
                 onBack = { navController.popBackStack() },
-                onComplete = { deckId -> navController.navigate(Screen.ExtractionPreview.createRoute(deckId)) },
-                deckId = 0 // Placeholder
+                onComplete = { newDeckId -> navController.navigate(Screen.ExtractionPreview.createRoute(newDeckId)) },
+                deckId = deckId
             )
         }
         composable(
@@ -51,7 +55,8 @@ fun ScanCardNavHost(navController: NavHostController) {
             DeckDetailScreen(
                 onBack = { navController.popBackStack() },
                 onStudyClick = { deckId -> navController.navigate(Screen.Study.createRoute(deckId)) },
-                onExportClick = { deckId -> navController.navigate(Screen.Export.createRoute(deckId)) }
+                onExportClick = { deckId -> navController.navigate(Screen.Export.createRoute(deckId)) },
+                onAddByScanClick = { deckId -> navController.navigate(Screen.Scan.createRoute(deckId)) }
             )
         }
         composable(

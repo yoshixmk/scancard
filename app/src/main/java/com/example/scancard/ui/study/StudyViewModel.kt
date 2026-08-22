@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.scancard.data.local.entities.Card
+import com.example.scancard.domain.model.CardStatus
+import com.example.scancard.domain.model.FilterType
 import com.example.scancard.domain.usecase.StudyCardsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +28,7 @@ class StudyViewModel @Inject constructor(
     private val _currentIndex = MutableStateFlow(0)
     val currentIndex = _currentIndex.asStateFlow()
 
-    private val _filter = MutableStateFlow(StudyFilter.ALL)
+    private val _filter = MutableStateFlow(FilterType.ALL)
     val filter = _filter.asStateFlow()
 
     val cards: StateFlow<List<Card>> = combine(
@@ -34,9 +36,10 @@ class StudyViewModel @Inject constructor(
         _filter
     ) { allCards, currentFilter ->
         when (currentFilter) {
-            StudyFilter.ALL -> allCards
-            StudyFilter.LEARNED -> allCards.filter { it.isLearned }
-            StudyFilter.NEEDS_REVIEW -> allCards.filter { !it.isLearned }
+            FilterType.ALL -> allCards
+            FilterType.NEW -> allCards.filter { it.status == CardStatus.NEW }
+            FilterType.LEARNING -> allCards.filter { it.status == CardStatus.LEARNING }
+            FilterType.REVIEW -> allCards.filter { it.status == CardStatus.REVIEW }
         }
     }.stateIn(
         scope = viewModelScope,
@@ -68,12 +71,8 @@ class StudyViewModel @Inject constructor(
         }
     }
 
-    fun setFilter(filter: StudyFilter) {
+    fun setFilter(filter: FilterType) {
         _filter.value = filter
         _currentIndex.value = 0
     }
-}
-
-enum class StudyFilter {
-    ALL, LEARNED, NEEDS_REVIEW
 }

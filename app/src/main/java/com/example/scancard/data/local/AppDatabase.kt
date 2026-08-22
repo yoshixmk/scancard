@@ -9,11 +9,14 @@ import com.example.scancard.data.local.entities.Card
 import com.example.scancard.data.local.entities.Deck
 import com.example.scancard.data.local.entities.Scan
 
+import androidx.room.TypeConverters
+
 @Database(
     entities = [Deck::class, Card::class, Scan::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun deckDao(): DeckDao
     abstract fun cardDao(): CardDao

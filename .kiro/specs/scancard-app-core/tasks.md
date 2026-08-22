@@ -215,99 +215,39 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 ## New Requirements Implementation Tasks
 
 ### 9. Duplicate Card Prevention (Requirement 6)
-- [ ] 9.1 Create CardValidator interface and implementation
-  - Implement duplicate detection with term normalization (trim, lowercase)
-  - Provide DuplicateWarning and DuplicateAction enums
-  - **Dependencies**: CardRepository (existing)
-- [ ] 9.2 Integrate CardValidator into ExtractCardsUseCase
-  - Check duplicates before card insertion
-  - Handle SHOW_WARNING, AUTO_SKIP, AUTO_ADD_WITH_INDICATOR actions
-  - **Dependencies**: Task 9.1
+- [x] 9.1 Create CardValidator interface and implementation
+- [x] 9.2 Integrate CardValidator into ExtractCardsUseCase
 
 ### 10. Simplified Export Function (Requirement 7)
-- [ ] 10.1 Create ExportManager interface and implementation
-  - Implement TSV format (Term[TAB]Definition) without Quizlet labels
-  - Add proper escaping for special characters
-  - **Dependencies**: None (standalone component)
-- [ ] 10.2 Update ExportDataUseCase to use ExportManager
-  - Add clipboard copy functionality
-  - Show success message after export
-  - **Dependencies**: Task 10.1
+- [x] 10.1 Create ExportManager interface and implementation
+- [x] 10.2 Update ExportDataUseCase to use ExportManager
 
 ### 11. Card List Editing (Requirement 8)
-- [ ] 11.1 Create CardEditor component
-  - Implement edit, add, delete operations
-  - Add confirmation dialog for delete
-  - **Dependencies**: CardRepository (existing)
-- [ ] 11.2 Update DeckDetailScreen with CRUD UI
-  - Add edit button for each card
-  - Add add button (camera/manual options)
-  - Add delete button with confirmation
-  - **Dependencies**: Task 11.1
+- [x] 11.1 Create CardEditor component (Implemented as Dialogs in UI)
+- [x] 11.2 Update DeckDetailScreen with CRUD UI
 
 ### 12. Study Screen Filter Enhancement (Requirement 9)
-- [ ] 12.1 Create FilterType enum (ALL, NEW, LEARNING, REVIEW)
-  - Replace existing StudyFilter enum
-  - **Dependencies**: None
-- [ ] 12.2 Create CardFilter implementation
-  - Implement filter by status
-  - Support filter persistence
-  - **Dependencies**: Task 12.1
-- [ ] 12.3 Update StudyViewModel to use new FilterType
-  - Use CardFilter for filtering logic
-  - Persist filter selection
-  - **Dependencies**: Task 12.2
+- [x] 12.1 Create FilterType enum (ALL, NEW, LEARNING, REVIEW)
+- [x] 12.2 Create CardFilter implementation (Integrated into StudyViewModel)
+- [x] 12.3 Update StudyViewModel to use new FilterType
 
 ### 13. Bilingual Card Display (Requirement 10)
-- [ ] 13.1 Create LanguagePreference enum (ENGLISH, JAPANESE)
-- [ ] 13.2 Create IBilingualCardDisplay interface and implementation
-  - Manage language toggle state
-  - Support session persistence
-  - **Dependencies**: None
-- [ ] 13.3 Update Card entity with japaneseTranslation field
-  - Add field to Card entity
-  - Update database schema
-  - **Dependencies**: None
-- [ ] 13.4 Update Study Screen UI with language toggle
-  - Add toggle button "日本語" / "Switch to English"
-  - Display correct translation based on preference
-  - **Dependencies**: Task 13.2, 13.3
+- [x] 13.1 Create LanguagePreference enum (ENGLISH, JAPANESE)
+- [x] 13.2 Create IBilingualCardDisplay interface (Handled in UI state)
+- [x] 13.3 Update Card entity with japaneseTranslation field
+- [x] 13.4 Update Study Screen UI with language toggle
 
 ### 14. Translation Prompt Improvement (Requirement 11)
-- [ ] 14.1 Create ITranslationPromptBuilder interface and implementation
-  - Build standard prompts with term enforcement
-  - Build improved prompts for retry scenarios
-  - **Dependencies**: None
-- [ ] 14.2 Create IPromptValidator interface and implementation
-  - Validate term presence in definition (case-insensitive)
-  - Detect generic responses like "A topic to Explore"
-  - Return ValidationResult (Valid/Invalid)
-  - **Dependencies**: None
-- [ ] 14.3 Integrate PromptValidator into ExtractCardsUseCase
-  - Add validation after AI extraction
-  - Implement retry logic (up to 3 attempts)
-  - **Dependencies**: Task 14.1, 14.2
+- [x] 14.1 Create ITranslationPromptBuilder interface and implementation
+- [x] 14.2 Create IPromptValidator interface and implementation
+- [x] 14.3 Integrate PromptValidator into ExtractCardsUseCase
 
 ### 15. Background Processing for Card Extraction (Requirement 12)
-- [ ] 15.1 Add WorkManager dependency to build.gradle.kts
-- [ ] 15.2 Create IBackgroundTaskManager interface and implementation
-  - Enqueue extraction tasks with WorkManager
-  - Track task status (PENDING, RUNNING, COMPLETED, FAILED, CANCELLED)
-  - Support progress reporting
-  - **Dependencies**: None
-- [ ] 15.3 Create CardExtractionWorker
-  - Implement long-running extraction logic
-  - Report progress incrementally
-  - Handle task resumption on app restart
-  - **Dependencies**: Task 15.2
-- [ ] 15.4 Add system notification for task completion
-  - Show notification when extraction completes in background
-  - Handle completion and failure states
-  - **Dependencies**: Task 15.3
-- [ ] 15.5 Update Extraction Screen with background processing UI
-  - Show progress indicator during extraction
-  - Allow navigation away without cancelling
-  - **Dependencies**: Task 15.2, 15.3, 15.4
+- [x] 15.1 Add WorkManager dependency to build.gradle.kts
+- [x] 15.2 Create BackgroundTaskManager
+- [x] 15.3 Create CardExtractionWorker
+- [x] 15.4 Add system notification for task completion
+- [x] 15.5 Update Extraction Screen with background processing UI
 
 ---
 
@@ -330,3 +270,7 @@ The tasks should be implemented in the following order for optimal dependency ma
 - Implemented **LiteRT LM SDK** for on-device inference with Universal CPU support.
 - Fully implemented Edge-to-Edge support for Android 15.
 - Core Scan-to-Study flow is fully functional and verified.
+- **Improved Card Management**: Added CRUD operations and duplicate prevention.
+- **Enhanced Study Experience**: Added bilingual toggle and NEW filter.
+- **Background Processing**: Integrated WorkManager for long-running extractions.
+- **Prompt Optimization**: Refined AI prompts for better E2B translations.

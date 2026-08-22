@@ -2,7 +2,9 @@ package com.example.scancard.ui
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
-    object Scan : Screen("scan")
+    object Scan : Screen("scan/{deckId}") {
+        fun createRoute(deckId: Long) = "scan/$deckId"
+    }
     object ExtractionPreview : Screen("extraction_preview/{deckId}") {
         fun createRoute(deckId: Long) = "extraction_preview/$deckId"
     }

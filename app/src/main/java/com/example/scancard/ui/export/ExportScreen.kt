@@ -47,7 +47,7 @@ fun ExportScreen(
                         selectedFormat = "TSV"
                         viewModel.generatePreview("TSV")
                     },
-                    label = { Text("TSV (Quizlet)") }
+                    label = { Text("TSV") }
                 )
                 FilterChip(
                     selected = selectedFormat == "CSV",

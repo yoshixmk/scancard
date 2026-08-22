@@ -1,0 +1,64 @@
+package com.example.scancard.util
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
+
+class NotificationHelper(private val context: Context) {
+    companion object {
+        private const val CHANNEL_ID = "extraction_channel"
+        private const val CHANNEL_NAME = "Extraction Progress"
+    }
+
+    init {
+        createNotificationChannel()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    fun showCompletionNotification(deckId: Long) {
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Extraction Complete")
+            .setContentText("Flashcards have been extracted successfully.")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        try {
+            manager.notify(deckId.toInt(), notification)
+        } catch (e: SecurityException) {
+            android.util.Log.e("NotificationHelper", "Missing notification permission", e)
+        }
+    }
+
+    fun showErrorNotification(deckId: Long, message: String) {
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_notify_error)
+            .setContentTitle("Extraction Failed")
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        try {
+            manager.notify(deckId.toInt(), notification)
+        } catch (e: SecurityException) {
+            android.util.Log.e("NotificationHelper", "Missing notification permission", e)
+        }
+    }
+}
