@@ -1,5 +1,9 @@
 package com.example.scancard.ui.extraction
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.scancard.domain.model.ModelConfig
 import com.example.scancard.domain.model.ModelState
-
 import androidx.work.WorkInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +37,14 @@ fun ExtractionPreviewScreen(
     val error by viewModel.error.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val extractionWorkInfo by viewModel.extractionWorkInfo.collectAsState()
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.startExtraction(deckId)
+        }
+    }
 
     LaunchedEffect(deckId) {
         android.util.Log.d("ExtractionPreview", "Screen loaded with deckId: $deckId")
@@ -121,18 +132,36 @@ fun ExtractionPreviewScreen(
                         Text("You can safely leave this screen.", style = MaterialTheme.typography.labelSmall)
                     } else if (extractionWorkInfo?.state == WorkInfo.State.FAILED) {
                         Text("Extraction failed.", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { viewModel.startExtraction(deckId) }) {
+                        Button(onClick = { 
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                viewModel.startExtraction(deckId)
+                            }
+                        }) {
                             Text("Retry Extraction")
                         }
                     } else if (error != null) {
                         Text("Error: $error", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { viewModel.startExtraction(deckId) }) {
+                        Button(onClick = { 
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                viewModel.startExtraction(deckId)
+                            }
+                        }) {
                             Text("Retry Extraction")
                         }
                     } else {
                         Text("Model Ready: ${selectedModel.name}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         Button(
-                            onClick = { viewModel.startExtraction(deckId) },
+                            onClick = { 
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    viewModel.startExtraction(deckId)
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(Icons.Default.Check, contentDescription = null)

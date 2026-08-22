@@ -13,6 +13,8 @@ import com.example.scancard.ui.home.HomeScreen
 import com.example.scancard.ui.scan.ScanScreen
 import com.example.scancard.ui.study.StudyScreen
 
+import androidx.navigation.navDeepLink
+
 @Composable
 fun ScanCardNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screen.Home.route) {
@@ -50,7 +52,10 @@ fun ScanCardNavHost(navController: NavHostController) {
         }
         composable(
             route = Screen.DeckDetail.route,
-            arguments = listOf(navArgument("deckId") { type = NavType.LongType })
+            arguments = listOf(navArgument("deckId") { type = NavType.LongType }),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "scancard://deck/{deckId}" }
+            )
         ) {
             DeckDetailScreen(
                 onBack = { navController.popBackStack() },

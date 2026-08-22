@@ -13,6 +13,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.scancard.ui.ScanCardNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
+import android.content.Intent
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,5 +33,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
     }
 }

@@ -38,25 +38,24 @@ fun HomeScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            Button(
+                onClick = { showAddDialog = true },
+                modifier = Modifier.padding(16.dp).fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Create Manual Deck")
+            }
+
             if (decks.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("No decks yet. Tap camera to start scanning.")
                 }
             } else {
-                LazyColumn {
-                    item {
-                        Button(
-                            onClick = { showAddDialog = true },
-                            modifier = Modifier.padding(16.dp).fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Create Manual Deck")
-                        }
-                    }
+                LazyColumn(modifier = Modifier.weight(1f)) {
                     items(decks) { deck ->
                         DeckItem(
                             deck = deck,

@@ -6,6 +6,10 @@ import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.net.Uri
+
 class NotificationHelper(private val context: Context) {
     companion object {
         private const val CHANNEL_ID = "extraction_channel"
@@ -29,11 +33,23 @@ class NotificationHelper(private val context: Context) {
     }
 
     fun showCompletionNotification(deckId: Long) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("scancard://deck/$deckId")).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            deckId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Extraction Complete")
             .setContentText("Flashcards have been extracted successfully.")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 

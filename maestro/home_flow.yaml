@@ -1,0 +1,16 @@
+appId: com.example.scancard
+---
+- launchApp
+- assertVisible: "ScanCard"
+- tapOn:
+    id: "Scan Document" # contentDescription of the FloatingActionButton
+- assertVisible: "Scan Document" # Title of ScanScreen
+- back
+- assertVisible: "ScanCard"
+- tapOn: "Create Manual Deck"
+- inputText: "Test Deck"
+- tapOn: "Create"
+- assertVisible: "Test Deck"
+- tapOn:
+    id: "Delete" # contentDescription of the Delete icon
+- assertNotVisible: "Test Deck"
