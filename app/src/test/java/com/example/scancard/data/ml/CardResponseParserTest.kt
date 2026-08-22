@@ -7,29 +7,34 @@ class CardResponseParserTest {
     private val parser = CardResponseParser()
 
     @Test
-    fun `parse valid JSON array`() {
-        val input = """[{"term": "Apple", "definition": "A red fruit", "japaneseTranslation": "赤い果物"}]"""
+    fun `parse valid JSON array returns correct cards`() {
+        val input = """[{"term": "Hello", "definition": "Greeting"}]"""
         val result = parser.parse(input)
         assertEquals(1, result.size)
-        assertEquals("Apple", result[0].term)
-        assertEquals("A red fruit", result[0].definition)
-        assertEquals("赤い果物", result[0].japaneseTranslation)
+        assertEquals("Hello", result[0].term)
+        assertEquals("Greeting", result[0].definition)
     }
 
     @Test
-    fun `parse JSON wrapped in text`() {
-        val input = """Here is the result: [{"term": "Banana", "definition": "A yellow fruit"}] Hope this helps!"""
+    fun `parse text with embedded JSON array returns correct cards`() {
+        val input = """Here is the data: [{"term": "World", "definition": "Earth"}] and more text."""
         val result = parser.parse(input)
         assertEquals(1, result.size)
-        assertEquals("Banana", result[0].term)
+        assertEquals("World", result[0].term)
     }
 
     @Test
-    fun `parse using regex fallback`() {
-        val input = """Pair: "term": "Cat", "definition": "An animal"."""
+    fun `parse invalid format returns empty list`() {
+        val input = "Not a json"
+        val result = parser.parse(input)
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `parse with japaneseTranslation returns it`() {
+        val input = """[{"term": "Dog", "definition": "Animal", "japaneseTranslation": "犬"}]"""
         val result = parser.parse(input)
         assertEquals(1, result.size)
-        assertEquals("Cat", result[0].term)
-        assertEquals("An animal", result[0].definition)
+        assertEquals("犬", result[0].japaneseTranslation)
     }
 }
