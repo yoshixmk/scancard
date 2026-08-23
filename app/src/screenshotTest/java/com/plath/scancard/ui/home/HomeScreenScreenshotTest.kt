@@ -169,8 +169,8 @@ package com.plath.scancard.ui.home
 // 4. ./gradlew :app:updateScreenshotTest で参照画像を生成 → 目視承認
 // 5. ./gradlew :app:validateScreenshotTest で差分検証（CI）
 // 6. 将来: DeckDetailScreen / StudyScreen / ExtractionPreviewScreen も同様に screenshotTest 配下に追加
-//    - `app/src/screenshotTest/java/com/example/scancard/ui/deckdetail/DeckDetailScreenScreenshotTest.kt`
-//    - `app/src/screenshotTest/java/com/example/scancard/ui/study/StudyScreenScreenshotTest.kt`
+//    - `app/src/screenshotTest/java/com/plath/scancard/ui/deckdetail/DeckDetailScreenScreenshotTest.kt`
+//    - `app/src/screenshotTest/java/com/plath/scancard/ui/study/StudyScreenScreenshotTest.kt`
 //    - 各ファイルで empty/loading/success/error の状態別に @PreviewTest を追加
 // =============================================================================
 

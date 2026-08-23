@@ -14,6 +14,7 @@ import com.plath.scancard.ui.ScanCardNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
 import android.content.Intent
+import com.plath.scancard.ui.NavHolder
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -66,5 +67,8 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        // singleTop + scancard://deck deepLink を warm-start でも解決する
+        // ScanCardNavHostの NavController が Compose内にいるため Holder経由で handleDeepLink
+        NavHolder.navController?.handleDeepLink(intent)
     }
 }

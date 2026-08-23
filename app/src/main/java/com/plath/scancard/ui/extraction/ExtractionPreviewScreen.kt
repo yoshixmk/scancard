@@ -43,9 +43,12 @@ fun ExtractionPreviewScreen(
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            viewModel.startExtraction(deckId)
+        // POST_NOTIFICATIONS 拒否でも抽出は継続（通知は SecurityException catchで握り潰し）
+        // 権限は通知表示の任意要件のため、isGranted に関わらず startExtraction する
+        if (!isGranted) {
+            android.util.Log.w("ExtractionPreview", "POST_NOTIFICATIONS denied — extraction continues without notification")
         }
+        viewModel.startExtraction(deckId)
     }
 
     LaunchedEffect(deckId) {

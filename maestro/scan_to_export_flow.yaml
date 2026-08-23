@@ -1,76 +1,142 @@
 appId: com.plath.scancard
 ---
-# IMP-06 6-5 Maestro 拡張フロー: Scan → Extract → DeckDetail → Study → Export
-# 既存 maestro/home_flow.yaml:1-18 の記法を踏襲（launchApp / assertVisible / tapOn / inputText / back）
-# 制約: gradleフル実行禁止のため本yamlは雛形。エミュレータで `maestro test maestro/scan_to_export_flow.yaml` で検証する。
-# 前提: HomeScreen にデッキが0件でも動作する。各 tapOn は contentDescription or text のいずれかで解決される。
-# 将来: DocumentScanner / Gemma 抽出は Fake に差し替えた debug ビルドで実行し、実スキャンは手動QAで補完する。
+# Skill: .kiro/skills/android-cli/references/journeys.md + testing-setup Step 9/12
+# Strategy: exact text / clearState / extendedWaitUntil + optional で auto-launch / Fake差し替え時の手動介入を optional コメントで整理
+# 参照: HomeScreen:42 contentDescription="Scan Document", DeckDetailScreen:88 contentDescription="Add Card", ScanScreen:115 title "Scan Document", DeckDetailScreen:116 "${cards.size} Cards", StudyScreen:67 "No cards to study in this filter.", ExportScreen:35 "Export Deck", FilterType: Enums.kt:9 ALL/NEW/LEARNING/REVIEW
 
-- launchApp
-- assertVisible: "ScanCard"
+- clearState
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "ScanCard"
+    timeout: 8000
 
 # 1. Deck作成（home_flow.yaml と同様）
 - tapOn: "Create Manual Deck"
+- extendedWaitUntil:
+    visible: "New Deck"
+    timeout: 5000
 - inputText: "E2E Export Deck"
 - tapOn: "Create"
-- assertVisible: "E2E Export Deck"
+- extendedWaitUntil:
+    visible: "E2E Export Deck"
+    timeout: 5000
 
 # 2. DeckDetail に遷移（デッキカードをタップ）
 - tapOn: "E2E Export Deck"
-# DeckDetail の TopAppBar タイトル or "Cards" ラベルを検証
-- assertVisible: "E2E Export Deck"
-# カード数表示（例: "0 Cards"）を確認 — 空デッキ状態
-- assertVisible: "0 Cards"
+# DeckDetail の TopAppBar タイトルを検証 (deck?.title)
+- extendedWaitUntil:
+    visible: "E2E Export Deck"
+    timeout: 5000
+# カード数表示（DeckDetailScreen:116 "${cards.size} Cards (ID: ...)"）— 空デッキ状態 0 Cards
+- extendedWaitUntil:
+    visible: "0 Cards"
+    timeout: 5000
 
-# 3. Scan → Extract（Mock）
-# "Add Card" FAB → "Scan Document" 選択
+# 3. Scan → Extract（1タップ化対応: F-2 / F-4）
+# "Add Card" FAB → "Scan Document" 選択 → ScanScreen自動起動 (alreadyAutoLaunched)
 # DeckDetail の FAB は contentDescription="Add Card"
 - tapOn:
     id: "Add Card"
-- assertVisible: "Add Card"
+    # TODO(F-3 testTag): contentDescription依存 → testTag("deckDetailFabAddCard") 推奨
+- extendedWaitUntil:
+    visible: "Add Card"
+    timeout: 5000
 - tapOn: "Scan Document"
-# ScanScreen のタイトル検証
-- assertVisible: "Scan Document"
-# スキャン実行（Fake DocumentScanner が即座に画像を返す想定）
-# 実機では ML Kit DocumentScanner の UI が出るため、手動操作が必要な場合は下記をコメントアウト
-# - tapOn: "Scan"
-# 抽出プレビュー画面へ遷移（Gemma Fake が固定カードを返す想定）
-# - assertVisible: "Extraction Preview"
-# - assertVisible: "hello"  # Fake抽出結果の term
-# - tapOn: "Save"
-# 保存後に DeckDetail に戻り、カードが増えていることを検証
-# - assertVisible: "1 Cards"
+# F-2/F-4: 従来 2タップ (Add Card -> Scan Document) を 1タップ+wait に変更。Scan Document 選択後は自動で Scanner 起動
+- extendedWaitUntil:
+    visible: "Scan Document"
+    timeout: 8000
+# auto-launch fallback: 権限未付与等で自動起動しなかった場合は手動ボタンが出る → optional
+- tapOn:
+    text: "Start Scanning"
+    optional: true
+# GmsDocumentScanner 外部UI → back で閉じる (optional: 実機のみ表示, emulatorやFake時は表示されないため)
+- back:
+    optional: true
+# --- Fake前提の抽出手順 (debugビルドで FakeDocumentScanner/FakeGemmaExtractor 差し替え時に有効化) ---
+# 手順: ScanScreenでスキャン完了 → "Extract Cards (n)" → "AI Extraction" 画面 → WorkManager抽出 → DeckDetailに戻る
+# 現状は実スキャンUIがオーバーレイするため下記はコメントアウトのまま。Fake導入時は下記ブロックをアンコメントし、maestro test で実行。
+# F-4 コメントアウト解除手順:
+#   1) debugビルドで Hilt module を Fake に差し替え (FakeDocumentScannerが即座に画像を返す)
+#   2) 下記 4行をアンコメント
+#   3) エミュレータで `maestro test maestro/scan_to_export_flow.yaml` 実行
+# - extendedWaitUntil:
+#     visible: "AI Extraction"
+#     timeout: 10000
+# - tapOn: "Start AI Extraction"
+# - extendedWaitUntil:
+#     visible: "E2E Export Deck"
+#     timeout: 15000
+# - extendedWaitUntil:
+#     visible: "1 Cards"
+#     timeout: 5000
+# ---------------------------------------------------------------------------
+# 実機では ML Kit DocumentScanner の UI が出るため、上記Fake手順は手動QAで補完する
+- back
+- extendedWaitUntil:
+    visible: "E2E Export Deck"
+    timeout: 5000
 
-# 4. Study → Filter 切替
+# 4. Study → Filter 切替 (コードの FilterType に整合: ALL/NEW/LEARNING/REVIEW)
 - tapOn: "Study"
-- assertVisible: "Study"
-# FilterMenu の現在値を確認（デフォルト "Filter: ALL"）
-- assertVisible: "Filter: ALL"
-# フィルタをタップして Dropdown を開く
+- extendedWaitUntil:
+    visible: "Study"
+    timeout: 5000
+# FilterMenu の現在値を確認（デフォルト "Filter: ALL" — StudyScreen:255 "Filter: ${currentFilter.name}"）
+- extendedWaitUntil:
+    visible: "Filter: ALL"
+    timeout: 5000
+# フィルタをタップして Dropdown を開く — DropdownMenuItemは FilterType.entries (Enums.kt:9)
 - tapOn: "Filter: ALL"
-- assertVisible: "ALL"
-- assertVisible: "LEARNED"
-- assertVisible: "REVIEW_NEEDED"
-# LEARNED に切替（空なら "No cards to study" が表示）
-- tapOn: "LEARNED"
-# フィルタ反映を検証（いずれかが表示される）
-- assertVisible: "Filter: LEARNED"
+- extendedWaitUntil:
+    visible: "ALL"
+    timeout: 3000
+# TODO(F-3 testTag): textセレクタ "ALL" 等は他画面と衝突しやすい → FilterMenuに testTag("filterDropdownItem_ALL") を付与し id セレクタ化を推奨
+- extendedWaitUntil:
+    visible: "LEARNING"
+    timeout: 3000
+- extendedWaitUntil:
+    visible: "REVIEW"
+    timeout: 3000
+- extendedWaitUntil:
+    visible: "NEW"
+    timeout: 3000
+# LEARNING に切替（空なら "No cards to study in this filter." が表示）
+- tapOn: "LEARNING"
+# フィルタ反映を検証
+- extendedWaitUntil:
+    visible: "Filter: LEARNING"
+    timeout: 5000
 # 戻る（Study → DeckDetail）
 - back
-- assertVisible: "E2E Export Deck"
+- extendedWaitUntil:
+    visible: "E2E Export Deck"
+    timeout: 5000
 
 # 5. Export
 - tapOn: "Export"
-# Export 成功トースト or 画面を検証（実装により文言は変動）
-# 例: "Exported" / "Copied to clipboard" / "Share" シート
-- assertVisible: "Export"
+# ExportScreen タイトルは "Export Deck" (ExportScreen.kt:35)
+- extendedWaitUntil:
+    visible: "Export Deck"
+    timeout: 5000
 # 共有シートが出る場合は閉じる
 - back
+- extendedWaitUntil:
+    visible: "E2E Export Deck"
+    timeout: 5000
 
 # 6. クリーンアップ: Homeに戻り Deck を削除
 - back
-- assertVisible: "ScanCard"
-- assertVisible: "E2E Export Deck"
+- extendedWaitUntil:
+    visible: "ScanCard"
+    timeout: 5000
+- extendedWaitUntil:
+    visible: "E2E Export Deck"
+    timeout: 3000
 - tapOn:
     id: "Delete"
-- assertNotVisible: "E2E Export Deck"
+    # TODO(F-3 testTag): testTag("deckDelete_E2E Export Deck") 推奨
+- extendedWaitUntil:
+    notVisible: "E2E Export Deck"
+    timeout: 5000

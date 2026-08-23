@@ -30,6 +30,8 @@ fun ExportScreen(
     var selectedFormat by remember { mutableStateOf("TSV") }
 
     Scaffold(
+        // SKILL.md Step3: contentWindowInsets=safeDrawing で systemBars を処理、bottomは windowInsetsPadding で二重回避
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
                 title = { Text("Export Deck") },
@@ -41,7 +43,7 @@ fun ExportScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+        Column(modifier = Modifier.padding(padding).consumeWindowInsets(padding).padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 FilterChip(
                     selected = selectedFormat == "TSV",

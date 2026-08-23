@@ -14,6 +14,10 @@ import com.plath.scancard.ui.scan.ScanScreen
 import com.plath.scancard.ui.study.StudyScreen
 
 import androidx.navigation.navDeepLink
+
+object NavHolder {
+    var navController: NavHostController? = null
+}
 // TODO(IMP-02): NavDisplay + entryProvider に移行 (docs/navigation3-migration.md参照)
 // 移行手順 (JVM17 + AGP 9.3.1 で実行、gradleフル実行禁止のためコメントのみ):
 //   1. app/build.gradle.kts の TODO(IMP-02) をアンコメントし Navigation3 依存を Sync (navigation3-runtime/ui + kotlin-serialization plugin)
@@ -76,6 +80,7 @@ import androidx.navigation.navDeepLink
 
 @Composable
 fun ScanCardNavHost(navController: NavHostController) {
+    androidx.compose.runtime.LaunchedEffect(navController) { NavHolder.navController = navController }
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
             HomeScreen(

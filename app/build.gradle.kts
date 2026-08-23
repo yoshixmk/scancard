@@ -348,7 +348,7 @@ dependencies {
     //   4. Hilt 連携: ScanCardAppFunctionService.kt は @AndroidEntryPoint + @AppFunctionServiceEntryPoint を併用。Hilt 2.60.1 / KSP 依存は既存で充足。
     //   5. ビルド検証: JVM17 で ./gradlew :app:assembleDebug を実行。app/build/generated/ksp/debug/ 配下に schema XML が生成されることを確認
     //   6. AndroidManifest.xml に <service android:permission="android.permission.BIND_APP_FUNCTION_SERVICE" ...> が KSP により自動/手動登録されることを確認
-    // 注意: 有効化前は本コメントのみ。依存を外したまま app/src/main/java/com/example/scancard/service/ScanCardAppFunctionService.kt はコメント雛形でコンパイルエラーを回避。
+    // 注意: 有効化前は本コメントのみ。依存を外したまま app/src/main/java/com/plath/scancard/service/ScanCardAppFunctionService.kt はコメント雛形でコンパイルエラーを回避。
     // TODO(IMP-08): implementation("androidx.appfunctions:appfunctions:1.0.0-alpha01")
     // TODO(IMP-08): ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha01")
 }

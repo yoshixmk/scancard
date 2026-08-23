@@ -132,10 +132,11 @@ fun ScanScreen(
         },
         bottomBar = {
             if (scannedPages.isNotEmpty() && !isProcessing) {
+                // SKILL.md Step3: custom bottomBarは自動insets処理されないため safeDrawing bottom を明示付与
                 Surface(
                     tonalElevation = 4.dp,
                     shadowElevation = 8.dp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                 ) {
                     Button(
                         onClick = { 
@@ -192,7 +193,11 @@ fun ScanScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(120.dp),
-                    contentPadding = PaddingValues(8.dp),
+                    // SKILL.md Lists章: Scaffold safeDrawing の bottom を contentPadding に含め bottomBar 被りを回避
+                    contentPadding = PaddingValues(
+                        start = 8.dp, top = 8.dp, end = 8.dp,
+                        bottom = 8.dp + padding.calculateBottomPadding() + 80.dp
+                    ),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(scannedPages) { uri ->

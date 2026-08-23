@@ -33,7 +33,9 @@ fun HomeScreen(
     var newDeckTitle by remember { mutableStateOf("") }
 
     Scaffold(
-        // Edge-to-Edge: StatusBar scrim/List章 検証用 — TopAppBarは Material3が自動でWindowInsetsを処理
+        // Edge-to-Edge SKILL.md Step2-3: Scaffold contentWindowInsets=safeDrawingで systemBars を処理、
+        // Adaptive: NavigationSuiteScaffold は PaddingValuesを伝播しないため個別画面で insets 処理が必要
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(title = { Text("ScanCard") })
         },
@@ -84,9 +86,11 @@ fun HomeScreen(
                 // ```
                 // 有効化手順: 上部 import のコメントを外し、この LazyColumn ブロックを上記で置換。
                 // 既存 Preview (HomeScreenPreview) は @FormFactorPreviews で 4形態検証すること。
+                // SKILL.md Lists章: contentPaddingに innerPadding を渡し先頭/末尾をsystemBarsから離す。
+                // 親Columnが Modifier.padding(padding) で既に inset しているため top は二重にならないよう bottom のみを contentPadding に委譲し FAB分の余白を加算
                 LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    contentPadding = padding
+                    modifier = Modifier.weight(1f).consumeWindowInsets(padding),
+                    contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 80.dp)
                 ) {
                     items(decks) { deck ->
                         DeckItem(
@@ -211,7 +215,7 @@ fun HomeScreen(
 //      ```
 //   D. ビルド検証: `./gradlew :app:assembleDebug` SUCCESS、既存Theme (Theme.kt) 無変更のため他画面影響なし
 // ロールバック: 上記 styleパラメータ化を再コメントし元の DeckItem シグネチャに戻せば即時復帰。ComponentStylesはダミーobjectのまま残置可。
-// 参考: app/src/main/java/com/example/scancard/ui/theme/ComponentStyles.kt、docs/styles-migration.md、.kiro/skills/styles/SKILL.md Step 3-4
+// 参考: app/src/main/java/com/plath/scancard/ui/theme/ComponentStyles.kt、docs/styles-migration.md、.kiro/skills/styles/SKILL.md Step 3-4
 
 @Composable
 fun DeckItem(

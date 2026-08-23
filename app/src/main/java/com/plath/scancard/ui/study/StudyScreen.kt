@@ -42,6 +42,8 @@ fun StudyScreen(
     var languagePreference by remember { mutableStateOf(LanguagePreference.ENGLISH) }
 
     Scaffold(
+        // SKILL.md Step3: Scaffold PREFERRED — contentWindowInsets=safeDrawing を指定し innerPadding を伝播
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
                 title = { Text("Study") },
@@ -59,6 +61,7 @@ fun StudyScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
+                .consumeWindowInsets(padding)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

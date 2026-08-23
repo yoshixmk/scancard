@@ -35,6 +35,9 @@ class NotificationHelper(private val context: Context) {
     fun showCompletionNotification(deckId: Long) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("scancard://deck/$deckId")).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // 明示package付与: カスタムscheme scancard:// は package に依らないが、
+            // com.plath 移行後に他アプリが同schemeを横取りするのを防ぐ
+            `package` = context.packageName
         }
         
         val pendingIntent = PendingIntent.getActivity(
@@ -62,11 +65,22 @@ class NotificationHelper(private val context: Context) {
     }
 
     fun showErrorNotification(deckId: Long, message: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("scancard://deck/$deckId")).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            `package` = context.packageName
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            deckId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
             .setContentTitle("Extraction Failed")
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 

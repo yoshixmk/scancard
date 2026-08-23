@@ -151,9 +151,10 @@ fun DeckDetailScreen(
             // ```
             // 判定: 案Aは ListItem 高さ均一で見栄え安定、案Bは定義長が不均一な deck で高さ追従。
             // いずれも FormFactorPreviews (400/700/900/1200dp) で列数可変を目視検証すること。
+            // SKILL.md Lists章: 親Columnが padding(padding) で inset 済みのため contentPaddingは bottom のみに限定し FAB被りを回避
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = padding
+                modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
+                contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 80.dp)
             ) {
                 items(cards) { card ->
                     CardListItem(
@@ -232,7 +233,8 @@ fun CardEditDialog(
         onDismissRequest = onDismiss,
         title = { Text("Edit Card") },
         text = {
-            Column(modifier = Modifier.imePadding()) {
+            // SKILL.md IME章 PREFERRED: fitInside より親で safeDrawing 消費済みのため子の imePadding は TextField のみに限定（二重回避）
+            Column {
                 TextField(
                     value = term,
                     onValueChange = { term = it },
@@ -275,7 +277,7 @@ fun AddCardOptionsDialog(
             onDismissRequest = onDismiss,
             title = { Text("New Card") },
             text = {
-                Column(modifier = Modifier.imePadding()) {
+                Column {
                     TextField(
                         value = term,
                         onValueChange = { term = it },
