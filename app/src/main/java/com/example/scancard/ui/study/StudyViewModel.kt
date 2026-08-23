@@ -17,6 +17,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// IMP-07 7-4: DataStore<Preferences> filter_type 永続化手順（JVM8制約でコメントのみ、Req9.6対応）
+// 手順:
+//  1) app/build.gradle.kts に `implementation("androidx.datastore:datastore-preferences:1.1.1")` 追加
+//     （依存追加はgradle.properties/build.gradle.ktsのコメント参照）
+//  2) @Inject constructor に `val dataStore: DataStore<Preferences>` をHiltで注入（PreferencesDataStore delegate）
+//  3) init で復元: viewModelScope.launch { dataStore.data.map { it[stringPreferencesKey("filter_type")] }.collect { saved -> _filter.value = runCatching { FilterType.valueOf(saved ?: "ALL") }.getOrDefault(FilterType.ALL) } }
+//  4) setFilter() で保存: viewModelScope.launch { dataStore.edit { it[stringPreferencesKey("filter_type")] = filter.name } }
+// 現状はメモリ保持のみ。TODO(IMP-07): DataStore<Preferences> filter_type で永続化（下記 setFilter/initのTODO参照）。
 @HiltViewModel
 class StudyViewModel @Inject constructor(
     private val studyCardsUseCase: StudyCardsUseCase,
@@ -28,6 +36,8 @@ class StudyViewModel @Inject constructor(
     private val _currentIndex = MutableStateFlow(0)
     val currentIndex = _currentIndex.asStateFlow()
 
+    // TODO(IMP-07): DataStore<Preferences> filter_type で永続化
+    // init で dataStore.data.collect して _filter を復元すること（手順はクラス冒頭コメント参照）
     private val _filter = MutableStateFlow(FilterType.ALL)
     val filter = _filter.asStateFlow()
 
@@ -72,6 +82,9 @@ class StudyViewModel @Inject constructor(
     }
 
     fun setFilter(filter: FilterType) {
+        // TODO(IMP-07): DataStore<Preferences> filter_type で永続化
+        // viewModelScope.launch { dataStore.edit { it[stringPreferencesKey("filter_type")] = filter.name } }
+        // 手順詳細はクラス冒頭コメント参照。依存追加は app/build.gradle.kts コメント参照。
         _filter.value = filter
         _currentIndex.value = 0
     }

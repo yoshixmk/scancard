@@ -34,7 +34,11 @@ class ExtractCardsUseCase @Inject constructor(
 
         var currentPrompt = promptBuilder.buildPrompt(combinedText)
         var extractedPairs = emptyList<com.example.scancard.data.ml.ExtractedCard>()
-        
+
+        // IMP-07 7-6: design.md 483-543 の3回リトライが配線済み（TranslationPromptBuilder + PromptValidator）
+        // 1回目: buildPrompt(combinedText) -> extractCards -> all { promptValidator.isValid } チェック
+        // 2-3回目: failedTerm を用いて buildImprovedPrompt(combinedText, failedTerm) で再試行
+        // allValid && isNotEmpty で return@repeat（break相当）。無ければ // TODO: retry 3 with PromptValidator コメント。
         // Try up to 3 times if validation fails
         repeat(3) { attempt ->
             extractedPairs = cardExtractor.extractCards(currentPrompt)

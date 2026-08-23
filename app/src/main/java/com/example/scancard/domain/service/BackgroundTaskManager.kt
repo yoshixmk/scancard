@@ -40,4 +40,8 @@ class BackgroundTaskManager @Inject constructor(
         return workManager.getWorkInfosForUniqueWorkFlow("extraction_$deckId")
             .map { it.firstOrNull() }
     }
+
+    // IMP-07 7-4 補足（Background/WorkManager通知）: getWorkInfo() の Flow<WorkInfo?> を UI（ExtractionPreviewScreen:41-46）で collect し
+    // WorkInfo.State.SUCCEEDED/FAILED 時に NotificationHelper で通知を出す設計。POST_NOTIFICATIONS 権限取得は
+    // ExtractionPreviewScreen の permission launcher と整合させること。WorkManagerInitializerは AndroidManifest.xml:45-53 で除去済みか要検証。
 }
