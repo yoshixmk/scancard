@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+// TODO(IMP-05 5-7): @FormFactorPreviews 適用用 import（コメント留め — 有効化時にアンコメント）
+// import com.example.scancard.ui.preview.FormFactorPreviews
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +70,13 @@ fun ExportScreen(
             }
 
             Spacer(Modifier.height(16.dp))
+
+            // TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+            // ```
+            // @FormFactorPreviews
+            // @Composable
+            // fun ExportScreenPreview() { MaterialTheme { ExportScreen(onBack={}) } }
+            // ```
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 Button(onClick = {

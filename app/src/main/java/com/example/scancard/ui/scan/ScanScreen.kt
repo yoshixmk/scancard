@@ -85,7 +85,9 @@ fun ScanScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
+            // Edge-to-Edge: StatusBar scrim/List章 検証用 — TopAppBarは自動でsafeDrawingを処理
             TopAppBar(
                 title = { Text("Scan Document") },
                 navigationIcon = {
@@ -130,7 +132,12 @@ fun ScanScreen(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .consumeWindowInsets(padding)
+                .fillMaxSize()
+        ) {
             if (!hasCameraPermission) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -205,6 +212,15 @@ fun ScanScreen(
         }
     }
 }
+
+// TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+// ```
+// @FormFactorPreviews
+// @Composable
+// fun ScanScreenPreview() { MaterialTheme { ScanScreen(onBack={}, onComplete={}, deckId=0) } }
+// ```
+// 既に LazyVerticalGrid(GridCells.Adaptive(120.dp)) 適用済 — IMP-05 Step4の参考実装。
+// FormFactorPreviews で 120dp列の可変を Tablet/Desktop で検証すること。
 
 fun Context.findActivity(): Activity? {
     var context = this

@@ -18,6 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.scancard.data.local.entities.Card as FlashCard
+// TODO(IMP-05 5-5): StaggeredGrid / Grid Adaptive 案用 import（コメント留め — 有効化時にアンコメント）
+// import androidx.compose.foundation.lazy.grid.GridCells
+// import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+// import androidx.compose.foundation.lazy.grid.items
+// import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+// import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+// import com.example.scancard.ui.preview.FormFactorPreviews
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +44,8 @@ fun DeckDetailScreen(
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
+        // Edge-to-Edge: StatusBar scrim/List章 検証用 — TopAppBarは自動でsafeDrawingを処理
         topBar = {
             TopAppBar(
                 title = { 
@@ -44,7 +53,8 @@ fun DeckDetailScreen(
                         TextField(
                             value = editedTitle,
                             onValueChange = { editedTitle = it },
-                            singleLine = true
+                            singleLine = true,
+                            modifier = Modifier.imePadding()
                         )
                     } else {
                         Text(deck?.title ?: "Loading...") 
@@ -80,7 +90,12 @@ fun DeckDetailScreen(
             }
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -103,7 +118,43 @@ fun DeckDetailScreen(
                 style = MaterialTheme.typography.labelLarge
             )
 
-            LazyColumn {
+            // TODO(IMP-05 5-5): LazyColumn → Adaptive Grid/StaggeredGrid 置換案（コメント留め、段階的適用）
+            // 現状は IMP-03 contentPadding 維持のため LazyColumn のまま。カード数多時やTablet幅で
+            // 複列表示が必要な場合の候補を以下に記載 — ビルドを壊さないためコメント留め。
+            // 案A: LazyVerticalGrid（均等カード高さ向け）
+            // ```
+            // LazyVerticalGrid(
+            //     columns = GridCells.Adaptive(180.dp),
+            //     modifier = Modifier.fillMaxSize(),
+            //     contentPadding = padding,
+            //     verticalArrangement = Arrangement.spacedBy(8.dp),
+            //     horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // ) {
+            //     items(cards) { card ->
+            //         CardListItem(card = card, onClick = { cardToEdit = card }, onDelete = { viewModel.deleteCard(card) })
+            //     }
+            // }
+            // ```
+            // 案B: LazyVerticalStaggeredGrid（カード高さ不均一な場合）
+            // ```
+            // LazyVerticalStaggeredGrid(
+            //     columns = StaggeredGridCells.Adaptive(180.dp),
+            //     modifier = Modifier.fillMaxSize(),
+            //     contentPadding = padding,
+            //     verticalItemSpacing = 8.dp,
+            //     horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // ) {
+            //     items(cards) { card ->
+            //         CardListItem(card = card, onClick = { cardToEdit = card }, onDelete = { viewModel.deleteCard(card) })
+            //     }
+            // }
+            // ```
+            // 判定: 案Aは ListItem 高さ均一で見栄え安定、案Bは定義長が不均一な deck で高さ追従。
+            // いずれも FormFactorPreviews (400/700/900/1200dp) で列数可変を目視検証すること。
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = padding
+            ) {
                 items(cards) { card ->
                     CardListItem(
                         card = card,
@@ -141,6 +192,13 @@ fun DeckDetailScreen(
     }
 }
 
+// TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+// ```
+// @FormFactorPreviews
+// @Composable
+// fun DeckDetailScreenPreview() { MaterialTheme { DeckDetailScreen(onBack={}, onStudyClick={}, onExportClick={}, onAddByScanClick={}) } }
+// ```
+
 @Composable
 fun CardListItem(
     card: FlashCard,
@@ -174,10 +232,20 @@ fun CardEditDialog(
         onDismissRequest = onDismiss,
         title = { Text("Edit Card") },
         text = {
-            Column {
-                TextField(value = term, onValueChange = { term = it }, label = { Text("Term") })
+            Column(modifier = Modifier.imePadding()) {
+                TextField(
+                    value = term,
+                    onValueChange = { term = it },
+                    label = { Text("Term") },
+                    modifier = Modifier.imePadding()
+                )
                 Spacer(Modifier.height(8.dp))
-                TextField(value = definition, onValueChange = { definition = it }, label = { Text("Definition") })
+                TextField(
+                    value = definition,
+                    onValueChange = { definition = it },
+                    label = { Text("Definition") },
+                    modifier = Modifier.imePadding()
+                )
             }
         },
         confirmButton = {
@@ -207,10 +275,20 @@ fun AddCardOptionsDialog(
             onDismissRequest = onDismiss,
             title = { Text("New Card") },
             text = {
-                Column {
-                    TextField(value = term, onValueChange = { term = it }, label = { Text("Term") })
+                Column(modifier = Modifier.imePadding()) {
+                    TextField(
+                        value = term,
+                        onValueChange = { term = it },
+                        label = { Text("Term") },
+                        modifier = Modifier.imePadding()
+                    )
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = definition, onValueChange = { definition = it }, label = { Text("Definition") })
+                    TextField(
+                        value = definition,
+                        onValueChange = { definition = it },
+                        label = { Text("Definition") },
+                        modifier = Modifier.imePadding()
+                    )
                 }
             },
             confirmButton = {

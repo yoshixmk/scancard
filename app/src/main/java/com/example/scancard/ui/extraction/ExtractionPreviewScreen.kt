@@ -23,6 +23,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.scancard.domain.model.ModelConfig
 import com.example.scancard.domain.model.ModelState
 import androidx.work.WorkInfo
+// TODO(IMP-05 5-7): @FormFactorPreviews 適用用 import（コメント留め — 有効化時にアンコメント）
+// import com.example.scancard.ui.preview.FormFactorPreviews
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -174,6 +176,13 @@ fun ExtractionPreviewScreen(
         }
     }
 }
+
+// TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+// ```
+// @FormFactorPreviews
+// @Composable
+// fun ExtractionPreviewScreenPreview() { MaterialTheme { ExtractionPreviewScreen(onBack={}, onFinish={}, deckId=1) } }
+// ```
 
 @Composable
 fun ModelSelector(
