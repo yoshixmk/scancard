@@ -1,4 +1,4 @@
-appId: com.example.scancard
+appId: com.plath.scancard
 ---
 - launchApp
 - assertVisible: "ScanCard"

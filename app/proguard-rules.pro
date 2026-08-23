@@ -13,20 +13,20 @@
 # -keep public class * extends android.app.backup.BackupAgentHelper
 # -keep public class * extends android.preference.Preference
 # 推奨縮小案: 削除 (AAPT2委譲)。特定クラスが必要なら最小keep例:
-# -keep public class com.example.scancard.ScanCardApplication { *; }
+# -keep public class com.plath.scancard.ScanCardApplication { *; }
 # 検証: ./gradlew :app:analyzeReleaseR8Config で subsumed 判定を確認。
 
 # Room
 # TODO(R8): 要 analyzeReleaseR8Config で冗長判定 – Room 2.8.4 はAARがconsumer-rules提供 (REDUNDANT-RULES.md Case: Room Database)。手動keep不要。
 # -keep class * extends androidx.room.RoomDatabase
 # 推奨: 削除 (Room consumer-rulesに委譲)。AppDatabase_Impl はR8が自動保持。
-# -keep class com.example.scancard.data.local.entities.** { *; }
+# -keep class com.plath.scancard.data.local.entities.** { *; }
 # 推奨縮小案 (広域 {*; } → アノテーション or フィールド限定):
 # -keep @androidx.room.Entity class * { *; }
 # またはクラス単位:
-# -keep class com.example.scancard.data.local.entities.Card { <fields>; }
-# -keep class com.example.scancard.data.local.entities.Deck { <fields>; }
-# -keep class com.example.scancard.data.local.entities.Scan { <fields>; }
+# -keep class com.plath.scancard.data.local.entities.Card { <fields>; }
+# -keep class com.plath.scancard.data.local.entities.Deck { <fields>; }
+# -keep class com.plath.scancard.data.local.entities.Scan { <fields>; }
 # 現PRはコメントアウト＋縮小案併記 (将来 analyzeReleaseR8Config で Keeps件数を確認し確定)。
 
 # LiteRT LM (Gemma)
@@ -71,13 +71,13 @@
 
 # General Data Models (if any use reflection/JSON)
 # TODO(R8): 精緻化 – ExtractedCard は手動JSONパース (CardResponseParser) でリフレクション不要。domain/modelはGson不使用。
-# -keep class com.example.scancard.data.ml.ExtractedCard { *; }
+# -keep class com.plath.scancard.data.ml.ExtractedCard { *; }
 # 推奨縮小案:
-# -keep class com.example.scancard.data.ml.ExtractedCard { <fields>; }
-# -keep class com.example.scancard.domain.model.** { *; }
+# -keep class com.plath.scancard.data.ml.ExtractedCard { <fields>; }
+# -keep class com.plath.scancard.domain.model.** { *; }
 # 推奨縮小案:
-# -keep class com.example.scancard.domain.model.** { <fields>; }
-# または allowobfuscation で縮小: -keep,allowobfuscation class com.example.scancard.domain.model.** { <fields>; }
+# -keep class com.plath.scancard.domain.model.** { <fields>; }
+# または allowobfuscation で縮小: -keep,allowobfuscation class com.plath.scancard.domain.model.** { <fields>; }
 
 # Hilt/Dagger specific (often needed if default rules are missing)
 # TODO(R8): 要 analyzeReleaseR8Config で冗長判定 – Hilt 2.60.1 / androidx.hilt:hilt-work:1.4.0 はAARがconsumer-rules同梱。REDUNDANT-RULES.mdライブラリ冗長ケース。
@@ -86,6 +86,6 @@
 # 推奨縮小案: -keepattributes *Annotation*,Signature  # InnerClasses/EnclosingMethodが不要かは分析後に判定
 -keep public class * extends dagger.hilt.internal.GeneratedComponentManager
 -keep public class * extends dagger.hilt.internal.ComponentManager
--keep class com.example.scancard.**_HiltModules { *; }
+-keep class com.plath.scancard.**_HiltModules { *; }
 -keep class dagger.hilt.android.internal.lifecycle.HiltWrapper_DefaultViewModelFactories { *; }
 # 上記4ルールは analyzeReleaseR8Config で subsumed と判定されれば削除。現PRは注記のみ残し有効維持。

@@ -1,4 +1,4 @@
-appId: com.example.scancard
+appId: com.plath.scancard
 ---
 # IMP-06 6-5 Maestro 拡張フロー: Scan → Extract → DeckDetail → Study → Export
 # 既存 maestro/home_flow.yaml:1-18 の記法を踏襲（launchApp / assertVisible / tapOn / inputText / back）

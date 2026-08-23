@@ -1,4 +1,4 @@
-appId: com.example.scancard
+appId: com.plath.scancard
 ---
 # IMP-06 6-5 Maestro 拡張フロー: Study Filter 切替
 # 既存 maestro/home_flow.yaml:1-18 の記法を踏襲。Deck作成→カード追加→Studyでフィルタを全パターン切替える。

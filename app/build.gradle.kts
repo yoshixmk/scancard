@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.scancard"
+    namespace = "com.plath.scancard"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.example.scancard"
+        applicationId = "com.plath.scancard"
         minSdk = 26
         // TODO(IMP-08): targetSdk = 36 昇格 (AppFunctions要件) — 実数値は JVM8 ビルド制約のため 35 のまま。昇格時は下記手順で 36 に変更する。
         // 要件: AppFunctions は targetSdk 36+ かつ compileSdk 37+ (Android 16) が前提。現行 compileSdk=37 は充足、targetSdk のみ未達。
@@ -36,7 +36,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "com.example.scancard.HiltTestRunner"
+        testInstrumentationRunner = "com.plath.scancard.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
