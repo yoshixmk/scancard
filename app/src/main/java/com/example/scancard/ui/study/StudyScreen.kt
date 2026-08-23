@@ -24,6 +24,10 @@ import com.example.scancard.data.local.entities.Card
 
 import com.example.scancard.domain.model.FilterType
 import com.example.scancard.domain.model.LanguagePreference
+// TODO(IMP-05 5-6/5-7): Adaptive FlashCard 用 import（コメント留め — 有効化時にアンコメント）
+// import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+// import androidx.window.core.layout.WindowSizeClass
+// import com.example.scancard.ui.preview.FormFactorPreviews
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,6 +170,19 @@ fun Flashcard(
         label = "cardRotation"
     )
 
+    // TODO(IMP-05 5-6): FlashCard aspectRatio を currentWindowAdaptiveInfo().windowSizeClass で可変にする
+    // 現状は固定 0.7f（Phone縦向け）。adaptive 依存有効化後に下記へ置換（ビルドを壊さないためコメント留め）:
+    // ```
+    // val adaptiveInfo = currentWindowAdaptiveInfo()
+    // val aspectRatio = when {
+    //     adaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 1.6f // expanded: Tablet/Desktop 横長
+    //     adaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)   -> 1.2f // medium: Foldable unfolded / large phone
+    //     else -> 0.7f // compact: Phone
+    // }
+    // ```
+    // 適用: Modifier.aspectRatio(aspectRatio) に置換。MediaQuery代替として WindowSizeClass を使用
+    // （adaptive/SKILL.md Step5 MediaQuery 章 — compose.material3.adaptive は MediaQuery 相当）
+    // 検証: @FormFactorPreviews (400/700/900/1200dp) でカード縦横比が崩れないことを目視確認
     Card(
         modifier = Modifier
             .fillMaxWidth(0.8f)
@@ -219,6 +236,16 @@ fun Flashcard(
         }
     }
 }
+
+// TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+// ```
+// @FormFactorPreviews
+// @Composable
+// fun StudyScreenPreview() { MaterialTheme { StudyScreen(onBack={}) } }
+// @FormFactorPreviews
+// @Composable
+// fun FlashcardPreview() { MaterialTheme { Flashcard(card=Card(...), languagePreference=ENGLISH, onToggleLanguage={}) } }
+// ```
 
 @Composable
 fun FilterMenu(currentFilter: FilterType, onFilterSelected: (FilterType) -> Unit) {
