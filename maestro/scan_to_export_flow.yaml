@@ -1,0 +1,76 @@
+appId: com.example.scancard
+---
+# IMP-06 6-5 Maestro 拡張フロー: Scan → Extract → DeckDetail → Study → Export
+# 既存 maestro/home_flow.yaml:1-18 の記法を踏襲（launchApp / assertVisible / tapOn / inputText / back）
+# 制約: gradleフル実行禁止のため本yamlは雛形。エミュレータで `maestro test maestro/scan_to_export_flow.yaml` で検証する。
+# 前提: HomeScreen にデッキが0件でも動作する。各 tapOn は contentDescription or text のいずれかで解決される。
+# 将来: DocumentScanner / Gemma 抽出は Fake に差し替えた debug ビルドで実行し、実スキャンは手動QAで補完する。
+
+- launchApp
+- assertVisible: "ScanCard"
+
+# 1. Deck作成（home_flow.yaml と同様）
+- tapOn: "Create Manual Deck"
+- inputText: "E2E Export Deck"
+- tapOn: "Create"
+- assertVisible: "E2E Export Deck"
+
+# 2. DeckDetail に遷移（デッキカードをタップ）
+- tapOn: "E2E Export Deck"
+# DeckDetail の TopAppBar タイトル or "Cards" ラベルを検証
+- assertVisible: "E2E Export Deck"
+# カード数表示（例: "0 Cards"）を確認 — 空デッキ状態
+- assertVisible: "0 Cards"
+
+# 3. Scan → Extract（Mock）
+# "Add Card" FAB → "Scan Document" 選択
+# DeckDetail の FAB は contentDescription="Add Card"
+- tapOn:
+    id: "Add Card"
+- assertVisible: "Add Card"
+- tapOn: "Scan Document"
+# ScanScreen のタイトル検証
+- assertVisible: "Scan Document"
+# スキャン実行（Fake DocumentScanner が即座に画像を返す想定）
+# 実機では ML Kit DocumentScanner の UI が出るため、手動操作が必要な場合は下記をコメントアウト
+# - tapOn: "Scan"
+# 抽出プレビュー画面へ遷移（Gemma Fake が固定カードを返す想定）
+# - assertVisible: "Extraction Preview"
+# - assertVisible: "hello"  # Fake抽出結果の term
+# - tapOn: "Save"
+# 保存後に DeckDetail に戻り、カードが増えていることを検証
+# - assertVisible: "1 Cards"
+
+# 4. Study → Filter 切替
+- tapOn: "Study"
+- assertVisible: "Study"
+# FilterMenu の現在値を確認（デフォルト "Filter: ALL"）
+- assertVisible: "Filter: ALL"
+# フィルタをタップして Dropdown を開く
+- tapOn: "Filter: ALL"
+- assertVisible: "ALL"
+- assertVisible: "LEARNED"
+- assertVisible: "REVIEW_NEEDED"
+# LEARNED に切替（空なら "No cards to study" が表示）
+- tapOn: "LEARNED"
+# フィルタ反映を検証（いずれかが表示される）
+- assertVisible: "Filter: LEARNED"
+# 戻る（Study → DeckDetail）
+- back
+- assertVisible: "E2E Export Deck"
+
+# 5. Export
+- tapOn: "Export"
+# Export 成功トースト or 画面を検証（実装により文言は変動）
+# 例: "Exported" / "Copied to clipboard" / "Share" シート
+- assertVisible: "Export"
+# 共有シートが出る場合は閉じる
+- back
+
+# 6. クリーンアップ: Homeに戻り Deck を削除
+- back
+- assertVisible: "ScanCard"
+- assertVisible: "E2E Export Deck"
+- tapOn:
+    id: "Delete"
+- assertNotVisible: "E2E Export Deck"

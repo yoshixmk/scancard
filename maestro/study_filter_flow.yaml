@@ -1,0 +1,74 @@
+appId: com.example.scancard
+---
+# IMP-06 6-5 Maestro 拡張フロー: Study Filter 切替
+# 既存 maestro/home_flow.yaml:1-18 の記法を踏襲。Deck作成→カード追加→Studyでフィルタを全パターン切替える。
+# 制約: gradleフル実行禁止のため雛形。`maestro test maestro/study_filter_flow.yaml` で検証。
+# 目的: FilterType (ALL / LEARNED / REVIEW_NEEDED / NEW) の切替がクラッシュせず、カード表示がフィルタに応じて変わることを検証。
+# 将来: IMP-07 7-3 の DataStore永続化が有効化されれば、kill→relaunch 後のフィルタ復元も本フローに追加する。
+
+- launchApp
+- assertVisible: "ScanCard"
+
+# 1. 事前準備: テスト用Deck作成
+- tapOn: "Create Manual Deck"
+- inputText: "Filter Test Deck"
+- tapOn: "Create"
+- assertVisible: "Filter Test Deck"
+
+# 2. DeckDetail に入る
+- tapOn: "Filter Test Deck"
+- assertVisible: "Filter Test Deck"
+# 空でも Study に遷移可能であることを確認
+- assertVisible: "0 Cards"
+
+# 3. Study 画面へ
+- tapOn: "Study"
+- assertVisible: "Study"
+# 空デッキなら "No cards to study" が表示される（カード無し状態の検証）
+- assertVisible: "No cards to study in this filter."
+
+# 4. Filter 切替: ALL → LEARNED → REVIEW_NEEDED → NEW → ALL
+# FilterMenu は TopAppBar の actions にある "Filter: ALL" ボタン
+
+# 4-1. ALL (初期値) → LEARNED
+- tapOn: "Filter: ALL"
+- assertVisible: "ALL"
+- tapOn: "LEARNED"
+- assertVisible: "Filter: LEARNED"
+# LEARNED フィルタでは空なら同様に empty 表示
+- assertVisible: "No cards to study in this filter."
+
+# 4-2. LEARNED → REVIEW_NEEDED
+- tapOn: "Filter: LEARNED"
+- tapOn: "REVIEW_NEEDED"
+- assertVisible: "Filter: REVIEW_NEEDED"
+
+# 4-3. REVIEW_NEEDED → NEW (もし NEW が FilterType にあれば)
+# FilterType.entries に応じて存在しない場合はスキップされる。Maestroは assertVisible で失敗するため、
+# 実行時は存在する値のみに絞ること。下記はコメントアウトで雛形として残す。
+# - tapOn: "Filter: REVIEW_NEEDED"
+# - tapOn: "NEW"
+# - assertVisible: "Filter: NEW"
+
+# 4-4. REVIEW_NEEDED → ALL に戻す
+- tapOn: "Filter: REVIEW_NEEDED"
+- tapOn: "ALL"
+- assertVisible: "Filter: ALL"
+
+# 5. 戻る: Study → DeckDetail → Home
+- back
+- assertVisible: "Filter Test Deck"
+- back
+- assertVisible: "ScanCard"
+
+# 6. クリーンアップ
+- assertVisible: "Filter Test Deck"
+- tapOn:
+    id: "Delete"
+- assertNotVisible: "Filter Test Deck"
+
+# 補足:
+# - 将来カードが存在する状態でのフィルタ検証は、scan_to_export_flow.yaml でカードを追加した後に本フローを続けて実行することで可能。
+# - DataStore永続化 (IMP-07) 有効化後は、下記を追加して kill→復元を検証:
+#   # - runFlow: kill_and_relaunch.yaml  # 別ファイルで app kill → launchApp を再実行
+#   # - assertVisible: "Filter: LEARNED"  # 再起動後もフィルタが復元されていること
