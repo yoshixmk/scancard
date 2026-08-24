@@ -113,10 +113,15 @@ fun HomeScreen(
             onDismissRequest = { showAddDialog = false },
             title = { Text("New Deck") },
             text = {
+                val isError = newDeckTitle.length > 100
                 TextField(
                     value = newDeckTitle,
                     onValueChange = { newDeckTitle = it },
                     label = { Text("Title") },
+                    isError = isError,
+                    supportingText = {
+                        if (isError) Text("Title must be 1-100 characters")
+                    },
                     modifier = Modifier.imePadding().testTag("newDeckTitleInput")
                 )
             },
@@ -127,6 +132,7 @@ fun HomeScreen(
                         newDeckTitle = ""
                         showAddDialog = false
                     },
+                    enabled = newDeckTitle.isNotBlank() && newDeckTitle.length <= 100,
                     modifier = Modifier.testTag("newDeckCreateBtn")
                 ) { Text("Create") }
             },
