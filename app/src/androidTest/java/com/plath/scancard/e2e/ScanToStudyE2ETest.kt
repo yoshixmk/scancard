@@ -69,7 +69,7 @@ package com.plath.scancard.e2e
 // //
 // //     // -------------------------------------------------------------------------
 // //     // Scenario 1: Happy path — Deck作成→スキャン→抽出→Study→Export
-// //     // Maestroの scan_to_export_flow.yaml と対応。UIAutomatorで同フローを検証。
+// //     // scan_to_export_flow.yaml と対応。UIAutomatorで同フローを検証。
 // //     // -------------------------------------------------------------------------
 // //     // @Test
 // //     // fun scanToStudyE2E_happyPath() {

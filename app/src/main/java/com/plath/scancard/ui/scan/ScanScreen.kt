@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -120,10 +121,13 @@ fun ScanScreen(
                 },
                 actions = {
                     if (scannedPages.isNotEmpty() && !isProcessing) {
-                        TextButton(onClick = { 
-                            android.util.Log.d("ScanScreen", "Top Bar Done clicked")
-                            viewModel.processScans(deckId) { newId -> onComplete(newId) }
-                        }) {
+                        TextButton(
+                            onClick = {
+                                android.util.Log.d("ScanScreen", "Top Bar Done clicked")
+                                viewModel.processScans(deckId) { newId -> onComplete(newId) }
+                            },
+                            modifier = Modifier.testTag("scanDoneBtn")
+                        ) {
                             Text("Done", fontWeight = FontWeight.Bold)
                         }
                     }
@@ -139,14 +143,15 @@ fun ScanScreen(
                     modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                 ) {
                     Button(
-                        onClick = { 
+                        onClick = {
                             android.util.Log.d("ScanScreen", "Bottom Finish button clicked")
-                            viewModel.processScans(deckId) { newId -> onComplete(newId) } 
+                            viewModel.processScans(deckId) { newId -> onComplete(newId) }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
                             .height(56.dp)
+                            .testTag("scanExtractBtn")
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
@@ -183,7 +188,10 @@ fun ScanScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         // Keep manual button as fallback after auto-launch cancel/failure
-                        Button(onClick = { launchScanner() }) {
+                        Button(
+                            onClick = { launchScanner() },
+                            modifier = Modifier.testTag("scanStartBtn")
+                        ) {
                             Text("Start Scanning")
                         }
                         Spacer(Modifier.height(8.dp))
@@ -219,7 +227,7 @@ fun ScanScreen(
                     item {
                         OutlinedButton(
                             onClick = { launchScanner() },
-                            modifier = Modifier.padding(4.dp).aspectRatio(0.7f)
+                            modifier = Modifier.padding(4.dp).aspectRatio(0.7f).testTag("scanAddMoreBtn")
                         ) {
                             Text("Add More")
                         }

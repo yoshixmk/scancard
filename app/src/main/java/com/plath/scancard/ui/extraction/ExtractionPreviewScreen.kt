@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -187,7 +188,7 @@ fun ExtractionPreviewScreen(
                             Text("No extraction running. Tap below to start.", style = MaterialTheme.typography.labelSmall)
                         }
                         Button(
-                            onClick = { 
+                            onClick = {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                 } else {
@@ -196,6 +197,7 @@ fun ExtractionPreviewScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .testTag("extractionStartBtn")
                                 // edge-to-edge: ボタンがnavigation barにめり込まないよう追加Bottom paddingはScaffoldのwindowInsetsで保証済み、ここではnavigationBarsPaddingを重複しない
                         ) {
                             Icon(Icons.Default.Check, contentDescription = null)

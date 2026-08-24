@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -66,7 +67,10 @@ fun StudyScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (cards.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize().testTag("studyEmpty"),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text("No cards to study in this filter.")
                 }
             } else {
@@ -254,7 +258,10 @@ fun Flashcard(
 fun FilterMenu(currentFilter: FilterType, onFilterSelected: (FilterType) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { expanded = true }) {
+        TextButton(
+            onClick = { expanded = true },
+            modifier = Modifier.testTag("studyFilterBtn")
+        ) {
             Text("Filter: ${currentFilter.name}")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -264,7 +271,8 @@ fun FilterMenu(currentFilter: FilterType, onFilterSelected: (FilterType) -> Unit
                     onClick = {
                         onFilterSelected(filter)
                         expanded = false
-                    }
+                    },
+                    modifier = Modifier.testTag("filterItem_${filter.name}")
                 )
             }
         }

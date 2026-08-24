@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.plath.scancard.data.local.entities.Deck
@@ -40,7 +41,10 @@ fun HomeScreen(
             TopAppBar(title = { Text("ScanCard") })
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onScanClick) {
+            FloatingActionButton(
+                onClick = onScanClick,
+                modifier = Modifier.testTag("homeFabScan")
+            ) {
                 Icon(Icons.Default.CameraAlt, contentDescription = "Scan Document")
             }
         }
@@ -53,7 +57,7 @@ fun HomeScreen(
         ) {
             Button(
                 onClick = { showAddDialog = true },
-                modifier = Modifier.padding(16.dp).fillMaxWidth()
+                modifier = Modifier.padding(16.dp).fillMaxWidth().testTag("homeCreateDeckBtn")
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
@@ -105,7 +109,7 @@ fun HomeScreen(
     }
 
     if (showAddDialog) {
-        AlertDialog(
+            AlertDialog(
             onDismissRequest = { showAddDialog = false },
             title = { Text("New Deck") },
             text = {
@@ -113,7 +117,7 @@ fun HomeScreen(
                     value = newDeckTitle,
                     onValueChange = { newDeckTitle = it },
                     label = { Text("Title") },
-                    modifier = Modifier.imePadding()
+                    modifier = Modifier.imePadding().testTag("newDeckTitleInput")
                 )
             },
             confirmButton = {
@@ -122,7 +126,8 @@ fun HomeScreen(
                         viewModel.createDeck(newDeckTitle)
                         newDeckTitle = ""
                         showAddDialog = false
-                    }
+                    },
+                    modifier = Modifier.testTag("newDeckCreateBtn")
                 ) { Text("Create") }
             },
             dismissButton = {
@@ -227,6 +232,7 @@ fun DeckItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .testTag("deckCard_${deck.title}")
             .clickable(onClick = onClick)
     ) {
         Row(
@@ -240,7 +246,10 @@ fun DeckItem(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            IconButton(onClick = onDelete) {
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.testTag("deckDeleteBtn_${deck.title}")
+            ) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete")
             }
         }

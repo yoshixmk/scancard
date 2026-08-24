@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 // TODO(IMP-05 5-7): @FormFactorPreviews 適用用 import（コメント留め — 有効化時にアンコメント）
@@ -47,27 +48,33 @@ fun ExportScreen(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 FilterChip(
                     selected = selectedFormat == "TSV",
-                    onClick = { 
+                    onClick = {
                         selectedFormat = "TSV"
                         viewModel.generatePreview("TSV")
                     },
-                    label = { Text("TSV") }
+                    label = { Text("TSV") },
+                    modifier = Modifier.testTag("exportChipTSV")
                 )
                 FilterChip(
                     selected = selectedFormat == "CSV",
-                    onClick = { 
+                    onClick = {
                         selectedFormat = "CSV"
                         viewModel.generatePreview("CSV")
                     },
-                    label = { Text("CSV") }
+                    label = { Text("CSV") },
+                    modifier = Modifier.testTag("exportChipCSV")
                 )
             }
 
             Spacer(Modifier.height(16.dp))
 
-            Card(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Card(modifier = Modifier.weight(1f).fillMaxWidth().testTag("exportPreviewCard")) {
                 Box(modifier = Modifier.padding(8.dp).verticalScroll(rememberScrollState())) {
-                    Text(text = exportText, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = exportText,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.testTag("exportPreviewText")
+                    )
                 }
             }
 
@@ -81,24 +88,30 @@ fun ExportScreen(
             // ```
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                Button(onClick = {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = ClipData.newPlainText("ScanCard Export", exportText)
-                    clipboard.setPrimaryClip(clip)
-                }) {
+                Button(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("ScanCard Export", exportText)
+                        clipboard.setPrimaryClip(clip)
+                    },
+                    modifier = Modifier.testTag("exportCopyBtn")
+                ) {
                     Icon(Icons.Default.ContentCopy, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Copy")
                 }
-                
-                Button(onClick = {
-                    val intent = android.content.Intent().apply {
-                        action = android.content.Intent.ACTION_SEND
-                        putExtra(android.content.Intent.EXTRA_TEXT, exportText)
-                        type = "text/plain"
-                    }
-                    context.startActivity(android.content.Intent.createChooser(intent, "Share Export"))
-                }) {
+
+                Button(
+                    onClick = {
+                        val intent = android.content.Intent().apply {
+                            action = android.content.Intent.ACTION_SEND
+                            putExtra(android.content.Intent.EXTRA_TEXT, exportText)
+                            type = "text/plain"
+                        }
+                        context.startActivity(android.content.Intent.createChooser(intent, "Share Export"))
+                    },
+                    modifier = Modifier.testTag("exportShareBtn")
+                ) {
                     Icon(Icons.Default.Share, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Share")

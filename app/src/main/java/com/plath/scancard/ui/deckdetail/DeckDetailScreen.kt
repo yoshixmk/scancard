@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.plath.scancard.data.local.entities.Card as FlashCard
@@ -85,7 +86,10 @@ fun DeckDetailScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                modifier = Modifier.testTag("deckDetailFabAddCard")
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Card")
             }
         }
@@ -100,12 +104,18 @@ fun DeckDetailScreen(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button(onClick = { deck?.let { onStudyClick(it.id) } }) {
+                Button(
+                    onClick = { deck?.let { onStudyClick(it.id) } },
+                    modifier = Modifier.testTag("deckDetailStudyBtn")
+                ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Study")
                 }
-                OutlinedButton(onClick = { deck?.let { onExportClick(it.id) } }) {
+                OutlinedButton(
+                    onClick = { deck?.let { onExportClick(it.id) } },
+                    modifier = Modifier.testTag("deckDetailExportBtn")
+                ) {
                     Icon(Icons.Default.Share, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Export")
@@ -114,7 +124,7 @@ fun DeckDetailScreen(
 
             Text(
                 text = "${cards.size} Cards (ID: ${deck?.id ?: "N/A"})",
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp).testTag("deckDetailCardCount"),
                 style = MaterialTheme.typography.labelLarge
             )
 
@@ -207,12 +217,15 @@ fun CardListItem(
     onDelete: () -> Unit
 ) {
     ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        headlineContent = { Text(card.term) },
+        modifier = Modifier.testTag("cardItem_${card.id}").clickable(onClick = onClick),
+        headlineContent = { Text(card.term, modifier = Modifier.testTag("cardTerm_${card.id}")) },
         supportingContent = { Text(card.definition) },
         trailingContent = {
             Row {
-                IconButton(onClick = onDelete) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.testTag("cardDelete_${card.id}")
+                ) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete")
                 }
             }
@@ -308,10 +321,16 @@ fun AddCardOptionsDialog(
             title = { Text("Add Card") },
             text = { Text("How would you like to add a new card?") },
             confirmButton = {
-                TextButton(onClick = onScanAdd) { Text("Scan Document") }
+                TextButton(
+                    onClick = onScanAdd,
+                    modifier = Modifier.testTag("addCardScanOption")
+                ) { Text("Scan Document") }
             },
             dismissButton = {
-                TextButton(onClick = { showManualAdd = true }) { Text("Manual Entry") }
+                TextButton(
+                    onClick = { showManualAdd = true },
+                    modifier = Modifier.testTag("addCardManualOption")
+                ) { Text("Manual Entry") }
             }
         )
     }
