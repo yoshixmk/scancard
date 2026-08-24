@@ -48,5 +48,10 @@ proguard-project.txt
 .cline/
 .anthropic/
 
+# Node / Appium
+node_modules/
+appium/node_modules/
+appium/wdio-logs/
+
 # Project specific ignores
 improvement.md
