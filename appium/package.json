@@ -9,8 +9,10 @@
     "test:home": "wdio run wdio.conf.js --spec specs/home.e2e.js",
     "test:scan-export": "wdio run wdio.conf.js --spec specs/scanToExport.e2e.js",
     "test:filter": "wdio run wdio.conf.js --spec specs/studyFilter.e2e.js",
+    "test:validation": "wdio run wdio.conf.js --spec specs/deckValidation.e2e.js",
     "appium": "appium",
-    "lint": "node --check wdio.conf.js && node --check helpers/caps.js && echo \"lint ok\""
+    "lint": "node --check wdio.conf.js && node --check helpers/caps.js && echo \"lint ok\"",
+    "postinstall": "node scripts/patch-p-limit.js"
   },
   "devDependencies": {
     "@wdio/appium-service": "^9.18.0",
@@ -20,5 +22,11 @@
     "@wdio/spec-reporter": "^9.18.0",
     "appium": "^3.6.0",
     "appium-uiautomator2-driver": "^8.5.0"
+  },
+  "overrides": {
+    "p-limit": "3.1.0"
+  },
+  "dependencies": {
+    "p-limit": "3.1.0"
   }
 }
