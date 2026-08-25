@@ -249,7 +249,13 @@ enum class LanguagePreference {
 - **ExportManager**: Generates TSV format (Term[TAB]Definition) for clipboard export without Quizlet labels.
 
 ### 4. Background Processing
-- **BackgroundTaskManager**: Manages long-running card extraction tasks using WorkManager, handles progress reporting, notifications, and task resumption on app restart.
+- **BackgroundTaskManager**: Manages long-running card extraction tasks using WorkManager with foreground service (`SystemForegroundService` declared `foregroundServiceType="shortService"` for targetSDK 35, `ForegroundInfo` id = deckId, `setForeground()` at start of `doWork()`), handles progress reporting, notifications, and task resumption on app restart. Notification channel `extraction_channel` is used for both foreground progress and completion. `CardExtractionWorker.getForegroundInfo()` returns `ForegroundInfo(deckId, notification, SHORT_SERVICE)` on `UPSIDE_DOWN_CAKE+`, plain `ForegroundInfo(deckId, notification)` otherwise; manifest declares `<service android:name="androidx.work.impl.foreground.SystemForegroundService" android:foregroundServiceType="shortService" tools:node="merge"/>` to satisfy `InvalidForegroundServiceTypeException` fixes (both `0x800 not subset 0x0` and `type none prohibited`).
+
+### 5. Test-Only E2E Helpers (DEBUG only, not in release)
+- **ScanScreen `scanDummyInsertBtn`**: `OutlinedButton` with `Modifier.testTag("scanDummyInsertBtn")`, visible only when `BuildConfig.DEBUG` is true (both empty and grid states, `app/src/main/java/com/plath/scancard/ui/scan/ScanScreen.kt:199,245`). Calls `ScanViewModel.insertDummyScanForE2E()` -> `ScanDocumentUseCase.insertDummyScan()` which inserts a dummy `Scan` with `rawText` Apple/Banana/Cat, bypassing ML Kit.
+- **ExtractionPreviewScreen `createDummyModelBtn`**: Visible only in `Idle` state and `BuildConfig.DEBUG`, writes `files/gemma-4-E2B-it.litertlm` (<5MB dummy) and refreshes `ModelManager` to `Ready`.
+- **GemmaCardExtractor dummy mode**: When `BuildConfig.DEBUG` and `modelFile.length() < 5MB`, `isDummyMode=true`, `extractCards()` delays 1s and returns 2 `ExtractedCard` without initializing LiteRT Engine, enabling `CardExtractionWorker` to complete on emulators without 2.6GB storage.
+- **Permissions**: `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SHORT_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, `POST_NOTIFICATIONS`; pre-granted via `pm grant` in Appium `helpers/utils.js` for `emulator-5554` (API 36).
 
 ---
 

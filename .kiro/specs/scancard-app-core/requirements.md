@@ -151,3 +151,8 @@ ScanCard is an Android application that enables users to photograph book pages u
 3. THE BackgroundTaskManager SHALL allow the user to navigate away from the extraction screen without cancelling the operation.
 4. WHEN extraction completes in the background, THE BackgroundTaskManager SHALL notify the user via a system notification.
 5. IF the app is terminated while extraction is in progress, THE BackgroundTaskManager SHALL resume the task when the app restarts.
+6. THE BackgroundTaskManager SHALL run extraction as a WorkManager foreground service with `foregroundServiceType="shortService"` declared on `SystemForegroundService` (targetSDK 35) and a non-null `ForegroundInfo` to prevent SystemJobService `onStopJob` cancellation after ~10s.
+7. ANY E2E test helper that bypasses camera/LLM (e.g., "Insert Dummy Scan (E2E)", "Create Dummy Model (E2E)") SHALL be gated by `BuildConfig.DEBUG` and SHALL NOT be visible or reachable in release builds. The helpers SHALL insert a dummy scan and a <5MB dummy model file to exercise the foreground pipeline without requiring 2.6GB assets or GMS scanner.
+
+#### Notes
+- The dummy scan/model path is test-only: `ScanDocumentUseCase.insertDummyScan()` and `ExtractionPreviewScreen` create `files/gemma-4-E2B-it.litertlm` with <5MB, triggering `GemmaCardExtractor` dummy mode (1s delay, 2 cards Apple/Banana) only when `BuildConfig.DEBUG` and file size <5MB.

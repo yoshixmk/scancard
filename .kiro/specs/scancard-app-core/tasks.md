@@ -105,11 +105,14 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "14.1", "name": "Create ITranslationPromptBuilder interface and implementation", "status": "pending", "dependencies": [], "optional": false },
     { "id": "14.2", "name": "Create IPromptValidator interface and implementation", "status": "pending", "dependencies": [], "optional": false },
     { "id": "14.3", "name": "Integrate PromptValidator into ExtractCardsUseCase", "status": "pending", "dependencies": ["14.1", "14.2"], "optional": false },
-    { "id": "15.1", "name": "Add WorkManager dependency to build.gradle.kts", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "15.2", "name": "Create IBackgroundTaskManager interface and implementation", "status": "pending", "dependencies": ["15.1"], "optional": false },
-    { "id": "15.3", "name": "Create CardExtractionWorker", "status": "pending", "dependencies": ["15.2"], "optional": false },
-    { "id": "15.4", "name": "Add system notification for task completion", "status": "pending", "dependencies": ["15.3"], "optional": false },
-    { "id": "15.5", "name": "Update Extraction Screen with background processing UI", "status": "pending", "dependencies": ["15.2", "15.3", "15.4"], "optional": false }
+    { "id": "15.1", "name": "Add WorkManager dependency to build.gradle.kts", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "15.2", "name": "Create IBackgroundTaskManager interface and implementation", "status": "completed", "dependencies": ["15.1"], "optional": false },
+    { "id": "15.3", "name": "Create CardExtractionWorker", "status": "completed", "dependencies": ["15.2"], "optional": false },
+    { "id": "15.4", "name": "Add system notification for task completion", "status": "completed", "dependencies": ["15.3"], "optional": false },
+    { "id": "15.5", "name": "Update Extraction Screen with background processing UI", "status": "completed", "dependencies": ["15.2", "15.3", "15.4"], "optional": false },
+    { "id": "15.6", "name": "Fix CardExtractionWorker foreground service for targetSDK 35 (SystemForegroundService shortService manifest merge, ForegroundInfo SHORT_SERVICE)", "status": "completed", "dependencies": ["15.3", "15.4"], "optional": false },
+    { "id": "15.7", "name": "Add DEBUG-only E2E helpers (ScanScreen scanDummyInsertBtn, ExtractionPreview createDummyModelBtn, Gemma dummy mode <5MB)", "status": "completed", "dependencies": ["15.2"], "optional": false },
+    { "id": "15.8", "name": "Add Appium E2E backgroundExtraction.e2e.js with GMS Discard handling and POST_NOTIFICATIONS grant", "status": "completed", "dependencies": ["15.6", "15.7"], "optional": false }
   ],
   "waves": [
     {
@@ -126,7 +129,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     },
     {
       "name": "Background Processing",
-      "tasks": ["15.1", "15.2", "15.3", "15.4", "15.5"]
+      "tasks": ["15.1", "15.2", "15.3", "15.4", "15.5", "15.6", "15.7", "15.8"]
     },
     {
       "name": "UI Integration",
@@ -245,9 +248,12 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 ### 15. Background Processing for Card Extraction (Requirement 12)
 - [x] 15.1 Add WorkManager dependency to build.gradle.kts
 - [x] 15.2 Create BackgroundTaskManager
-- [x] 15.3 Create CardExtractionWorker
-- [x] 15.4 Add system notification for task completion
+- [x] 15.3 Create CardExtractionWorker (`getForegroundInfo()` + `setForeground()` at `doWork()` start, `ForegroundInfo` deckId)
+- [x] 15.4 Add system notification for task completion (`NotificationHelper` foreground + completion, channel `extraction_channel`)
 - [x] 15.5 Update Extraction Screen with background processing UI
+- [x] 15.6 Fix foreground service for targetSDK 35: `AndroidManifest.xml` merge `<service SystemForegroundService foregroundServiceType="shortService">`, `FOREGROUND_SERVICE_SHORT_SERVICE` permission, `CardExtractionWorker` `SHORT_SERVICE` on `UPSIDE_DOWN_CAKE+` (verified on emulator-5554 API 36, `backgroundExtraction.e2e.js` 43.8s PASS)
+- [x] 15.7 DEBUG-only E2E helpers (NOT in release): `ScanScreen.kt:199,245` `scanDummyInsertBtn` + `ScanViewModel.insertDummyScanForE2E()` + `ScanDocumentUseCase.insertDummyScan()` + `ExtractionPreviewScreen` `createDummyModelBtn` (Idle+DEBUG) + `GemmaCardExtractor` dummy mode (<5MB → 1s 2 cards), all gated by `BuildConfig.DEBUG`
+- [x] 15.8 Appium E2E `specs/backgroundExtraction.e2e.js`: GMS `Discard` dialog handling, `clearStateAndLaunch` grants `CAMERA`+`POST_NOTIFICATIONS`, verifies `2 Cards` and `Dummy mode enabled` with no `Work cancelled`
 
 ---
 
