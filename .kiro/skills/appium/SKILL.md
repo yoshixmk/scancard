@@ -4,7 +4,7 @@ description: E2E testing with Appium + WebdriverIO for Android Compose apps. Han
 license: Complete terms in LICENSE.txt
 metadata:
   author: ScanCard
-  last-updated: '2026-08-24'
+  last-updated: '2026-08-25'
   keywords:
   - appium
   - webdriverio
@@ -36,16 +36,18 @@ $env:ANDROID_HOME="{ANDROID_SDK}"; & $mise exec node@20 -- npx wdio run wdio.con
 ## ScanCard-specific constraints
 
 1. **testTag not exposed** — `Modifier.testTag()` is invisible to UIAutomator (`resource-id=""`). Use `helpers/utils.js:tapByTestTag(tag, {fallbackText})` which falls back to `contentDescription`/`text` → `references/compose-testtag.md`.
-2. **clearApp wipes grant** — `autoGrantPermissions:true` is cleared by `mobile: clearApp`. `clearStateAndLaunch()` re-grants via `pm grant CAMERA` and clicks `While using the app` via `handlePermissionDialog()` → `references/permission-dialog.md`.
-3. **GMS overlay** — `GmsDocumentScanning.getStartScanIntent()` launches `com.google.android.gms`. Detect `getCurrentPackage()` then `pressBack()`; make scan optional for CI → `references/gms-scanner.md`.
+2. **clearApp wipes grant** — `autoGrantPermissions:true` is cleared by `mobile: clearApp`. `clearStateAndLaunch()` re-grants via `pm grant CAMERA`+`POST_NOTIFICATIONS` and clicks `While using the app` via `handlePermissionDialog()` → `references/permission-dialog.md`.
+3. **GMS overlay** — `GmsDocumentScanning.getStartScanIntent()` launches `com.google.android.gms`. Detect `getCurrentPackage()` then `pressBack()` or tap `Discard`; covers `Discard document?` dialog → `references/gms-scanner.md`.
 4. **Node 20 required** — Appium 3.x + uiautomator2 fails on Node 22/24 (`p-limit` ESM cycle). Always `mise exec node@20 -- <cmd>` → `references/mise-node.md`.
+5. **Foreground FGS (targetSDK 35)** — `CardExtractionWorker` uses `SystemForegroundService` with `foregroundServiceType="shortService"` (merged via `AndroidManifest.xml`). `POST_NOTIFICATIONS` must be granted, otherwise `setForeground()` throws `InvalidForegroundServiceTypeException` → `references/foreground-service.md`.
 
 ## Troubleshooting (non-obvious only)
 
 | Symptom | Fix |
 |---|---|
 | `tapByTestTag failed: <tag>` | Pass `fallbackText` matching `contentDescription` |
-| Permission dialog covers UI | `pm grant` + `handlePermissionDialog()` clicks `While using the app` |
-| `getCurrentPackage()==com.google.android.gms` after FAB | `pressBack()`; keep scan `try/catch` optional |
+| Permission dialog covers UI | `pm grant CAMERA+POST_NOTIFICATIONS` + `handlePermissionDialog()` |
+| `getCurrentPackage()==com.google.android.gms` after FAB | `pressBack()` or tap `Discard`; keep scan `try/catch` optional |
+| `InvalidForegroundServiceTypeException` / `type none prohibited` | Declare `SystemForegroundService shortService` via manifest merge and grant `POST_NOTIFICATIONS` |
 
 See `references/troubleshooting.md` for details.

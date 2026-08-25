@@ -1,12 +1,12 @@
-# CAMERA Permission Dialog
+# Permission Dialogs
 
-`ScanScreen` auto-requests `CAMERA`; on API 36 the system dialog `Allow ScanCard to take pictures... / While using the app` appears.
+`ScanScreen` auto-requests `CAMERA`; `CardExtractionWorker` needs `POST_NOTIFICATIONS` for foreground notification (targetSDK 35).
 
-`mobile: clearApp` wipes `autoGrantPermissions`, so dialog reappears after each `clearStateAndLaunch()`.
+`mobile: clearApp` wipes `autoGrantPermissions`, so dialogs reappear after each `clearStateAndLaunch()`.
 
-**Mitigation** (in `helpers/utils.js:clearStateAndLaunch` + `handlePermissionDialog`):
+**Mitigation** (`helpers/utils.js:clearStateAndLaunch` + `handlePermissionDialog`):
 
-1. `driver.execute('mobile: shell', {command:'pm', args:['grant', APP_ID, 'android.permission.CAMERA']})`
+1. `pm grant CAMERA` and `pm grant POST_NOTIFICATIONS` via `mobile: shell`.
 2. UI fallback: click `While using the app` / `Only this time` if displayed.
 
-Call `handlePermissionDialog()` after `activateApp` and after FAB taps.
+Call `handlePermissionDialog()` after `activateApp`.
