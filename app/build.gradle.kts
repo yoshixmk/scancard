@@ -236,7 +236,8 @@ dependencies {
     // IMP-07 7-4 DataStore導入手順（JVM8制約でコメントのみ、gradleフル実行禁止のため依存追加はコメントに留める）
     // 手順: implementation("androidx.datastore:datastore-preferences:1.1.1")
     // 用途: StudyViewModel の filter_type 永続化（DataStore<Preferences>）。Req9.6 "filter persists across sessions" 対応。
-    // 有効化時: StudyViewModelのTODOコメント（クラス冒頭/setFilter/init）を実装し、HiltでDataStoreを注入する。
+
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     // Tests - Unit
     testImplementation("junit:junit:4.13.2")
@@ -276,65 +277,9 @@ dependencies {
     // implementation("androidx.compose.material3.adaptive:adaptive-layout:1.1.0")
     // implementation("androidx.compose.material3.adaptive:adaptive-navigation3:1.1.0")
 
-    // TODO(IMP-09): Styles API 実験導入手順 — gradleフル実行禁止のためコメント雛形のみ (P3任意, experimental)
-    // 背景: .kiro/skills/styles/SKILL.md は foundation:1.12.0-alpha01 / BOM 2026.04.01 + compileSdk 37 + ExperimentalFoundationStyleApi opt-in を要求。
-    //       本プロジェクトは app/build.gradle.kts:12 compileSdk=37 は充足。BOM 2026.08.00 は 2026.04.01 より新しくfoundationも含むが、
-    //       明示的に foundation:1.12.0-alpha01 を要求する場合は下記 Option B を併用できる。TextField等の Material3 は Styles対象外。
-    // 前提チェック:
-    //   - compileSdk = 37 充足 (本ファイル android{ compileSdk=37 } を維持)
-    //   - kotlin jvmTarget = 17 充足 (kotlinOptions.jvmTarget="17" / compilerOptions.jvmTarget 参照)
-    // 有効化手順 (JVM17 + AGP 9.3.1 で ./gradlew :app:assembleDebug が SUCCESS であることを事前確認):
-    //   Option A — BOM 更新で foundation を間接取得 (推奨, BOM 2026.04.01+ は foundation 1.12.0-alpha01 を内包):
-    //     dependencies {
-    //         implementation(platform("androidx.compose:compose-bom:2026.04.01")) // 現行 2026.08.00 は既に 2026.04.01 より新しいため維持でも可
-    //         // BOM更新時は 2026.08.00 → 2026.04.01 以上へ (ただし Downgradeにならないよう最新を維持するなら変更不要)
-    //     }
-    //   Option B — foundation を明示追加 (alpha を直接指定したい場合, BOMと併用可):
-    //     dependencies {
-    //         implementation("androidx.compose.foundation:foundation:1.12.0-alpha01")
-    //         // 注意: BOMと併用時は BOMのバージョン解決が優先されるため、必要なら BOM を 2026.04.01 以上に上げる
-    //     }
-    //   Option C — コンパイラ opt-in (必須, experimental API):
-    //     // build.gradle.kts androidブロック外 または kotlinブロック内で有効化:
-    //     kotlin {
-    //         compilerOptions {
-    //             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-    //             freeCompilerArgs.add("-opt-in=androidx.compose.foundation.style.ExperimentalFoundationStyleApi")
-    //         }
-    //     }
-    //     // 代替 (AGP 9.3.1 + Kotlin 2.1系で kotlinOptions 使用時):
-    //     // kotlinOptions { freeCompilerArgs += "-opt-in=androidx.compose.foundation.style.ExperimentalFoundationStyleApi" }
-    //     // 既存の kotlinOptions { jvmTarget="17" } と併存させる場合は kotlin { compilerOptions { ... } } に一本化推奨
-    //   検証:
-    //     1. 上記 Option A/B + C をアンコメントし Sync
-    //     2. import androidx.compose.foundation.style.Style が解決できることを確認 (IDEで赤波線が消える)
-    //     3. ui/theme/ComponentStyles.kt のコメント雛形を有効化しビルド
-    //     4. ./gradlew :app:assembleDebug で SUCCESS、スクショ差分0を確認 (IMP-09 9-4 参照)
-    //   ロールバック: 上記3行を再コメントし Sync すれば現行 Material3直書きに復帰 (Theme.kt は無変更のため影響なし)
-    //   リスク: foundation 1.12.0-alpha01 は alpha/experimental。Material3コンポーネント(Card/Button等)は Styles非対応、カスタムコンポーネントのみ適用可
-    //   参考: .kiro/skills/styles/SKILL.md Prerequisites / Step 2-3、docs/styles-migration.md
+    // IMP-09 Styles API experimental - see .kiro/skills/styles
 
-    // TODO(IMP-01): testImplementation("io.mockk:mockk:1.13.8") — 既存と整合: 現行 1.13.13 に更新済み (Kotlin 2.x 互換のため 1.13.8→1.13.13)
-    //   有効化手順: 上記 testImplementation 行のコメントを外す。MockKはFake優先で必要な場合のみ使用。
-    // TODO(IMP-01): androidTestImplementation("com.google.dagger:hilt-android-testing:2.60.1") — Hilt Instrumented Test用
-    //   手順: androidTest sourceSet に追記、KSP とペアで有効化。HiltTestRunner / HiltAndroidRule と併用。
-    // TODO(IMP-01): kspAndroidTest("com.google.dagger:hilt-compiler:2.60.1") — HiltのKSPコード生成 (androidTest)
-    //   手順: kspAndroidTest 構成で hilt-compiler を追加。HiltTestApplication生成に必須。
-    // TODO(IMP-01): testImplementation("io.kotest:kotest-property:5.9.1") — Property-based Testing
-    //   手順: test sourceSet に追記。Kotest Property 5.9.1 は BOMなし直指定。現行は JUnit4 Parameterizedで代替しつつ依存は導入済み。
-    // TODO(IMP-01): testImplementation("org.robolectric:robolectric:4.12.2") — JVM上でAndroid FrameworkをFake
-    //   手順: testImplementation に追記 + testOptions.unitTests.isIncludeAndroidResources=true で有効化。
-    // TODO(IMP-01): testImplementation("androidx.test:core:1.6.1") — AndroidX Test Core (Robolectric併用)
-    //   手順: testImplementation に追記。既存は 1.7.0 に更新済み (1.6.1と互換、最新で整合)。core-testing / espresso 等と併用。
-    // TODO(IMP-01): jacoco 導入手順 — plugins { id("jacoco") } + jacoco { toolVersion = "0.8.12" } + tasks.register<JacocoReport>("jacocoTestReport") { isEnabled=false } (スタブ)
-    //   詳細は 1-7 のコメントブロックを参照。AGP 8+ では android.buildTypes.debug.enableUnitTestCoverage 連携が別途必要。
-
-    // TODO(IMP-01) 1-7 jacoco導入コメント:
-    // 手順1: plugins { id("jacoco") } — 既に app/build.gradle.kts:7 に適用済み
-    // 手順2: jacoco { toolVersion = "0.8.12" } — 本ファイル 62-64行に配置済み (0.8.12 は AGP 8.x / JDK17 と整合)
-    // 手順3: tasks.register<JacocoReport>("jacocoTestReport") { isEnabled=false; reports{ xml, html } } — 69-94行にスタブ登録済み
-    // 手順4: 有効化時は isEnabled=true + dependsOn("testDebugUnitTest") + classDirectories/sourceDirectories/executionData を正しく紐付け、CI閾値 80% (business logic) を `jacocoTestCoverageVerification` で設定
-    // 注意: JVM8制約下では実際のコバンテージレポート生成は不可のためスタブ留め。JVM17で `./gradlew :app:jacocoTestReport` 実行。
+    // IMP-01 done: deps implemented (mockk 1.13.13 etc) - see .kiro/skills/testing-setup
 
     // TODO(IMP-08): AppFunctions 依存 — JVM8 gradle制約でコメント留め、targetSdk 36 昇格時に有効化
     // 要件: targetSdk 36+ / compileSdk 37+ / KSP / Hilt。skill: .kiro/skills/appfunctions/references/implementation-configuration.md Step1 参照。

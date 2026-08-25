@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     // val adaptiveInfo = currentWindowAdaptiveInfo()
                     // NavigationSuiteScaffold(
                     //     navigationSuiteItems = {
-                    //         // TODO: 各 Screen の NavigationSuiteItem をここへ移設
+
                     //         // item(icon = { Icon(Icons.Default.Home, null) }, label = { Text("Home") },
                     //         //      selected = currentRoute == Screen.Home.route,
                     //         //      onClick = { navController.navigate(Screen.Home.route) })

@@ -1,7 +1,6 @@
 package com.plath.scancard.domain.util
 
-// IMP-07 7-6: 本Builderは ExtractCardsUseCase.repeat(3) から呼ばれる。design.md 483-543 の3回リトライ配線は UseCase側で保証。
-// buildPrompt -> buildImprovedPrompt(failedTerm) のリトライが ExtractCardsUseCase:39 で実装済み。未配線なら // TODO: retry 3 with PromptValidator コメントをUseCaseに追記。
+
 class TranslationPromptBuilder {
     fun buildPrompt(ocrText: String): String {
         return """
