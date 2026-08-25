@@ -23,19 +23,21 @@ export async function clearStateAndLaunch() {
         } catch {}
     }
     await driver.activateApp(APP_ID);
-    // Pre-grant CAMERA to avoid system permission dialog (ScanScreen requests CAMERA)
-    try {
-        await driver.execute('mobile: shell', {
-            command: 'pm grant ' + APP_ID + ' android.permission.CAMERA',
-            args: []
-        });
-    } catch {
+    // Pre-grant CAMERA and POST_NOTIFICATIONS to avoid dialogs and allow foreground WorkManager
+    for (const perm of ['android.permission.CAMERA', 'android.permission.POST_NOTIFICATIONS']) {
         try {
             await driver.execute('mobile: shell', {
-                command: 'pm',
-                args: ['grant', APP_ID, 'android.permission.CAMERA']
+                command: 'pm grant ' + APP_ID + ' ' + perm,
+                args: []
             });
-        } catch {}
+        } catch {
+            try {
+                await driver.execute('mobile: shell', {
+                    command: 'pm',
+                    args: ['grant', APP_ID, perm]
+                });
+            } catch {}
+        }
     }
     // Small pause for app to settle
     await driver.pause(800);
