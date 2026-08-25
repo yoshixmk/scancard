@@ -56,8 +56,13 @@ class GemmaCardExtractor @Inject constructor(
     // private val mutex = Mutex()
     private var engine: Engine? = null
     private var conversation: Conversation? = null
+    private var isDummyMode = false
 
     suspend fun initialize(modelPath: String) = withContext(Dispatchers.IO) {
+        if (isDummyMode) {
+            android.util.Log.d("GemmaExtractor", "Already in dummy mode")
+            return@withContext
+        }
         if (engine != null && conversation != null) {
             android.util.Log.d("GemmaExtractor", "Already initialized")
             return@withContext
@@ -65,6 +70,13 @@ class GemmaCardExtractor @Inject constructor(
 
         try {
             android.util.Log.d("GemmaExtractor", "Initializing engine with path: $modelPath")
+            // E2E dummy mode: small file (<5MB) in DEBUG avoids 2.6GB load and 30s inference, returns dummy cards quickly
+            val f = java.io.File(modelPath)
+            if (com.plath.scancard.BuildConfig.DEBUG && f.exists() && f.length() < 5 * 1024 * 1024) {
+                android.util.Log.d("GemmaExtractor", "Dummy mode enabled for E2E (size=${f.length()})")
+                isDummyMode = true
+                return@withContext
+            }
             val engineConfig = EngineConfig(
                 modelPath = modelPath,
                 backend = Backend.CPU(),
@@ -94,6 +106,14 @@ class GemmaCardExtractor @Inject constructor(
     }
 
     suspend fun extractCards(text: String): List<ExtractedCard> = withContext(Dispatchers.IO) {
+        if (isDummyMode) {
+            // E2E fast path: simulate 1s inference and return parsed dummy
+            kotlinx.coroutines.delay(1000)
+            return@withContext listOf(
+                ExtractedCard(term = "Apple", definition = "A fruit", japaneseTranslation = "りんご"),
+                ExtractedCard(term = "Banana", definition = "Yellow fruit", japaneseTranslation = "バナナ")
+            )
+        }
         val currentConversation = conversation ?: return@withContext emptyList()
 
         val prompt = """
@@ -137,5 +157,6 @@ class GemmaCardExtractor @Inject constructor(
         engine?.close()
         conversation = null
         engine = null
+        isDummyMode = false
     }
 }

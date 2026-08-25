@@ -196,6 +196,15 @@ fun ScanScreen(
                         }
                         Spacer(Modifier.height(8.dp))
                         Text("Scanner will open automatically", style = MaterialTheme.typography.labelSmall)
+                        if (com.plath.scancard.BuildConfig.DEBUG) {
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedButton(
+                                onClick = { viewModel.insertDummyScanForE2E(deckId, onComplete) },
+                                modifier = Modifier.testTag("scanDummyInsertBtn")
+                            ) {
+                                Text("Insert Dummy Scan (E2E)")
+                            }
+                        }
                     }
                 }
             } else {
@@ -230,6 +239,16 @@ fun ScanScreen(
                             modifier = Modifier.padding(4.dp).aspectRatio(0.7f).testTag("scanAddMoreBtn")
                         ) {
                             Text("Add More")
+                        }
+                    }
+                    if (com.plath.scancard.BuildConfig.DEBUG) {
+                        item {
+                            OutlinedButton(
+                                onClick = { viewModel.insertDummyScanForE2E(deckId, onComplete) },
+                                modifier = Modifier.padding(4.dp).aspectRatio(0.7f).testTag("scanDummyInsertBtn")
+                            ) {
+                                Text("Insert Dummy Scan (E2E)")
+                            }
                         }
                     }
                 }

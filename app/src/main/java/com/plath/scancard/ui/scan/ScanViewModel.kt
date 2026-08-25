@@ -57,4 +57,22 @@ class ScanViewModel @Inject constructor(
             }
         }
     }
+
+    fun insertDummyScanForE2E(deckId: Long, onComplete: (Long) -> Unit) {
+        viewModelScope.launch {
+            _isProcessing.value = true
+            try {
+                val targetDeckId = if (deckId <= 0) {
+                    val dateStr = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+                    manageDeckUseCase.createDeck("Scan $dateStr")
+                } else deckId
+                scanDocumentUseCase.insertDummyScan(targetDeckId)
+                onComplete(targetDeckId)
+            } catch (e: Exception) {
+                android.util.Log.e("ScanVM", "Dummy insert failed", e)
+            } finally {
+                _isProcessing.value = false
+            }
+        }
+    }
 }

@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ fun ExtractionPreviewScreen(
     val selectedModel by viewModel.selectedModel.collectAsState()
     val extractionWorkInfo by viewModel.extractionWorkInfo.collectAsState()
 
+    val ctx = LocalContext.current
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -49,6 +51,7 @@ fun ExtractionPreviewScreen(
         if (!isGranted) {
             android.util.Log.w("ExtractionPreview", "POST_NOTIFICATIONS denied — extraction continues without notification")
         }
+        android.util.Log.d("ExtractionPreview", "Permission result isGranted=$isGranted, starting extraction for deck $deckId")
         viewModel.startExtraction(deckId)
     }
 
@@ -110,6 +113,24 @@ fun ExtractionPreviewScreen(
                         Spacer(Modifier.width(8.dp))
                         Text("Download via Google Play")
                     }
+                    if (com.plath.scancard.BuildConfig.DEBUG) {
+                        val ctx = LocalContext.current
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = {
+                                try {
+                                    java.io.File(ctx.filesDir, selectedModel.fileName).writeText("dummy")
+                                    android.util.Log.d("ExtractionPreview", "Created dummy model file for E2E")
+                                } catch (e: Exception) {
+                                    android.util.Log.e("ExtractionPreview", "Failed to create dummy", e)
+                                }
+                                viewModel.checkModelStatus()
+                            },
+                            modifier = Modifier.testTag("createDummyModelBtn")
+                        ) {
+                            Text("Create Dummy Model (E2E)")
+                        }
+                    }
                 }
                 is ModelState.Downloading -> {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -151,34 +172,34 @@ fun ExtractionPreviewScreen(
                         CircularProgressIndicator()
                     } else if (wiState == WorkInfo.State.FAILED) {
                         Text("Extraction failed.", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { 
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                viewModel.startExtraction(deckId)
-                            }
+                        Button(onClick = {
+                            android.util.Log.d("ExtractionPreview", "Retry clicked for deck $deckId")
+                            val hasPerm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                androidx.core.content.ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            } else true
+                            if (hasPerm) viewModel.startExtraction(deckId) else notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         }) {
                             Text("Retry Extraction")
                         }
                     } else if (wiState == WorkInfo.State.CANCELLED) {
                         Text("Previous extraction was cancelled. Please retry.", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { 
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                viewModel.startExtraction(deckId)
-                            }
+                        Button(onClick = {
+                            android.util.Log.d("ExtractionPreview", "Retry (cancelled) clicked for deck $deckId")
+                            val hasPerm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                androidx.core.content.ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            } else true
+                            if (hasPerm) viewModel.startExtraction(deckId) else notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         }) {
                             Text("Retry Extraction")
                         }
                     } else if (error != null) {
                         Text("Error: $error", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { 
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                viewModel.startExtraction(deckId)
-                            }
+                        Button(onClick = {
+                            android.util.Log.d("ExtractionPreview", "Retry (error) clicked for deck $deckId")
+                            val hasPerm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                androidx.core.content.ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            } else true
+                            if (hasPerm) viewModel.startExtraction(deckId) else notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         }) {
                             Text("Retry Extraction")
                         }
@@ -189,11 +210,11 @@ fun ExtractionPreviewScreen(
                         }
                         Button(
                             onClick = {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                } else {
-                                    viewModel.startExtraction(deckId)
-                                }
+                                android.util.Log.d("ExtractionPreview", "Start clicked for deck $deckId")
+                                val hasPerm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    androidx.core.content.ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                } else true
+                                if (hasPerm) viewModel.startExtraction(deckId) else notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
