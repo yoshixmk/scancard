@@ -107,8 +107,10 @@ class GemmaCardExtractor @Inject constructor(
 
     suspend fun extractCards(text: String): List<ExtractedCard> = withContext(Dispatchers.IO) {
         if (isDummyMode) {
-            // E2E fast path: simulate 1s inference and return parsed dummy
-            kotlinx.coroutines.delay(1000)
+            // E2E fast path: simulate 8s inference and return parsed dummy.
+            // 8s: エミュレータのクロックずれ/poll間隔を考慮し、通知エリアの "Page n of m"
+            // 進捗をE2Eが確実にポーリングできる窓を確保するため（Req12.12）
+            kotlinx.coroutines.delay(8000)
             return@withContext listOf(
                 ExtractedCard(term = "Apple", definition = "A fruit", japaneseTranslation = "りんご"),
                 ExtractedCard(term = "Banana", definition = "Yellow fruit", japaneseTranslation = "バナナ")

@@ -10,6 +10,8 @@ export const APP_ID = process.env.APP_ID || 'com.plath.scancard';
  */
 export async function clearStateAndLaunch() {
     try {
+        // 前回実行残留の通知シェード/ダイアログを閉じてからクリーンアップ
+        try { await driver.execute('mobile: shell', { command: 'cmd statusbar collapse' }); } catch {}
         // Prefer Appium extension: clearApp (wipes data)
         await driver.execute('mobile: clearApp', { appId: APP_ID });
     } catch {

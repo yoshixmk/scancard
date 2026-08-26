@@ -158,26 +158,77 @@ describe('Background extraction (foreground WorkManager)', () => {
             console.log('[bg] No Idle state or dummy model not needed:', e.message);
         }
         await waitVisible('android=new UiSelector().textContains("Model Ready")', 8000);
-        // Tap Start AI Extraction - use testTag with fallback
-        try {
-            await tapByTestTag('extractionStartBtn', { fallbackText: 'Start AI Extraction' });
-        } catch {
-            const startBtn = await waitVisible('android=new UiSelector().text("Start AI Extraction")', 3000);
-            await startBtn.click();
+        // Tap Start AI Extraction with retry; confirm the worker actually started via logcat.
+        // (elementClick can miss if Compose relayouts shift the cached bounds — verify, don't assume.)
+        await driver.execute('mobile: shell', { command: 'logcat -c' });
+        let workerStarted = false;
+        for (let attempt = 0; attempt < 3 && !workerStarted; attempt++) {
+            try {
+                await tapByTestTag('extractionStartBtn', { fallbackText: 'Start AI Extraction' });
+            } catch {
+                const startBtn = await waitVisible('android=new UiSelector().text("Start AI Extraction")', 3000);
+                await startBtn.click();
+            }
+            for (let k = 0; k < 10 && !workerStarted; k++) {
+                const lg = await driver.execute('mobile: shell', {
+                    command: 'logcat -d -t 300 2>&1 | grep -E "Starting background extraction|WorkerWrapper: Starting work|onProgress"',
+                }).catch(() => '');
+                if (/Starting|onProgress/.test(String(lg))) {
+                    workerStarted = true;
+                    console.log('[bg] worker confirmed started via logcat');
+                } else {
+                    await driver.pause(400);
+                }
+            }
+            if (!workerStarted) console.log(`[bg] start attempt ${attempt} missed — retapping`);
         }
+        if (!workerStarted) {
+            const src = await driver.getPageSource().catch(() => '');
+            console.log('[bg] worker never started, page source:', String(src).slice(0, 1500));
+        }
+        expect(workerStarted).toBe(true);
 
-        // 4. Wait for background WorkManager: RUNNING -> SUCCEEDED (dummy 1s + DB)
+        // 4. Wait for background WorkManager: RUNNING -> SUCCEEDED (dummy 8s/page + DB)
         // ExtractionPreview shows "Gemma is extracting..." then auto-navigates to DeckDetail on SUCCEEDED
-        await driver.pause(2000);
-        // Check foreground notification exists (optional, not failing if missing)
+        // Req12.12: open the notification shade and verify per-page progress ("Page n of m") is visible
+        let sawProgressNotif = false;
+        let progressText = '';
+        await driver.openNotifications();
         try {
-            const notif = await driver.execute('mobile: shell', { command: 'dumpsys notification | grep -i Extracting' });
-            console.log('[bg] notification dumpsys:', String(notif).slice(0, 500));
-        } catch {}
+            for (let i = 0; i < 15 && !sawProgressNotif; i++) {
+                try {
+                    const el = await $('android=new UiSelector().textContains("Page ")');
+                    if (await el.isDisplayed().catch(() => false)) {
+                        progressText = await el.getText();
+                        sawProgressNotif = /Page \d+ of \d+/.test(progressText);
+                        console.log(`[bg] shade shows progress notification: "${progressText}"`);
+                        break;
+                    }
+                } catch {}
+                await driver.pause(600);
+            }
+        } finally {
+            // closeNotificationsはwdioに無いのでBACKでシェードを閉じる
+            try { await driver.pressKeyCode(4); } catch {}
+            await driver.pause(600);
+        }
+        if (!sawProgressNotif) {
+            // フォールバック診断: シェードUIに無い場合はdumpsysも確認（catchで握りつぶさない）
+            const notifDump = await driver.execute('mobile: shell', {
+                command: 'dumpsys notification --noredact 2>&1 | grep -iE "Extracting|Page [0-9]|android.text" | head -20',
+            });
+            console.log('[bg] no Page n of m in shade, dumpsys:', String(notifDump).slice(0, 1200));
+        }
+        expect(sawProgressNotif).toBe(true);
+        expect(progressText).toMatch(/Page \d+ of \d+/);
+
+        // Extraction may have auto-navigated to DeckDetail while the shade was open — settle first
+        try { await driver.activateApp('com.plath.scancard'); } catch {}
+        await driver.pause(800);
 
         // Wait for auto-finish to DeckDetail (cards created) with diagnostics
         try {
-            await waitVisible('android=new UiSelector().textContains("Cards")', 15000);
+            await waitVisible('android=new UiSelector().textContains("Cards")', 25000);
         } catch (e) {
             try {
                 const pkg = await driver.getCurrentPackage().catch(() => 'unknown');
