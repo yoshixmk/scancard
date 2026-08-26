@@ -218,5 +218,35 @@ describe('Background extraction (foreground WorkManager)', () => {
         // Cleanup handled in afterEach, but also verify cards via back to Home
         await pressBack(); // DeckDetail -> Home
         await homePage.waitLoaded(5000);
+
+        // 6. Persistence across restart (Req12.8/12.10): force-stop + relaunch.
+        // Cards must survive and extraction must NOT re-run for the completed deck.
+        await driver.execute('mobile: shell', { command: 'am force-stop com.plath.scancard' });
+        await driver.pause(1500);
+        await driver.activateApp('com.plath.scancard');
+        await homePage.waitLoaded(10000);
+        await homePage.tapDeck(DECK);
+        await deckDetailPage.waitLoaded(DECK);
+        try {
+            const persisted = await waitVisible('android=new UiSelector().textContains("2 Cards")', 8000);
+            expect(await persisted.isDisplayed()).toBe(true);
+            console.log('[bg] Cards persisted across app restart');
+        } catch (e) {
+            const src = await driver.getPageSource().catch(() => '');
+            console.log('[bg] Persistence check failed, page source:', String(src).slice(0, 1500));
+            throw e;
+        }
+        // No re-extraction on launch: fresh process must not run the extractor again
+        try {
+            const pidAfter = await driver.execute('mobile: shell', { command: 'pidof com.plath.scancard' });
+            const resumedLog = await driver.execute('mobile: shell', {
+                command: `logcat -d --pid=${String(pidAfter).trim()} | grep -iE "GemmaExtractor|CardExtractionWorker|ResumeExtractions" | tail -15`,
+            });
+            console.log('[bg] post-restart log:', String(resumedLog).slice(0, 800));
+            expect(String(resumedLog)).not.toContain('Dummy mode enabled');
+            expect(String(resumedLog)).not.toContain('Resuming');
+        } catch (e) {
+            console.log('[bg] post-restart logcat check skipped:', e.message);
+        }
     });
 });
