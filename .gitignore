@@ -52,6 +52,7 @@ proguard-project.txt
 node_modules/
 appium/node_modules/
 appium/wdio-logs/
+/.artifacts/
 
 # Project specific ignores
 improvement.md
