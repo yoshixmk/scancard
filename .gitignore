@@ -19,6 +19,19 @@ gen/
 .gradle/
 build/
 
+# Kotlin 2.x build cache / daemon logs
+.kotlin/
+
+# Android Studio captures & native build artifacts
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing keys - never commit
+*.jks
+*.keystore
+*.p12
+
 # Local configuration file (sdk path, etc)
 local.properties
 
