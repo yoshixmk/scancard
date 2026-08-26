@@ -272,6 +272,15 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - [x] 17.4 `GemmaCardExtractor` dummy mode delay 1s → 8s (E2E shade-check window despite clock skew)
 - [x] 17.5 E2E `backgroundExtraction.e2e.js`: open the notification shade mid-extraction and assert `Page n of m` is visible; verify completion still reaches `2 Cards` + persistence across restart
 
+### 18. Fast Extraction Flow (Requirement 18 — Performance)
+
+- [x] 18.1 `TextRecognitionManager.recognizeText`: wrap `InputImage.fromFilePath` in `withContext(Dispatchers.IO)` (Main-thread I/O → ANR fix)
+- [x] 18.2 `ScanDocumentUseCase.processScannedPages`: parallel OCR via `coroutineScope` + `async`/`awaitAll`, preserve page order on `insertScan`
+- [x] 18.3 `ScanViewModel`: add `ModelRepository` + `BackgroundTaskManager` deps; `processScans`/`insertDummyScanForE2E` check `checkModelStatus(GEMMA_4_E2B)` → `Ready` triggers `startExtraction(DEFAULT_ID)` and returns `fastMode=true`, else `false`
+- [x] 18.4 `ScanScreen` + `ScanCardNavHost`: change `onComplete` to `(Long, Boolean) -> Unit`; NavHost routes `fastMode=true` → `DeckDetail` (skip `ExtractionPreviewScreen`), `false` → `ExtractionPreviewScreen`
+- [x] 18.5 Unit tests: `ScanDocumentUseCaseTest` (virtual-time parallel timing + order), `ScanViewModelTest` (Ready→auto-extract, Idle→fallback)
+- [x] 18.6 E2E `specs/fastFlow.e2e.js`: fallback (=`Idle` → preview) + `@slow` auto-extraction path (DEBUG dummy model file `<5MB` ⇒ `Ready` ⇒ DeckDetail direct + progress notification still appears)
+
 ---
 
 ## Implementation Order

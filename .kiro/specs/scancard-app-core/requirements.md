@@ -161,6 +161,19 @@ ScanCard is an Android application that enables users to photograph book pages u
 13. THE progress counter SHALL reflect real work: `ExtractCardsUseCase` SHALL process uploaded scans page-by-page (one LLM call per page) and report `(0, N)` before the first page and `(i, N)` immediately after page i finishes, WHERE N is the number of uploaded scans for the deck.
 14. THE worker SHALL additionally expose progress via WorkManager `setProgress` (`progress_current`, `progress_total`) so that in-app UI can observe the same progress without reading notifications.
 
+### Requirement 18: Fast Extraction Flow (Performance Optimization)
+
+**User Story:** As a user, I want scanning and extraction to complete as quickly as possible, so that I can start studying without unnecessary waiting or manual steps.
+
+#### Acceptance Criteria
+
+1. WHEN multiple pages are scanned, THE ScanDocumentUseCase SHALL process OCR for all pages in parallel using `coroutineScope` + `async`/`awaitAll` (one `TextRecognitionManager.recognizeText` per page concurrently) and preserve page order when inserting scans.
+2. THE TextRecognitionManager.recognizeText SHALL execute `InputImage.fromFilePath` inside `withContext(Dispatchers.IO)` to avoid blocking the Main thread during OCR initialization.
+3. WHEN OCR completes and a model is in `Ready` state (checked via `ModelRepository.checkModelStatus(GEMMA_4_E2B)` / `modelState`), THE ScanViewModel SHALL automatically trigger `BackgroundTaskManager.startExtraction` with `ModelConfig.DEFAULT_ID` and report `fastMode=true` so that `ScanCardNavHost` navigates directly to `DeckDetail` (skipping `ExtractionPreviewScreen`).
+4. WHEN OCR completes and no model is `Ready`, THE ScanCard SHALL navigate to `ExtractionPreviewScreen` as before (fallback path).
+5. WHILE auto-triggered extraction is running, THE ScanCard SHALL show the same ongoing progress notification (`Page n of m`, Req 12.12) and replace it with the completion notification on success (Req 12.4).
+
 #### Notes
 - The dummy scan/model path is test-only: `ScanDocumentUseCase.insertDummyScan()` and `ExtractionPreviewScreen` create `files/gemma-4-E2B-it.litertlm` with <5MB, triggering `GemmaCardExtractor` dummy mode (1s delay, 2 cards Apple/Banana) only when `BuildConfig.DEBUG` and file size <5MB.
 - Durable state model: `Deck.extractionStatus: ExtractionStatus` (`NONE, PENDING, RUNNING, COMPLETED, FAILED`) stored in Room. This is the single source of truth for "was this deck already extracted and saved" — WorkManager state alone is not durable enough (terminal CANCELLED/FAILED states are never auto-retried).
+- Fast Mode is verified by unit tests (parallel OCR timing + auto-trigger branching) and by Appium E2E `fastFlow.e2e.js` (fallback + `@slow` auto-extraction path via DEBUG dummy model file).
