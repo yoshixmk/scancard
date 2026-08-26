@@ -17,3 +17,11 @@ enum class LanguagePreference {
     ENGLISH,
     JAPANESE
 }
+
+enum class ExtractionStatus {
+    NONE,
+    PENDING,
+    RUNNING,
+    COMPLETED,
+    FAILED
+}

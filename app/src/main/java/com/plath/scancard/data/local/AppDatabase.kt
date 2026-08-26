@@ -12,6 +12,7 @@ import com.plath.scancard.data.local.entities.Scan
 import androidx.room.TypeConverters
 
 // IMP-07 7-2: version 2->3 で Card.isDuplicate, Card.duplicateOfId 列追加
+// version 3->4 で Deck.extractionStatus 列追加（Req12.8-12.11 抽出結果の永続化・レジューム）。
 // Build時は exportSchema=false + AutoMigrationなしで fallbackToDestructiveMigration() に委譲（開発用）。
 // 本番リリース前に AutoMigration 用の schema 2.json を生成し、下記を有効化すること:
 //   exportSchema=true + autoMigrations=[AutoMigration(from=2,to=3)] + room { schemaDirectory("$projectDir/schemas") }
@@ -25,7 +26,7 @@ import androidx.room.TypeConverters
 // DatabaseModule.kt の fallbackToDestructiveMigration() は開発用。本番では除去し MIGRATION_2_3 を addMigrations() で登録。
 @Database(
     entities = [Deck::class, Card::class, Scan::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
