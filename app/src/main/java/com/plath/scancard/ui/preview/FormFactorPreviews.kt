@@ -3,12 +3,12 @@ package com.plath.scancard.ui.preview
 import androidx.compose.ui.tooling.preview.Preview
 
 /**
- * IMP-05 Step1: Adaptive UI 検証用 FormFactor Previews
+ * IMP-05 Step 1: FormFactor Previews for Adaptive UI verification
  *
- * adaptive/SKILL.md Step1 準拠 — Phone / Foldable / Tablet / Desktop の4形態を
- * 単一アノテーションでプレビューする。
+ * Adheres to adaptive/SKILL.md Step 1 — Previews 4 form factors: Phone / Foldable / Tablet / Desktop
+ * with a single annotation.
  *
- * 使用例:
+ * Example usage:
  * ```
  * @FormFactorPreviews
  * @Composable
@@ -16,12 +16,12 @@ import androidx.compose.ui.tooling.preview.Preview
  *     MaterialTheme { HomeScreen(...) }
  * }
  * ```
- * 既存の @Preview は置換せず併記可能。Screenshot Testing (IMP-06) でも
- * このアノテーションを @PreviewTest と組み合わせて使用する想定。
+ * Existing @Preview can coexist without replacement. Also useful in Screenshot Testing (IMP-06)
+ * when combined with @PreviewTest.
  *
- * Device サイズは improvement.md IMP-05 / Task 5-2 指定:
+ * Device sizes specified in improvement.md IMP-05 / Task 5-2:
  * - PHONE    400dp x 800dp
- * - FOLDABLE 700dp x 800dp (unfolded foldable の代表値)
+ * - FOLDABLE 700dp x 800dp (representative value for unfolded foldable)
  * - TABLET   900dp x 1200dp
  * - DESKTOP  1200dp x 800dp
  */

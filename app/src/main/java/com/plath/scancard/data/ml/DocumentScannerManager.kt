@@ -12,32 +12,37 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 /**
- * IMP-10 10-1 監査結果 (2026-08-23) — camerax/SKILL.md immutability / thermals / threading 照合
+ * IMP-10 10-1 Audit results (2026-08-23) — Comparison with camerax/SKILL.md immutability / thermals / threading
  *
- * [スレッド] OK: GmsDocumentScanning.getClient(options).getStartScanIntent は Play Services Task を返す。
- *   addOnSuccessListener / addOnFailureListener は MainThread で実行されるため ScannerLauncher 起動は
- *   UIスレッドで安全。ただし ScanScreen.kt:68 の scanner も Main で remember 生成されているため競合なし。
- *   将来 CameraX に移行する場合 (ProcessCameraProvider.getInstance) は ListenableFuture.await() で
- *   Dispatchers.Main で await する必要あり — 本クラスでは不要。
+ * [Threading] OK: GmsDocumentScanning.getClient(options).getStartScanIntent returns a Play Services Task.
+ *   Since addOnSuccessListener / addOnFailureListener are executed on MainThread, ScannerLauncher launch is
+ *   safe on UI thread. Also, as scanner in ScanScreen.kt:68 is remember-generated on Main, there's no conflict.
+ *   When migrating to CameraX (ProcessCameraProvider.getInstance) in the future, ListenableFuture.await()
+ *   needs to be awaited on Dispatchers.Main — not required in this class.
  *
- * [Escaping] 要注意: createLauncher() の onSuccess/onError/onCanceled ラムダは
- *   ActivityResultLauncher にキャプチャされ Activity 破棄まで生存 (Escaping closure)。
- *   ComponentActivity#registerForActivityResult は Lifecycle に紐づくため
- *   Activity再生成時に再登録が必要。ViewModel で保持せず毎回 createLauncher 呼び出しは正しいが、
- *   呼び出し元で launcher を ViewModel に保持しないこと。ScanScreen.kt は composition 内 remember なので OK。
- *   改善案: onError 未伝播 (startScan の addOnFailureListener が空) — 呼び出し元に onError を通知すべき。
+ * [Escaping] Note: onSuccess/onError/onCanceled lambdas in createLauncher() are
+ *   captured by ActivityResultLauncher and survive until Activity destruction (Escaping closure).
+ *   Re-registration is required upon Activity recreation. Calling createLauncher every time instead
+ *   of holding in ViewModel is correct, but don't hold the launcher in ViewModel on the caller side.
+ *   ScanScreen.kt is OK as it uses remember within composition.
+ *   Improvement proposal: onError not propagated (addOnFailureListener in startScan is empty) —
+ *   should notify caller of onError. Only comments added at the time of Audit to avoid breaking
+ *   existing behavior.
  *
- * [Immutability / Builder再代入] OK: GmsDocumentScannerOptions.Builder は fluent だが
- *   本コードはチェーンメソッド -> build() で正しく再代入(チェーン)している。
- *   camerax/SKILL.md immutability.md の PendingRecording.withAudioEnabled() のような
- *   "戻り値を捨てる" 漏れはなし。pageLimit=100 は ML Kit上限内の固定値で再代入漏れなし。
- *   将来 GmsDocumentScannerOptions に NightMode 等が追加された場合も Builder チェーンを維持すること。
+ * [Immutability / Builder reassignment] OK: GmsDocumentScannerOptions.Builder is fluent, but
+ *   this code correctly reassigns (chains) via method chain -> build().
+ *   No omissions like "discarding return value" in PendingRecording.withAudioEnabled()
+ *   from camerax/SKILL.md immutability.md. pageLimit=100 is a fixed value within ML Kit limits;
+ *   no reassignment omissions. Maintain Builder chain even if NightMode etc. are added
+ *   to GmsDocumentScannerOptions in the future.
  *
- * [Thermal / リソース] N/A: DocumentScanner は Play Services 側で管理、StreamUseCase 非適用。
- *   熱対策が必要な場合は CameraX Preview + ImageAnalysis に移行後に docs/camera-thermals.md 参照。
+ * [Thermal / Resources] N/A: DocumentScanner is managed on the Play Services side; StreamUseCase
+ *   not applied. See docs/camera-thermals.md after migrating to CameraX Preview + ImageAnalysis
+ *   if thermal measures are needed.
  *
- * [残課題] startScan の addOnFailureListener で // Handle error コメントのみ — onError コールバックに
- *   伝播するか Log + Snackbar を出すべき。Audit時点では既存動作を壊さないためコメントのみ追記。
+ * [Remaining issues] Only "// Handle error" comment in addOnFailureListener of startScan — should
+ *   propagate to onError callback or show Log + Snackbar. Only comments added at the time of Audit
+ *   to avoid breaking existing behavior.
  */
 class DocumentScannerManager @Inject constructor() {
     private val options = GmsDocumentScannerOptions.Builder()

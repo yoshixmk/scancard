@@ -3,36 +3,37 @@ package com.plath.scancard.ui.navigation
 import kotlinx.serialization.Serializable
 
 /**
- * IMP-02 Navigation3 NavKey 雛形 (ビルドを壊さないためコメント中心)
+ * IMP-02 Navigation3 NavKey Template (Comment-based to avoid breaking the build)
  *
- * 背景: `ui/ScanCardNavHost.kt` は navigation-compose 2.9.8 の string route (Screen.kt) を使用。
- *       Navigation3 移行では各 destination を `@Serializable` + `NavKey` 化し、
- *       `rememberNavBackStack(Home)` / `NavDisplay(entryProvider {...})` で管理する。
- *       JVM8環境では navigation3 依存追加でビルド不可のため、本ファイルは
- *       `navigation3-runtime` を import せず `kotlinx.serialization.Serializable` のみで雛形化している。
+ * Background: `ui/ScanCardNavHost.kt` uses string routes from navigation-compose 2.9.8 (Screen.kt).
+ *       In Navigation3 migration, each destination becomes `@Serializable` + `NavKey`,
+ *       managed by `rememberNavBackStack(Home)` / `NavDisplay(entryProvider {...})`.
+ *       Since build is impossible with Navigation3 dependencies in JVM8 environments,
+ *       this file is templated with only `kotlinx.serialization.Serializable` without
+ *       importing `navigation3-runtime`.
  *
- * 有効化手順 (JVM17 + AGP 9.3.1 で実行):
- *   1. app/build.gradle.kts の TODO(IMP-02) コメントを外し Navigation3 依存を Sync
+ * Activation Procedure (Run with JVM17 + AGP 9.3.1):
+ *   1. Uncomment TODO(IMP-02) in `app/build.gradle.kts` and Sync Navigation3 dependencies
  *      - implementation("androidx.navigation3:navigation3-runtime:1.0.0")
  *      - implementation("androidx.navigation3:navigation3-ui:1.0.0")
  *      - plugins { id("org.jetbrains.kotlin.plugin.serialization") version "2.1.10" }
- *   2. 下記各クラスのコメントを外す:
- *      - `import androidx.navigation3.runtime.NavKey` を追加
- *      - 各 `data object / data class` に `: NavKey` を付与
- *        例: `@Serializable data object Home : NavKey` / `@Serializable data class DeckDetail(val deckId: Long) : NavKey`
- *   3. ui/Screen.kt (string route) は NavKeys.kt に置換されるため削除 or Deprecated化
- *   4. ui/ScanCardNavHost.kt を docs/navigation3-migration.md の After 例に置換
+ *   2. Uncomment each class below:
+ *      - add `import androidx.navigation3.runtime.NavKey`
+ *      - append `: NavKey` to each `data object / data class`
+ *        Example: `@Serializable data object Home : NavKey` / `@Serializable data class DeckDetail(val deckId: Long) : NavKey`
+ *   3. `ui/Screen.kt` (string route) will be replaced by NavKeys.kt, so delete or mark as Deprecated.
+ *   4. Replace `ui/ScanCardNavHost.kt` with the After example in `docs/navigation3-migration.md`.
  *
- * 参考:
+ * References:
  *   - .kiro/skills/navigation-3/SKILL.md migration-guide Step2
  *   - .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/migration-guide.md Step2
  *   - .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/recipes/basicdsl.md
  *   - .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/recipes/basicsaveable.md
  *
- * 注意: 現状は Dummy data class としてコンパイルが通ることを保証。navigation3 の NavKey interface はコメントで代替。
+ * Note: Currently ensures compilation as dummy data classes. Navigation3's NavKey interface is substituted with comments.
  */
 
-// TODO(IMP-02): Navigation3 有効化時は `import androidx.navigation3.runtime.NavKey` を追加し、各クラスに `: NavKey` を付与
+// TODO(IMP-02): When enabling Navigation3, add `import androidx.navigation3.runtime.NavKey` and append `: NavKey` to each class
 // import androidx.navigation3.runtime.NavKey
 
 @Serializable
@@ -53,13 +54,13 @@ data class Study(val deckId: Long) // : NavKey
 @Serializable
 data class Export(val deckId: Long) // : NavKey
 
-// 将来的な拡張例 (必要に応じて追加):
+// Future expansion examples (add as needed):
 // @Serializable data object Settings : NavKey
 // @Serializable data class Search(val query: String? = null) : NavKey
-//   - nullable 引数は Navigation3 でも自動サポート (type-safe-destinations.md Best practices参照)
-//   - 複雑な型は custom NavType を定義 (type-safe-destinations.md Step5 参照)
+//   - Nullable arguments are automatically supported in Navigation3 (see type-safe-destinations.md Best practices)
+//   - Define custom NavType for complex types (see type-safe-destinations.md Step 5)
 
-// 旧 Screen.kt との対応表 (移行時に置換):
+// Correspondence table with old Screen.kt (replace upon migration):
 // Screen.Home.route ("home")                          -> Home
 // Screen.Scan.route ("scan/{deckId}")                 -> Scan(deckId)
 // Screen.ExtractionPreview.route                      -> ExtractionPreview(deckId)

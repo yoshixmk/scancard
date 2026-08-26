@@ -26,7 +26,7 @@ class ScanCardApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        // プロセス死亡・システムキャンセルで途切れた抽出を再開する（Req12.10）
+        // Resume extractions interrupted by process death or system cancellation (Req12.10)
         applicationScope.launch {
             runCatching { resumePendingExtractions() }
                 .onFailure { android.util.Log.e("ScanCardApp", "Failed to resume pending extractions", it) }

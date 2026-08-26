@@ -36,7 +36,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 @Composable
 fun ScanScreen(
     onBack: () -> Unit,
-    onComplete: (Long) -> Unit,
+    onComplete: (deckId: Long, fastMode: Boolean) -> Unit,
     deckId: Long,
     viewModel: ScanViewModel = hiltViewModel()
 ) {
@@ -79,9 +79,9 @@ fun ScanScreen(
         }
     }
 
-    // Manual test: 2タップ削減 — ScanScreen遷移後に自動でDocumentScannerを起動（1タップ化）
-    // Home FAB / DeckDetail ScanAdd からの遷移直後に scanner を即時起動し、従来の「Start Scanning」ボタンを押す手間を省く。
-    // 再起動抑止: alreadyAutoLaunched で初回のみ自動起動、キャンセル時はボタンで再起動可能。
+    // Manual test: Reduced by 2 taps — Automatically launch DocumentScanner after transitioning to ScanScreen (becomes 1 tap)
+    // Immediately launch scanner after transitioning from Home FAB / DeckDetail ScanAdd, saving the effort of pressing the conventional "Start Scanning" button.
+    // Re-launch suppression: Auto-launch only for the first time with alreadyAutoLaunched; can be re-launched via button on cancellation.
     var alreadyAutoLaunched by remember { mutableStateOf(false) }
     fun launchScanner() {
         val activity = context.findActivity() ?: return
@@ -100,7 +100,7 @@ fun ScanScreen(
         }
     }
 
-    // permission付与後に自動起動（初回のみ、scannedPagesが空のとき=新規スキャン）
+    // Auto-launch after permission is granted (first time only, when scannedPages is empty = new scan)
     LaunchedEffect(hasCameraPermission) {
         if (hasCameraPermission && !alreadyAutoLaunched && scannedPages.isEmpty() && !isProcessing) {
             alreadyAutoLaunched = true
@@ -111,7 +111,7 @@ fun ScanScreen(
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
-            // Edge-to-Edge: StatusBar scrim/List章 検証用 — TopAppBarは自動でsafeDrawingを処理
+            // Edge-to-Edge: For verifying StatusBar scrim/List chapter — TopAppBar automatically handles safeDrawing
             TopAppBar(
                 title = { Text("Scan Document") },
                 navigationIcon = {
@@ -124,7 +124,7 @@ fun ScanScreen(
                         TextButton(
                             onClick = {
                                 android.util.Log.d("ScanScreen", "Top Bar Done clicked")
-                                viewModel.processScans(deckId) { newId -> onComplete(newId) }
+                                viewModel.processScans(deckId) { newDeckId, fastMode -> onComplete(newDeckId, fastMode) }
                             },
                             modifier = Modifier.testTag("scanDoneBtn")
                         ) {
@@ -136,7 +136,7 @@ fun ScanScreen(
         },
         bottomBar = {
             if (scannedPages.isNotEmpty() && !isProcessing) {
-                // SKILL.md Step3: custom bottomBarは自動insets処理されないため safeDrawing bottom を明示付与
+                // SKILL.md Step3: custom bottomBar is not automatically handled by insets, so explicitly apply safeDrawing bottom
                 Surface(
                     tonalElevation = 4.dp,
                     shadowElevation = 8.dp,
@@ -145,7 +145,7 @@ fun ScanScreen(
                     Button(
                         onClick = {
                             android.util.Log.d("ScanScreen", "Bottom Finish button clicked")
-                            viewModel.processScans(deckId) { newId -> onComplete(newId) }
+                            viewModel.processScans(deckId) { newDeckId, fastMode -> onComplete(newDeckId, fastMode) }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -199,7 +199,7 @@ fun ScanScreen(
                         if (com.plath.scancard.BuildConfig.DEBUG) {
                             Spacer(Modifier.height(12.dp))
                             OutlinedButton(
-                                onClick = { viewModel.insertDummyScanForE2E(deckId, onComplete) },
+                                onClick = { viewModel.insertDummyScanForE2E(deckId) { newDeckId, fastMode -> onComplete(newDeckId, fastMode) } },
                                 modifier = Modifier.testTag("scanDummyInsertBtn")
                             ) {
                                 Text("Insert Dummy Scan (E2E)")
@@ -210,7 +210,7 @@ fun ScanScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(120.dp),
-                    // SKILL.md Lists章: Scaffold safeDrawing の bottom を contentPadding に含め bottomBar 被りを回避
+                    // SKILL.md Lists chapter: Include bottom of Scaffold safeDrawing in contentPadding to avoid bottomBar overlap
                     contentPadding = PaddingValues(
                         start = 8.dp, top = 8.dp, end = 8.dp,
                         bottom = 8.dp + padding.calculateBottomPadding() + 80.dp
@@ -244,7 +244,7 @@ fun ScanScreen(
                     if (com.plath.scancard.BuildConfig.DEBUG) {
                         item {
                             OutlinedButton(
-                                onClick = { viewModel.insertDummyScanForE2E(deckId, onComplete) },
+                                onClick = { viewModel.insertDummyScanForE2E(deckId) { newDeckId, fastMode -> onComplete(newDeckId, fastMode) } },
                                 modifier = Modifier.padding(4.dp).aspectRatio(0.7f).testTag("scanDummyInsertBtn")
                             ) {
                                 Text("Insert Dummy Scan (E2E)")
@@ -257,14 +257,14 @@ fun ScanScreen(
     }
 }
 
-// TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+// TODO(IMP-05 5-7): @FormFactorPreviews application procedure
 // ```
 // @FormFactorPreviews
 // @Composable
 // fun ScanScreenPreview() { MaterialTheme { ScanScreen(onBack={}, onComplete={}, deckId=0) } }
 // ```
-// 既に LazyVerticalGrid(GridCells.Adaptive(120.dp)) 適用済 — IMP-05 Step4の参考実装。
-// FormFactorPreviews で 120dp列の可変を Tablet/Desktop で検証すること。
+// Already applied LazyVerticalGrid(GridCells.Adaptive(120.dp)) — reference implementation of IMP-05 Step 4.
+// Verify 120dp column variation on Tablet/Desktop with FormFactorPreviews.
 
 fun Context.findActivity(): Activity? {
     var context = this

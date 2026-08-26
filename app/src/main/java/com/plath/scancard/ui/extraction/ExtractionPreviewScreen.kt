@@ -25,7 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.plath.scancard.domain.model.ModelConfig
 import com.plath.scancard.domain.model.ModelState
 import androidx.work.WorkInfo
-// TODO(IMP-05 5-7): @FormFactorPreviews 適用用 import（コメント留め — 有効化時にアンコメント）
+// TODO(IMP-05 5-7): Imports for applying @FormFactorPreviews (commented out — uncomment when enabling)
 // import com.plath.scancard.ui.preview.FormFactorPreviews
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,8 +46,8 @@ fun ExtractionPreviewScreen(
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        // POST_NOTIFICATIONS 拒否でも抽出は継続（通知は SecurityException catchで握り潰し）
-        // 権限は通知表示の任意要件のため、isGranted に関わらず startExtraction する
+        // Extraction continues even if POST_NOTIFICATIONS is denied (notifications swallowed by SecurityException catch)
+        // Since permissions are an optional requirement for notification display, startExtraction regardless of isGranted
         if (!isGranted) {
             android.util.Log.w("ExtractionPreview", "POST_NOTIFICATIONS denied — extraction continues without notification")
         }
@@ -78,7 +78,7 @@ fun ExtractionPreviewScreen(
                 }
             )
         },
-        // edge-to-edge: navigation barめり込み防止 — safeDrawingをcontentWindowInsetsに指定し、innerPaddingをcontentPaddingへ委譲
+        // edge-to-edge: navigation bar overlap prevention — specify safeDrawing in contentWindowInsets and delegate innerPadding to contentPadding
         contentWindowInsets = WindowInsets.safeDrawing
     ) { padding ->
         Column(
@@ -87,7 +87,7 @@ fun ExtractionPreviewScreen(
                 .padding(padding)
                 .consumeWindowInsets(padding)
                 .padding(16.dp)
-                // navigationBar分の追加padding: ScaffoldのcontentWindowInsetsがbottomを処理するが、scroll末尾のボタンが隠れないようwindowInsetsBottomを保証
+                // Additional padding for navigationBar: Scaffold's contentWindowInsets handles bottom, but ensure windowInsetsBottom so that buttons at the end of the scroll are not hidden
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -158,7 +158,7 @@ fun ExtractionPreviewScreen(
                     }
                 }
                 is ModelState.Ready -> {
-                    // WorkInfo可視化: ENQUEUED/RUNNING/SUCCEEDED/FAILED/CANCELLED を明示し、ユーザーがステータスを迷わないようにする
+                    // WorkInfo visualization: ENQUEUED/RUNNING/SUCCEEDED/FAILED/CANCELLED are shown explicitly to avoid user confusion about status
                     val wiState = extractionWorkInfo?.state
                     if (isExtracting || wiState == WorkInfo.State.ENQUEUED) {
                         CircularProgressIndicator()
@@ -219,7 +219,7 @@ fun ExtractionPreviewScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("extractionStartBtn")
-                                // edge-to-edge: ボタンがnavigation barにめり込まないよう追加Bottom paddingはScaffoldのwindowInsetsで保証済み、ここではnavigationBarsPaddingを重複しない
+                                // edge-to-edge: Additional Bottom padding to prevent button from overlapping with navigation bar is guaranteed by Scaffold's windowInsets; do not duplicate navigationBarsPadding here
                         ) {
                             Icon(Icons.Default.Check, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
@@ -232,7 +232,7 @@ fun ExtractionPreviewScreen(
     }
 }
 
-// TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+// TODO(IMP-05 5-7): @FormFactorPreviews application procedure
 // ```
 // @FormFactorPreviews
 // @Composable

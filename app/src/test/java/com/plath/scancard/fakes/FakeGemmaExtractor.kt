@@ -6,17 +6,18 @@ import com.plath.scancard.data.ml.ExtractedCard
 /**
  * FakeGemmaExtractor — IMP-10 10-4
  *
- * 目的: GemmaCardExtractor の Fake 置換。LiteRT (litertlm) はネイティブ + 大容量モデルで
- * Robolectric / JVM テストで初期化不可 (モデルファイル ~数GB、Engine 初期化が重い)。
- * 本 Fake は CardResponseParser の振る舞いをメモリで再現し、ScanDocumentUseCase の
- * 非同期ライフサイクル (initialize -> extractCards -> close) を Mockito なしでテストする。
+ * Purpose: Fake replacement for GemmaCardExtractor. LiteRT (litertlm) is native + large-scale model
+ * and cannot be initialized in Robolectric / JVM tests (model files are ~several GBs, Engine
+ * initialization is heavy). This Fake reproduces CardResponseParser behavior in memory,
+ * allowing testing of ScanDocumentUseCase's asynchronous lifecycle (initialize -> extractCards -> close)
+ * without Mockito.
  *
- * 準拠: `.kiro/skills/camerax/references/testing.md` Fakes over mocks
- *       - Mockito で ImageProxy / Engine をモックすると brittle になるため Fake で状態検証。
- *       - Google Truth assertions を使用。
- *       - @RunWith(AndroidJUnit4::class) を明示 (10-5 参照)。
+ * Adheres to: `.kiro/skills/camerax/references/testing.md` Fakes over mocks
+ *       - Mocking ImageProxy / Engine with Mockito becomes brittle, so use Fakes for state verification.
+ *       - Uses Google Truth assertions.
+ *       - Specifies @RunWith(AndroidJUnit4::class) (see 10-5).
  *
- * 使い方:
+ * Usage:
  * ```
  * @RunWith(AndroidJUnit4::class)
  * class ExtractCardsUseCaseTest {
@@ -25,7 +26,7 @@ import com.plath.scancard.data.ml.ExtractedCard
  *
  *     @Test fun extractCards_success() = runTest {
  *         fakeExtractor.setNextCards(listOf(ExtractedCard("Hello", "Greeting")))
- *         fakeExtractor.initialize("/fake/model/path") // Fake なので即成功
+ *         fakeExtractor.initialize("/fake/model/path") // Immediately succeeds as it's a Fake
  *         val result = fakeExtractor.extractCards("Hello means Greeting")
  *         assertThat(result).hasSize(1) // Truth
  *         assertThat(result[0].term).isEqualTo("Hello")
@@ -38,7 +39,7 @@ import com.plath.scancard.data.ml.ExtractedCard
  *
  *     @Test fun initialize_idempotent() = runTest {
  *         fakeExtractor.initialize("/fake/path")
- *         fakeExtractor.initialize("/fake/path") // 2回目は no-op (本物と同様 Already initialized)
+ *         fakeExtractor.initialize("/fake/path") // Second call is no-op (Already initialized)
  *         assertThat(fakeExtractor.initializeCallCount).isEqualTo(2)
  *         assertThat(fakeExtractor.isInitialized).isTrue()
  *     }
@@ -46,11 +47,11 @@ import com.plath.scancard.data.ml.ExtractedCard
  * ```
  */
 
-// GemmaCardExtractor の振る舞いを模倣する Fake
+// Fake that mimics GemmaCardExtractor behavior
 class FakeGemmaExtractor(
     private val parser: CardResponseParser = CardResponseParser()
 ) {
-    // --- 内部状態 (本物の engine/conversation に対応) ---
+    // --- Internal state (corresponds to actual engine/conversation) ---
 
     var isInitialized: Boolean = false
         private set
@@ -65,57 +66,57 @@ class FakeGemmaExtractor(
     var lastExtractText: String? = null
         private set
 
-    // 次回 extractCards で返すカード (成功ケース)
+    // Cards to return in the next extractCards (success case)
     private var nextCards: List<ExtractedCard>? = null
 
-    // 次回 extractCards で返す生 JSON 文字列 (parser 経由で ExtractedCard に変換されるケース)
+    // Raw JSON string to return in the next extractCards (case where it's converted to ExtractedCard via parser)
     private var nextRawResponse: String? = null
 
-    // 次回 extractCards で throw する例外
+    // Exception to throw in the next extractCards
     private var nextError: Throwable? = null
 
-    // 初期化失敗をシミュレートする例外
+    // Exception to simulate initialization failure
     private var nextInitError: Throwable? = null
 
-    // 遅延をシミュレート (非同期ライフサイクルテスト用, ms)
+    // Simulate delay (for asynchronous lifecycle testing, ms)
     var fakeDelayMs: Long = 0
 
-    // --- テストからの操作 API (given) ---
+    // --- Operation APIs from tests (given) ---
 
-    /** 次回 extractCards で返すカードを直接指定 */
+    /** Directly specify cards to return in the next extractCards */
     fun setNextCards(cards: List<ExtractedCard>) {
         nextCards = cards
         nextRawResponse = null
         nextError = null
     }
 
-    /** 次回 extractCards で返す生レスポンス (JSON) を指定 — parser.parse() を経由して検証したい場合 */
+    /** Specify raw response (JSON) for the next extractCards — when you want to verify via parser.parse() */
     fun setNextRawResponse(rawJson: String) {
         nextRawResponse = rawJson
         nextCards = null
         nextError = null
     }
 
-    /** 次回 extractCards で例外を throw するように設定 */
+    /** Set to throw an exception in the next extractCards */
     fun setNextError(throwable: Throwable) {
         nextError = throwable
         nextCards = null
         nextRawResponse = null
     }
 
-    /** 次回 initialize で例外を throw するように設定 */
+    /** Set to throw an exception in the next initialize */
     fun setNextInitError(throwable: Throwable) {
         nextInitError = throwable
     }
 
-    // --- Fake 実装 (本物の GemmaCardExtractor と同シグネチャ) ---
+    // --- Fake implementation (same signature as actual GemmaCardExtractor) ---
 
     /**
-     * Fake initialize — 本物の Engine(engineConfig).initialize() + createConversation 相当を
-     * 即時成功でシミュレート。2回目以降は本物と同様に "Already initialized" 相当で no-op。
+     * Fake initialize — simulates actual Engine(engineConfig).initialize() + createConversation
+     * equivalent with immediate success. Second call onwards is no-op as "Already initialized".
      *
-     * スレッド: withContext(Dispatchers.IO) は本物のみ、Fake は呼び出し元スレッドで即実行。
-     * テストでは runTest で呼ぶため dispatcher 制御が可能。
+     * Threads: withContext(Dispatchers.IO) is only for the actual one; Fake executes immediately
+     * on the calling thread. Since tests call it via runTest, dispatcher control is possible.
      */
     suspend fun initialize(modelPath: String) {
         initializeCallCount++
@@ -126,7 +127,7 @@ class FakeGemmaExtractor(
             throw e
         }
         if (isInitialized) {
-            // 本物: Log.d("GemmaExtractor", "Already initialized") + return
+            // Actual: Log.d("GemmaExtractor", "Already initialized") + return
             return
         }
         if (fakeDelayMs > 0) kotlinx.coroutines.delay(fakeDelayMs)
@@ -134,16 +135,16 @@ class FakeGemmaExtractor(
     }
 
     /**
-     * Fake extractCards — 本物の conversation.sendMessageAsync + suspendCancellableCoroutine 相当を
-     * 同期的にシミュレート。未初期化なら emptyList() を返す (本物と同様)。
+     * Fake extractCards — synchronously simulates actual conversation.sendMessageAsync +
+     * suspendCancellableCoroutine equivalent. Returns emptyList() if uninitialized.
      *
-     * @param text OCR 結果テキスト
-     * @return ExtractedCard リスト
+     * @param text OCR result text
+     * @return ExtractedCard list
      */
     suspend fun extractCards(text: String): List<ExtractedCard> {
         extractCallCount++
         lastExtractText = text
-        if (!isInitialized) return emptyList() // 本物: conversation == null -> emptyList()
+        if (!isInitialized) return emptyList() // Actual: conversation == null -> emptyList()
 
         nextError?.let { e ->
             nextError = null
@@ -152,32 +153,32 @@ class FakeGemmaExtractor(
 
         if (fakeDelayMs > 0) kotlinx.coroutines.delay(fakeDelayMs)
 
-        // 優先: setNextCards で直接指定されたカード
+        // Priority: cards directly specified by setNextCards
         nextCards?.let { cards ->
             nextCards = null
             return cards
         }
 
-        // 次: setNextRawResponse で指定された JSON を parser でパース (本物の parser.parse(fullResponse) 経由)
+        // Next: JSON specified by setNextRawResponse parsed by parser (via actual parser.parse(fullResponse))
         nextRawResponse?.let { raw ->
             nextRawResponse = null
             return parser.parse(raw)
         }
 
-        // デフォルト: 空リスト (テストで setNext* し忘れた場合の安全策)
+        // Default: empty list (safety measure if setNext* is forgotten in test)
         return emptyList()
     }
 
     /**
-     * Fake close — 本物の conversation?.close() / engine?.close() 相当。
-     * 何度呼んでも安全 (idempotent)。
+     * Fake close — actual conversation?.close() / engine?.close() equivalent.
+     * Safe to call multiple times (idempotent).
      */
     fun close() {
         closeCallCount++
         isInitialized = false
     }
 
-    /** テスト間の状態リセット — @Before / @After で呼ぶ */
+    /** Reset state between tests — call in @Before / @After */
     fun reset() {
         isInitialized = false
         initializeCallCount = 0
@@ -192,7 +193,7 @@ class FakeGemmaExtractor(
         fakeDelayMs = 0
     }
 
-    // --- Truth assertions 置換例 (docs/testing.md 10-5 参照) ---
+    // --- Truth assertions substitution examples (see docs/testing.md 10-5) ---
     // JUnit: assertEquals(true, fake.isInitialized)
     // Truth: assertThat(fake.isInitialized).isTrue()
     // JUnit: assertEquals(1, result.size)
@@ -200,5 +201,5 @@ class FakeGemmaExtractor(
     // JUnit: assertEquals("Hello", result[0].term)
     // Truth: assertThat(result[0].term).isEqualTo("Hello")
     // JUnit: assertNotNull(result)
-    // Truth: assertThat(result).isNotNull() または assertThat(result).isEmpty() / isNotEmpty()
+    // Truth: assertThat(result).isNotNull() or assertThat(result).isEmpty() / isNotEmpty()
 }

@@ -3,6 +3,10 @@ package com.plath.scancard.ui.scan
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.plath.scancard.domain.model.ModelConfig
+import com.plath.scancard.domain.model.ModelState
+import com.plath.scancard.domain.repository.ModelRepository
+import com.plath.scancard.domain.service.BackgroundTaskManager
 import com.plath.scancard.domain.usecase.ManageDeckUseCase
 import com.plath.scancard.domain.usecase.ScanDocumentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +21,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ScanViewModel @Inject constructor(
     private val scanDocumentUseCase: ScanDocumentUseCase,
-    private val manageDeckUseCase: ManageDeckUseCase
+    private val manageDeckUseCase: ManageDeckUseCase,
+    private val modelRepository: ModelRepository,
+    private val backgroundTaskManager: BackgroundTaskManager
 ) : ViewModel() {
 
     private val _scannedPages = MutableStateFlow<List<Uri>>(emptyList())
@@ -34,7 +40,13 @@ class ScanViewModel @Inject constructor(
         _scannedPages.value = _scannedPages.value - uri
     }
 
-    fun processScans(deckId: Long, onComplete: (Long) -> Unit) {
+    /**
+     * Fast Mode (Req18.2/18.3) after OCR: If model is ready, skip extraction preview screen
+     * and start background extraction directly then navigate to deck detail (2nd arg of
+     * onComplete = true). If model is not ready, navigate to ExtractionPreviewScreen
+     * as usual (2nd arg = false, Req18.4).
+     */
+    fun processScans(deckId: Long, onComplete: (Long, Boolean) -> Unit) {
         android.util.Log.d("ScanVM", "Processing scans for deckId input: $deckId")
         viewModelScope.launch {
             _isProcessing.value = true
@@ -48,8 +60,15 @@ class ScanViewModel @Inject constructor(
                     deckId
                 }
                 scanDocumentUseCase.processScannedPages(targetDeckId, _scannedPages.value)
-                android.util.Log.d("ScanVM", "Scan processing complete. Navigating to extraction with ID: $targetDeckId")
-                onComplete(targetDeckId)
+                android.util.Log.d("ScanVM", "Scan processing complete. Navigating with ID: $targetDeckId")
+
+                modelRepository.checkModelStatus(ModelConfig.GEMMA_4_E2B)
+                val modelReady = modelRepository.modelState.value is ModelState.Ready
+                if (modelReady) {
+                    android.util.Log.d("ScanVM", "Fast mode: model ready — starting extraction directly")
+                    backgroundTaskManager.startExtraction(targetDeckId, ModelConfig.DEFAULT_ID)
+                }
+                onComplete(targetDeckId, modelReady)
             } catch (e: Exception) {
                 android.util.Log.e("ScanVM", "Error processing scans", e)
             } finally {
@@ -58,7 +77,7 @@ class ScanViewModel @Inject constructor(
         }
     }
 
-    fun insertDummyScanForE2E(deckId: Long, onComplete: (Long) -> Unit) {
+    fun insertDummyScanForE2E(deckId: Long, onComplete: (Long, Boolean) -> Unit) {
         viewModelScope.launch {
             _isProcessing.value = true
             try {
@@ -67,7 +86,15 @@ class ScanViewModel @Inject constructor(
                     manageDeckUseCase.createDeck("Scan $dateStr")
                 } else deckId
                 scanDocumentUseCase.insertDummyScan(targetDeckId)
-                onComplete(targetDeckId)
+                // Fast Mode judgment is same as the actual flow (Req18.2). In E2E environments
+                // where the model file is placed in DEBUG, this becomes true, skipping preview.
+                modelRepository.checkModelStatus(ModelConfig.GEMMA_4_E2B)
+                val modelReady = modelRepository.modelState.value is ModelState.Ready
+                if (modelReady) {
+                    android.util.Log.d("ScanVM", "Fast mode: model ready — starting extraction directly")
+                    backgroundTaskManager.startExtraction(targetDeckId, ModelConfig.DEFAULT_ID)
+                }
+                onComplete(targetDeckId, modelReady)
             } catch (e: Exception) {
                 android.util.Log.e("ScanVM", "Dummy insert failed", e)
             } finally {

@@ -15,10 +15,10 @@ class NotificationHelper(private val context: Context) {
         private const val CHANNEL_ID = "extraction_channel"
         private const val CHANNEL_NAME = "Extraction Progress"
 
-        // アプリ管理通知（progress/completion/error）のベースid。
-        // WorkManagerのFGS通知は deckId をそのまま使うため、衝突を避けてオフセットする。
-        // 同一IDでのraw notifyはWMがsetProgress毎に元FGS通知を再投稿して上書きされるため機能しない
-        // （実測 2026-08-26）。別IDなら常にシェードに表示される。
+        // Base ID for app management notifications (progress/completion/error).
+        // Since WorkManager's FGS notification uses deckId directly, offset to avoid collisions.
+        // Raw notify with the same ID doesn't work because WM reposts and overwrites the original FGS notification on each setProgress
+        // (observed 2026-08-26). Using a different ID ensures it's always displayed in the shade.
         private const val APP_NOTIF_ID_OFFSET = 100_000
         fun appNotificationId(deckId: Long): Int = APP_NOTIF_ID_OFFSET + deckId.toInt()
     }
@@ -42,8 +42,8 @@ class NotificationHelper(private val context: Context) {
     fun showCompletionNotification(deckId: Long) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("scancard://deck/$deckId")).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            // 明示package付与: カスタムscheme scancard:// は package に依らないが、
-            // com.plath 移行後に他アプリが同schemeを横取りするのを防ぐ
+            // Explicit package assignment: While custom scheme scancard:// doesn't depend on package,
+            // this prevents other apps from hijacking the scheme after migration to com.plath
             `package` = context.packageName
         }
         
@@ -117,7 +117,7 @@ class NotificationHelper(private val context: Context) {
             .setContentText("Page $current of $safeTotal")
             .setProgress(safeTotal, current.coerceIn(0, safeTotal), false)
             .setOngoing(true)
-            // 進捗更新のたびに通知音/ヘッドアップを鳴らさない
+            // Do not play sound/head-up on every progress update
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)

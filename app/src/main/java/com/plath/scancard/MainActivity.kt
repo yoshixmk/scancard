@@ -28,14 +28,14 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // TODO(IMP-05): NavigationSuiteScaffold(calculateFromAdaptiveInfo) に置換
-                    // 手順 (IMP-02 Navigation3移行後に有効化):
-                    // 1. app/build.gradle.kts の adaptive 3依存のコメントを外す
+                    // TODO(IMP-05): Replace with NavigationSuiteScaffold(calculateFromAdaptiveInfo)
+                    // Procedure (Enable after IMP-02 Navigation3 migration):
+                    // 1. Uncomment adaptive 3 dependencies in app/build.gradle.kts
                     // 2. import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
                     //    import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
                     //    import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
                     //    import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
-                    // 3. 下記雛形で Scaffold を NavigationSuiteScaffold に置換:
+                    // 3. Replace Scaffold with NavigationSuiteScaffold using the following template:
                     // ```
                     // var isNavBarVisible by remember { mutableStateOf(true) }
                     // val scaffoldState = rememberNavigationSuiteScaffoldState()
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                     //     if (isNavBarVisible) scaffoldState.show() else scaffoldState.hide()
                     // }
                     // ```
-                    // 現状は Scaffold固定のまま (MainActivity.kt:22-31) — ビルドを壊さないためコメント留め。
+                    // Currently fixed as Scaffold (MainActivity.kt:22-31) — commented out to avoid breaking the build.
                     val navController = rememberNavController()
                     ScanCardNavHost(navController = navController)
                 }
@@ -67,8 +67,8 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        // singleTop + scancard://deck deepLink を warm-start でも解決する
-        // ScanCardNavHostの NavController が Compose内にいるため Holder経由で handleDeepLink
+        // Resolve singleTop + scancard://deck deepLink even in warm-start
+        // Since ScanCardNavHost's NavController is in Compose, use handleDeepLink via Holder
         NavHolder.navController?.handleDeepLink(intent)
     }
 }

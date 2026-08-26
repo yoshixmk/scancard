@@ -766,7 +766,7 @@ fun CardBackContent(card: Card) {
         ) {
             Text(
                 if (languagePreference == LanguagePreference.ENGLISH) 
-                    "日本語に切り替え" 
+                    "Switch to Japanese" 
                 else 
                     "Switch to English"
             )

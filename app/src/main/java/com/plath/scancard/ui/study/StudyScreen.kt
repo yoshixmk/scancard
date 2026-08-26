@@ -25,7 +25,7 @@ import com.plath.scancard.data.local.entities.Card
 
 import com.plath.scancard.domain.model.FilterType
 import com.plath.scancard.domain.model.LanguagePreference
-// TODO(IMP-05 5-6/5-7): Adaptive FlashCard 用 import（コメント留め — 有効化時にアンコメント）
+// TODO(IMP-05 5-6/5-7): Imports for Adaptive FlashCard (commented out — uncomment when enabling)
 // import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 // import androidx.window.core.layout.WindowSizeClass
 // import com.plath.scancard.ui.preview.FormFactorPreviews
@@ -43,7 +43,7 @@ fun StudyScreen(
     var languagePreference by remember { mutableStateOf(LanguagePreference.ENGLISH) }
 
     Scaffold(
-        // SKILL.md Step3: Scaffold PREFERRED — contentWindowInsets=safeDrawing を指定し innerPadding を伝播
+        // SKILL.md Step 3: Scaffold PREFERRED — specify contentWindowInsets=safeDrawing and propagate innerPadding
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
@@ -177,19 +177,20 @@ fun Flashcard(
         label = "cardRotation"
     )
 
-    // TODO(IMP-05 5-6): FlashCard aspectRatio を currentWindowAdaptiveInfo().windowSizeClass で可変にする
-    // 現状は固定 0.7f（Phone縦向け）。adaptive 依存有効化後に下記へ置換（ビルドを壊さないためコメント留め）:
+    // TODO(IMP-05 5-6): Vary FlashCard aspectRatio based on currentWindowAdaptiveInfo().windowSizeClass
+    // Currently fixed at 0.7f (for Phone portrait). Replace with the following after enabling
+    // adaptive dependencies (commented out to avoid breaking the build):
     // ```
     // val adaptiveInfo = currentWindowAdaptiveInfo()
     // val aspectRatio = when {
-    //     adaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 1.6f // expanded: Tablet/Desktop 横長
+    //     adaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 1.6f // expanded: Tablet/Desktop horizontal
     //     adaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)   -> 1.2f // medium: Foldable unfolded / large phone
     //     else -> 0.7f // compact: Phone
     // }
     // ```
-    // 適用: Modifier.aspectRatio(aspectRatio) に置換。MediaQuery代替として WindowSizeClass を使用
-    // （adaptive/SKILL.md Step5 MediaQuery 章 — compose.material3.adaptive は MediaQuery 相当）
-    // 検証: @FormFactorPreviews (400/700/900/1200dp) でカード縦横比が崩れないことを目視確認
+    // Application: Replace with Modifier.aspectRatio(aspectRatio). Use WindowSizeClass as MediaQuery substitute
+    // (adaptive/SKILL.md Step 5 MediaQuery chapter — compose.material3.adaptive is equivalent to MediaQuery)
+    // Verification: Visually confirm that card aspect ratio is maintained in @FormFactorPreviews (400/700/900/1200dp)
     Card(
         modifier = Modifier
             .fillMaxWidth(0.8f)
@@ -236,7 +237,7 @@ fun Flashcard(
                         // Stop propagation of click to the card
                         onToggleLanguage() 
                     }) {
-                        Text(if (languagePreference == LanguagePreference.ENGLISH) "日本語" else "English")
+                        Text(if (languagePreference == LanguagePreference.ENGLISH) "Japanese" else "English")
                     }
                 }
             }
@@ -244,7 +245,7 @@ fun Flashcard(
     }
 }
 
-// TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+// TODO(IMP-05 5-7): @FormFactorPreviews application procedure
 // ```
 // @FormFactorPreviews
 // @Composable

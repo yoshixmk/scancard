@@ -120,7 +120,7 @@ ScanCard is an Android application that enables users to photograph book pages u
 #### Acceptance Criteria
 
 1. THE CardBack SHALL display the English definition by default.
-2. THE CardBack SHALL provide a toggle button labeled "日本語" to switch to Japanese.
+2. THE CardBack SHALL provide a toggle button labeled "Japanese" to switch to Japanese.
 3. WHEN the toggle button is pressed, THE CardDisplay SHALL show the Japanese translation of the definition.
 4. THE CardBack SHALL preserve the E2B bilingual translation (English definition with Japanese annotation) alongside the toggle feature.
 5. WHILE the toggle is active, THE CardDisplay SHALL maintain the selected language preference until changed by the user.

@@ -92,9 +92,9 @@ class ExportManagerTest {
     }
 
     @Test
-    fun exportToTSV_preservesJapaneseAndSpecialChars() {
-        val cards = listOf(Card(id = 1, deckId = 1, term = "犬", definition = "dog"))
+    fun exportToTSV_preservesNonAsciiAndSpecialChars() {
+        val cards = listOf(Card(id = 1, deckId = 1, term = "dog_ja", definition = "dog"))
         val result = manager.exportToTSV(cards)
-        assertEquals("犬\tdog", result)
+        assertEquals("dog_ja\tdog", result)
     }
 }

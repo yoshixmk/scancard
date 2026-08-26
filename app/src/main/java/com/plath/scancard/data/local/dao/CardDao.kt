@@ -34,13 +34,14 @@ interface CardDao {
     @Query("UPDATE cards SET status = :status WHERE id = :cardId")
     suspend fun updateCardStatus(cardId: Long, status: CardStatus)
 
-    // IMP-07 7-3: 正規化対応の重複チェック。lower(trim(term)) で大文字小文字・前後空白を無視。
-    // クエリ: SELECT * WHERE deckId=:deckId AND lower(trim(term))=lower(trim(:term))
-    // - SQLiteの lower()/trim() でDBレベル正規化を担保（アプリ層 CardValidator.findDuplicate と二重化）。
-    // - 既存 checkDuplicate が無かったため新規追加。上記SQLは正規化対応済み。
-    // - 修正案メモ: もし lower/trim なしの `WHERE term = :term` だった場合は上記クエリへ置換すること。
-    // - Index推奨: deckId は既存 Index あり。複合 UNIQUE(deckId, normalizedTerm) を張るなら normalizedTerm 列を追加して
-    //   trigger/生成列で lower(trim(term)) を永続化し UNIQUE 制約を付与する方法もあるが、本PRではクエリ正規化に留める。
+    // IMP-07 7-3: Duplicate check with normalization. lower(trim(term)) ignores case and leading/trailing whitespace.
+    // Query: SELECT * WHERE deckId=:deckId AND lower(trim(term))=lower(trim(:term))
+    // - Ensures DB-level normalization with SQLite's lower()/trim() (duplicated with app-layer CardValidator.findDuplicate).
+    // - Added as it was missing; the SQL above handles normalization.
+    // - Note for future fix: if there was a `WHERE term = :term` without lower/trim, replace with the above query.
+    // - Index recommendation: deckId has an existing index. To add a composite UNIQUE(deckId, normalizedTerm),
+    //   one could add a normalizedTerm column and persist lower(trim(term)) via triggers/generated columns,
+    //   but this PR sticks to query normalization.
     @Query("SELECT * FROM cards WHERE deckId = :deckId AND lower(trim(term)) = lower(trim(:term)) LIMIT 1")
     suspend fun checkDuplicate(deckId: Long, term: String): Card?
 

@@ -29,7 +29,8 @@ class BackgroundTaskManager @Inject constructor(
     fun extractionWorkName(deckId: Long): String = "extraction_$deckId"
 
     suspend fun startExtraction(deckId: Long, modelId: String) {
-        // 永続ステータスを先に PENDING へ（Req12.9）。プロセス死亡時のレジューム判定はこの列が source of truth。
+        // Set persistent status to PENDING first (Req12.9).
+        // This column is the source of truth for resumption judgment upon process death.
         deckRepository.updateExtractionStatus(deckId, ExtractionStatus.PENDING)
 
         if (hasActiveWork(deckId)) {
@@ -58,12 +59,12 @@ class BackgroundTaskManager @Inject constructor(
 
         val request = OneTimeWorkRequestBuilder<CardExtractionWorker>()
             .setInputData(data)
-            // プロセス死亡/一時失敗時に自動リトライ（指数バックオフ）
+            // Automatic retry on process death/temporary failure (exponential backoff)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_DELAY_MS, TimeUnit.MILLISECONDS)
             .build()
 
-        // APPEND_OR_REPLACE: 実行中チェーンには追加（キャンセルしない → 「Job was cancelled」スパム防止）、
-        // CANCELLED/FAILED チェーンは置換 → 過去の失敗がリトライを静かにブロックしない（Req12.11）
+        // APPEND_OR_REPLACE: Appends to running chains (avoids "Job was cancelled" spam),
+        // replaces CANCELLED/FAILED chains so past failures don't silently block retries (Req12.11)
         workManager.enqueueUniqueWork(
             extractionWorkName(deckId),
             ExistingWorkPolicy.APPEND_OR_REPLACE,

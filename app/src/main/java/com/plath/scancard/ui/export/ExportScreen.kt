@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-// TODO(IMP-05 5-7): @FormFactorPreviews 適用用 import（コメント留め — 有効化時にアンコメント）
+// TODO(IMP-05 5-7): Imports for applying @FormFactorPreviews (commented out — uncomment when enabling)
 // import com.plath.scancard.ui.preview.FormFactorPreviews
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,7 +31,7 @@ fun ExportScreen(
     var selectedFormat by remember { mutableStateOf("TSV") }
 
     Scaffold(
-        // SKILL.md Step3: contentWindowInsets=safeDrawing で systemBars を処理、bottomは windowInsetsPadding で二重回避
+        // SKILL.md Step3: contentWindowInsets=safeDrawing handles systemBars; bottom uses windowInsetsPadding to avoid double padding
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
@@ -80,7 +80,7 @@ fun ExportScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+            // TODO(IMP-05 5-7): @FormFactorPreviews application procedure
             // ```
             // @FormFactorPreviews
             // @Composable

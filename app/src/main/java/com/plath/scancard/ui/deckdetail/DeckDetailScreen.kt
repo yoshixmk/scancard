@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.plath.scancard.data.local.entities.Card as FlashCard
-// TODO(IMP-05 5-5): StaggeredGrid / Grid Adaptive 案用 import（コメント留め — 有効化時にアンコメント）
+// TODO(IMP-05 5-5): Imports for StaggeredGrid / Grid Adaptive proposal (commented out — uncomment when enabling)
 // import androidx.compose.foundation.lazy.grid.GridCells
 // import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 // import androidx.compose.foundation.lazy.grid.items
@@ -46,7 +46,7 @@ fun DeckDetailScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
-        // Edge-to-Edge: StatusBar scrim/List章 検証用 — TopAppBarは自動でsafeDrawingを処理
+        // Edge-to-Edge: For verifying StatusBar scrim/List chapter — TopAppBar automatically handles safeDrawing
         topBar = {
             TopAppBar(
                 title = { 
@@ -128,10 +128,10 @@ fun DeckDetailScreen(
                 style = MaterialTheme.typography.labelLarge
             )
 
-            // TODO(IMP-05 5-5): LazyColumn → Adaptive Grid/StaggeredGrid 置換案（コメント留め、段階的適用）
-            // 現状は IMP-03 contentPadding 維持のため LazyColumn のまま。カード数多時やTablet幅で
-            // 複列表示が必要な場合の候補を以下に記載 — ビルドを壊さないためコメント留め。
-            // 案A: LazyVerticalGrid（均等カード高さ向け）
+            // TODO(IMP-05 5-5): Proposal to replace LazyColumn with Adaptive Grid/StaggeredGrid (commented out for staged application)
+            // Currently remains as LazyColumn to maintain IMP-03 contentPadding. Candidate for
+            // multi-column display when card count is high or on tablet widths — commented out to avoid breaking the build.
+            // Option A: LazyVerticalGrid (for uniform card heights)
             // ```
             // LazyVerticalGrid(
             //     columns = GridCells.Adaptive(180.dp),
@@ -145,7 +145,7 @@ fun DeckDetailScreen(
             //     }
             // }
             // ```
-            // 案B: LazyVerticalStaggeredGrid（カード高さ不均一な場合）
+            // Option B: LazyVerticalStaggeredGrid (for non-uniform card heights)
             // ```
             // LazyVerticalStaggeredGrid(
             //     columns = StaggeredGridCells.Adaptive(180.dp),
@@ -159,9 +159,9 @@ fun DeckDetailScreen(
             //     }
             // }
             // ```
-            // 判定: 案Aは ListItem 高さ均一で見栄え安定、案Bは定義長が不均一な deck で高さ追従。
-            // いずれも FormFactorPreviews (400/700/900/1200dp) で列数可変を目視検証すること。
-            // SKILL.md Lists章: 親Columnが padding(padding) で inset 済みのため contentPaddingは bottom のみに限定し FAB被りを回避
+            // Evaluation: Option A is stable for uniform ListItem heights; Option B follows height in decks with non-uniform definitions.
+            // Visually verify variable column counts in both with FormFactorPreviews (400/700/900/1200dp).
+            // SKILL.md Lists chapter: Since parent Column is already inset with padding(padding), limit contentPadding to bottom only to avoid FAB overlap.
             LazyColumn(
                 modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
                 contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 80.dp)
@@ -203,7 +203,7 @@ fun DeckDetailScreen(
     }
 }
 
-// TODO(IMP-05 5-7): @FormFactorPreviews 適用手順
+// TODO(IMP-05 5-7): @FormFactorPreviews application procedure
 // ```
 // @FormFactorPreviews
 // @Composable
@@ -246,7 +246,7 @@ fun CardEditDialog(
         onDismissRequest = onDismiss,
         title = { Text("Edit Card") },
         text = {
-            // SKILL.md IME章 PREFERRED: fitInside より親で safeDrawing 消費済みのため子の imePadding は TextField のみに限定（二重回避）
+            // SKILL.md IME chapter PREFERRED: Since safeDrawing is consumed by parent rather than fitInside, limit child's imePadding to TextField only (to avoid double padding).
             Column {
                 TextField(
                     value = term,

@@ -18,11 +18,11 @@ import androidx.navigation.navDeepLink
 object NavHolder {
     var navController: NavHostController? = null
 }
-// TODO(IMP-02): NavDisplay + entryProvider に移行 (docs/navigation3-migration.md参照)
-// 移行手順 (JVM17 + AGP 9.3.1 で実行、gradleフル実行禁止のためコメントのみ):
-//   1. app/build.gradle.kts の TODO(IMP-02) をアンコメントし Navigation3 依存を Sync (navigation3-runtime/ui + kotlin-serialization plugin)
-//   2. ui/navigation/NavKeys.kt の `: NavKey` をアンコメント (import androidx.navigation3.runtime.NavKey)
-//   3. 本ファイルの NavHost/composable/navArgument/navDeepLink を下記 After 例に置換:
+// TODO(IMP-02): Migrate to NavDisplay + entryProvider (see docs/navigation3-migration.md)
+// Migration procedure (Run with JVM17 + AGP 9.3.1, comments only to avoid full gradle execution):
+//   1. Uncomment TODO(IMP-02) in app/build.gradle.kts and Sync Navigation3 dependencies (navigation3-runtime/ui + kotlin-serialization plugin)
+//   2. Uncomment ": NavKey" in ui/navigation/NavKeys.kt (import androidx.navigation3.runtime.NavKey)
+//   3. Replace NavHost/composable/navArgument/navDeepLink in this file with the following After example:
 //      ```
 //      // Before:
 //      NavHost(navController, startDestination = Screen.Home.route) {
@@ -37,11 +37,11 @@ object NavHolder {
 //          entryProvider = entryProvider {
 //              entry<Home> { HomeScreen(onScanClick = { backStack.add(Scan(deckId=0L)) }) }
 //              entry<Scan> { key -> ScanScreen(deckId = key.deckId, onBack = { backStack.removeLastOrNull() }) }
-//              entry<DeckDetail> { key -> DeckDetailScreen(deckId = key.deckId) } // deepLinkは UriDeepLinkMatcher("scancard://deck/{deckId}") に移行
+//              entry<DeckDetail> { key -> DeckDetailScreen(deckId = key.deckId) } // Deep links migrated to UriDeepLinkMatcher("scancard://deck/{deckId}")
 //          }
 //      )
 //      ```
-//   4. コールバック置換案 (副作用なし):
+//   4. Callback replacement proposals (no side effects):
 //      - navController.navigate(Screen.Scan.createRoute(id))           -> backStack.add(Scan(deckId=id))
 //      - navController.navigate(Screen.DeckDetail.createRoute(id))     -> backStack.add(DeckDetail(deckId=id))
 //      - navController.navigate(Screen.ExtractionPreview.createRoute(id)) -> backStack.add(ExtractionPreview(deckId=id))
@@ -51,17 +51,17 @@ object NavHolder {
 //      - navController.navigate(...){ popUpTo(Home) }                  -> while(backStack.lastOrNull()!=Home) backStack.removeLastOrNull(); backStack.add(...)
 //      - backStackEntry.arguments?.getLong("deckId")                   -> key.deckId  or  savedStateHandle.toRoute<DeckDetail>().deckId
 //      - navDeepLink { uriPattern="scancard://deck/{deckId}" }         -> UriDeepLinkMatcher(DeepLinkUri("scancard://deck/{deckId}"), serializer<DeckDetail>()) + DeepLinkRequest(intent)
-//   5. 詳細は docs/navigation3-migration.md および .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/migration-guide.md Step3-6 参照
-//   6. 検証: JVM17で ./gradlew :app:testDebugUnitTest + :app:assembleDebug が SUCCESS、NavigationTest 雛形をアンコメントし緑化
-// TODO(IMP-05): Adaptive ListDetail Scene — Navigation3移行後に有効化 (adaptive/SKILL.md Step3)
-// 有効化手順 (IMP-02 Nav3移行後):
-// 1. app/build.gradle.kts の adaptive-navigation3 コメントを外す
+//   5. See docs/navigation3-migration.md and .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/migration-guide.md Step3-6 for details
+//   6. Verification: Ensure ./gradlew :app:testDebugUnitTest + :app:assembleDebug SUCCESS on JVM17, uncomment NavigationTest template and verify green.
+// TODO(IMP-05): Adaptive ListDetail Scene — Enable after Navigation3 migration (adaptive/SKILL.md Step3)
+// Activation procedure (After IMP-02 Nav3 migration):
+// 1. Uncomment adaptive-navigation3 in app/build.gradle.kts
 // 2. import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 //    import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 //    import androidx.navigation3.runtime.NavDisplay
 //    import androidx.navigation3.runtime.entryProvider
 //    import androidx.navigation3.runtime.rememberSaveableBackStack
-// 3. 本 NavHost を NavDisplay に置換:
+// 3. Replace this NavHost with NavDisplay:
 // ```
 // val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
 // NavDisplay(
@@ -69,14 +69,14 @@ object NavHolder {
 //     sceneStrategy = listDetailStrategy,
 //     entryProvider = entryProvider {
 //         entry<Home>(metadata = ListDetailSceneStrategy.listPane(
-//             detailPlaceholder = { Text("デッキを選択してください", modifier=Modifier.fillMaxSize().wrapContentSize()) }
+//             detailPlaceholder = { Text("Please select a deck", modifier=Modifier.fillMaxSize().wrapContentSize()) }
 //         )) { HomeScreen(...) }
 //         entry<DeckDetail>(metadata = ListDetailSceneStrategy.detailPane()) { DeckDetailScreen(...) }
-//         // Study/Scan/Export は detailPane でも supportingPane でもなく通常 entry
+//         // Study/Scan/Export are regular entries, not listPane or detailPane
 //     }
 // )
 // ```
-// 現状は navigation-compose:2.9.8 の NavHost のまま — ビルドを壊さないためコメント留め。
+// Currently remains as NavHost of navigation-compose:2.9.8 — commented out to avoid breaking the build.
 
 @Composable
 fun ScanCardNavHost(navController: NavHostController) {
@@ -95,7 +95,17 @@ fun ScanCardNavHost(navController: NavHostController) {
             val deckId = backStackEntry.arguments?.getLong("deckId") ?: 0L
             ScanScreen(
                 onBack = { navController.popBackStack() },
-                onComplete = { newDeckId -> navController.navigate(Screen.ExtractionPreview.createRoute(newDeckId)) },
+                onComplete = { newDeckId, fastMode ->
+                    // Fast Mode (Req18.3): Skip extraction preview if model is ready
+                    // and navigate directly to DeckDetail (backstack pops to Home).
+                    if (fastMode) {
+                        navController.navigate(Screen.DeckDetail.createRoute(newDeckId)) {
+                            popUpTo(Screen.Home.route)
+                        }
+                    } else {
+                        navController.navigate(Screen.ExtractionPreview.createRoute(newDeckId))
+                    }
+                },
                 deckId = deckId
             )
         }
@@ -147,7 +157,7 @@ fun ScanCardNavHost(navController: NavHostController) {
     }
 }
 
-// TODO(IMP-05 5-7): 各Screen Preview に @FormFactorPreviews 適用 — ScanCardNavHost自体は NavHost のため
-// Preview対象外だが、Home/DeckDetail は ListDetailScene で並列表示されることを
-// @FormFactorPreviews (700dp/900dp/1200dp) でスクショ検証すること。
-// 手順: `.kiro/skills/adaptive/SKILL.md` Step3.3 参照。
+// TODO(IMP-05 5-7): Apply @FormFactorPreviews to each Screen Preview — ScanCardNavHost itself is not a Preview target
+// as it's a NavHost, but verify Home/DeckDetail are displayed side-by-side in ListDetailScene using
+// @FormFactorPreviews (700dp/900dp/1200dp) with screenshots.
+// Procedure: See .kiro/skills/adaptive/SKILL.md Step3.3.

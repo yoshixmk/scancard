@@ -29,7 +29,8 @@ data class Card(
     val japaneseTranslation: String = "",
     val status: CardStatus = CardStatus.NEW,
     val createdAt: Long = System.currentTimeMillis(),
-    // IMP-07 7-1: 重複検出列（design.md 272-284）。デフォルト値付きで既存DB読込・既存コンストラクタを壊さない
+    // IMP-07 7-1: Duplicate detection columns (design.md 272-284).
+    // With default values to avoid breaking existing DB loads and constructors.
     @ColumnInfo(name = "isDuplicate")
     val isDuplicate: Boolean = false,
     @ColumnInfo(name = "duplicateOfId")

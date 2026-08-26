@@ -1,24 +1,24 @@
 package com.plath.scancard.ui.home
 
 // =============================================================================
-// IMP-06 6-3 Screenshot Test 雛形 (Compose Preview Screenshot Testing)
+// IMP-06 6-3 Screenshot Test Template (Compose Preview Screenshot Testing)
 // =============================================================================
-// 制約: gradleフル実行禁止 / JVM8では screenshotTest タスク実行不可 のため
-//       本ファイルは「雛形コメント中心」で作成。実際にコンパイルが通らなくても
-//       コメントとして残し、JVM17 + plugin有効化後に段階的に有効化する。
-// ビルドを壊さないため、実装は全てコメントアウトで残す。必要に応じて
-// app/build.gradle.kts の TODO(IMP-06) コメントを外してから有効化すること。
+// Constraints: Full gradle execution and screenshotTest task are not available on JVM8.
+//       This file is created as a "comment-based template". Even if it doesn't compile,
+//       keep it as comments and gradually enable it after JVM17 + plugin activation.
+// All implementations are commented out to avoid breaking the build. Enable by
+// uncommenting TODO(IMP-06) in app/build.gradle.kts as needed.
 // =============================================================================
 
-// TODO(IMP-06) 6-1 依存有効化後にアンコメント:
+// TODO(IMP-06) 6-1 Uncomment after enabling dependencies:
 // plugins {
 //     alias(libs.plugins.compose.screenshotTest) // or id("com.android.compose.screenshot")
 // }
-// 有効化後の sourceSet: `app/src/screenshotTest/java/` が自動認識され、
-// `./gradlew :app:validateScreenshotTest` / `updateScreenshotTest` が利用可能になる。
+// Once enabled, sourceSet: `app/src/screenshotTest/java/` will be automatically recognized,
+// and `./gradlew :app:validateScreenshotTest` / `updateScreenshotTest` will become available.
 
 // -----------------------------------------------------------------------------
-// 有効化時にアンコメントする import 群
+// Imports to be uncommented upon activation
 // -----------------------------------------------------------------------------
 // import androidx.compose.runtime.Composable
 // import androidx.compose.ui.tooling.preview.Devices
@@ -26,14 +26,15 @@ package com.plath.scancard.ui.home
 // import androidx.compose.material3.MaterialTheme
 // import androidx.compose.ui.test.DeviceConfigurationOverride
 // import androidx.compose.ui.test.WindowSize
-// import com.android.compose.screenshot.PreviewTest // AGP 8.5+ の Preview Screenshot Testing 用
+// import com.android.compose.screenshot.PreviewTest // For AGP 8.5+ Preview Screenshot Testing
 // import com.plath.scancard.ui.theme.ScanCardTheme
 // import com.plath.scancard.data.local.entities.Deck
 // import java.util.Date
 
 // -----------------------------------------------------------------------------
-// FormFactorPreviews アノテーション雛形 (adaptive/SKILL.md Step1準拠)
-// IMP-05で `ui/preview/FormFactorPreviews.kt` に定義予定。ここでは再掲（有効化時にそちらを参照）。
+// FormFactorPreviews annotation template (adheres to adaptive/SKILL.md Step 1)
+// Planned to be defined in ui/preview/FormFactorPreviews.kt in IMP-05.
+// Re-listed here for reference during activation.
 // -----------------------------------------------------------------------------
 // @Preview(name = "Phone", device = Devices.PHONE, showBackground = true)
 // @Preview(name = "Foldable", device = Devices.FOLDABLE, showBackground = true)
@@ -42,29 +43,30 @@ package com.plath.scancard.ui.home
 // annotation class FormFactorPreviews
 
 // =============================================================================
-// HomeScreen スクショ雛形 — 9サイズ (400/610/900dp × 400/500/1000dp)
+// HomeScreen screenshot template — 9 sizes (400/610/900dp x 400/500/1000dp)
 // + dark/light + fontScale1.5
 // =============================================================================
 
 // -----------------------------------------------------------------------------
-// 案A: @PreviewTest で自動収集（Compose Preview Screenshot Testing 推奨）
-// 各 @PreviewTest + @FormFactorPreviews が validateScreenshotTest で全サイズ生成
+// Option A: Automatic collection with @PreviewTest (Recommended for Compose Preview Screenshot Testing)
+// Each @PreviewTest + @FormFactorPreviews generates all sizes via validateScreenshotTest
 // -----------------------------------------------------------------------------
 
-// // Empty state — Phone (400×500) が基準、他サイズは FormFactorPreviews で自動生成
+// // Empty state — Phone (400x500) as baseline, other sizes auto-generated via FormFactorPreviews
 // @PreviewTest
 // @FormFactorPreviews
 // @Composable
 // fun HomeScreenScreenshot_Empty() {
 //     ScanCardTheme {
-//         // Fake ViewModel を Hilt で差し替え、または HomeScreen の decks を引数化したWrapperを使用
-//         // 例: HomeScreen(decks = emptyList(), onScanClick = {}, onDeckClick = {})
-//         // 現行 HomeScreen は hiltViewModel() を直接使うため、Screenshot用に `HomeScreenContent(decks=...)` を切り出すのが推奨
+//         // Swap with Fake ViewModel using Hilt, or use a Wrapper that takes decks as an argument.
+//         // Example: HomeScreen(decks = emptyList(), onScanClick = {}, onDeckClick = {})
+//         // Since the current HomeScreen uses hiltViewModel() directly, it is recommended
+//         // to extract HomeScreenContent(decks=...) for Screenshots.
 //         HomeScreenPreviewWrapper(decks = emptyList())
 //     }
 // }
 //
-// // With decks — 複数デッキ表示
+// // With decks — displaying multiple decks
 // @PreviewTest
 // @FormFactorPreviews
 // @Composable
@@ -80,7 +82,7 @@ package com.plath.scancard.ui.home
 //     }
 // }
 //
-// // Dark theme バリエーション (mobile 400×500 のみでも可、Skill Step8準拠)
+// // Dark theme variation (mobile 400x500 only is fine, adheres to Skill Step 8)
 // @Preview(name = "Dark", device = Devices.PHONE, showBackground = true)
 // @PreviewTest
 // @Composable
@@ -92,12 +94,12 @@ package com.plath.scancard.ui.home
 //     }
 // }
 //
-// // FontScale 1.5 バリエーション (mobile 400×500 のみ)
-// // DeviceConfigurationOverride で fontScale を上書き — docs/testing.md の追記を参照
+// // FontScale 1.5 variation (mobile 400x500 only)
+// // Overwrite fontScale via DeviceConfigurationOverride — see docs/testing.md addition
 // @PreviewTest
 // @Composable
 // fun HomeScreenScreenshot_FontScale15() {
-//     // 有効化時: CompositionLocalProvider + DeviceConfigurationOverride で fontScale=1.5f を再現
+//     // Upon activation: Reproduce fontScale=1.5f via CompositionLocalProvider + DeviceConfigurationOverride
 //     // DeviceConfigurationOverride(
 //     //     DeviceConfigurationOverride.FontScale(1.5f)
 //     // ) {
@@ -106,8 +108,8 @@ package com.plath.scancard.ui.home
 // }
 
 // -----------------------------------------------------------------------------
-// 案B: 9サイズを明示的に手書きPreview（LayoutLibのdevice指定で代替）
-// Adaptive Grid (GridCells.Adaptive 320dp) の列数可変を目視確認するために有効
+// Option B: Explicitly hand-written Previews for 9 sizes (substituted via LayoutLib device specification)
+// Useful for visual verification of variable column counts in Adaptive Grid (GridCells.Adaptive 320dp)
 // -----------------------------------------------------------------------------
 // @Preview(name = "400×400", widthDp = 400, heightDp = 400, showBackground = true)
 // @Preview(name = "400×500", widthDp = 400, heightDp = 500, showBackground = true)
@@ -125,7 +127,7 @@ package com.plath.scancard.ui.home
 // }
 
 // -----------------------------------------------------------------------------
-// Optional: Paparazzi / Roborazzi への切替雛形（将来の選択肢、JVM8制約でコメント留め）
+// Optional: Switching template for Paparazzi / Roborazzi (Future options, commented out due to JVM8 constraints)
 // -----------------------------------------------------------------------------
 // // Paparazzi:
 // // @get:Rule val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_6, theme = "android:Theme.Material3.DayNight")
@@ -145,14 +147,14 @@ package com.plath.scancard.ui.home
 // // }
 
 // -----------------------------------------------------------------------------
-// Preview Wrapper 雛形 — ViewModel依存を切り離すための Content 分離案
-// 現行 HomeScreen は hiltViewModel() を使うため、Screenshotでは stateless なWrapperが望ましい
-// 将来: HomeScreen.kt を `HomeScreen(viewModel)` と `HomeScreenContent(decks, ...)` に分割
+// Preview Wrapper template — Content separation to decouple ViewModel dependency
+// Since current HomeScreen uses hiltViewModel(), a stateless Wrapper is preferred for Screenshots
+// Future: Split HomeScreen.kt into HomeScreen(viewModel) and HomeScreenContent(decks, ...)
 // -----------------------------------------------------------------------------
 // @Composable
 // private fun HomeScreenPreviewWrapper(decks: List<Deck>) {
 //     // HomeScreenContent(decks = decks, onScanClick = {}, onDeckClick = {}, onDelete = {})
-//     // DeckItem の Preview も同様に分離して Component-level screenshot を追加可能
+//     // DeckItem Preview can also be separated to add component-level screenshots
 // }
 //
 // private fun sampleDecks() = listOf(
@@ -161,18 +163,19 @@ package com.plath.scancard.ui.home
 // )
 
 // =============================================================================
-// 有効化手順まとめ
+// Activation Procedure Summary
 // =============================================================================
-// 1. app/build.gradle.kts の TODO(IMP-06) コメントを外し Sync（JVM17で）
-// 2. 本ファイルの import / @PreviewTest ブロックのコメントを外す
-// 3. HomeScreen.kt を Content分離（必要なら）し、Wrapperが参照できるようにする
-// 4. ./gradlew :app:updateScreenshotTest で参照画像を生成 → 目視承認
-// 5. ./gradlew :app:validateScreenshotTest で差分検証（CI）
-// 6. 将来: DeckDetailScreen / StudyScreen / ExtractionPreviewScreen も同様に screenshotTest 配下に追加
+// 1. Uncomment TODO(IMP-06) in `app/build.gradle.kts` and Sync (with JVM17)
+// 2. Uncomment the import / @PreviewTest blocks in this file
+// 3. Separate Content in `HomeScreen.kt` (if needed) so the Wrapper can reference it
+// 4. Generate reference images with `./gradlew :app:updateScreenshotTest` -> visual approval
+// 5. Difference verification with `./gradlew :app:validateScreenshotTest` (CI)
+// 6. Future: Add DeckDetailScreen / StudyScreen / ExtractionPreviewScreen under screenshotTest in the same way
 //    - `app/src/screenshotTest/java/com/plath/scancard/ui/deckdetail/DeckDetailScreenScreenshotTest.kt`
 //    - `app/src/screenshotTest/java/com/plath/scancard/ui/study/StudyScreenScreenshotTest.kt`
-//    - 各ファイルで empty/loading/success/error の状態別に @PreviewTest を追加
+//    - Add @PreviewTest for each state (empty/loading/success/error) in each file
 // =============================================================================
 
-// NOTE: 本ファイルは雛形のため、現状はコンパイル対象外（全てコメント）。screenshotTest sourceSet
-// が有効化され上記コメントを外すまではビルドに影響しない。
+// NOTE: This file is a template and currently not a compilation target (all commented out).
+// It does not affect the build until screenshotTest sourceSet is enabled and comments
+// above are removed.

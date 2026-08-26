@@ -15,23 +15,23 @@ android {
     defaultConfig {
         applicationId = "com.plath.scancard"
         minSdk = 26
-        // TODO(IMP-08): targetSdk = 36 昇格 (AppFunctions要件) — 実数値は JVM8 ビルド制約のため 35 のまま。昇格時は下記手順で 36 に変更する。
-        // 要件: AppFunctions は targetSdk 36+ かつ compileSdk 37+ (Android 16) が前提。現行 compileSdk=37 は充足、targetSdk のみ未達。
-        //       skill: .kiro/skills/appfunctions/SKILL.md Prerequisites / references/context.md 参照。
-        // 昇格手順:
-        //   1. 本行を targetSdk = 36 に変更 (数値のみ変更、本コメントは除去)
-        //   2. compileSdk=37 が維持されていることを確認
-        //   3. JVM17 + AGP 9.3.1 環境で ./gradlew :app:assembleDebug を実行し SUCCESS を確認
-        //   4. Android 16+ (API 36) エミュ/実機でインストール検証: adb shell getprop ro.build.version.sdk が 36 以上
-        //   5. adb shell cmd app_function list-app-functions で AppFunctions 登録を確認 (docs/appfunctions-discovery.md 8-6 参照)
-        // 注意点 — targetSdk 35→36 Behavior Changes (要 Release Notes 照合):
-        //   - 通知(POST_NOTIFICATIONS): 33+ で導入済みだが 36 では通知チャネル重要度・フォアグラウンドサービス通知の厳格化に注意。
-        //     BackgroundTaskManager / NotificationHelper / ExtractionPreviewScreen(権限リクエスト)のフローを再検証。権限未付与時の WorkManager 通知フォールバック確認。
-        //   - ストレージ/メディア: READ_EXTERNAL_STORAGE(maxSdkVersion=32) / READ_MEDIA_* は維持。36 で追加された権限・PhotoPicker 拡張があれば要対応。本アプリは SAF/Clipboard に委譲。
-        //   - Edge-to-Edge: 35+ で強制される edge-to-edge が 36 でも継続。MainActivity.enableEdgeToEdge() + WindowInsets 消費が正しいか再スクショ (IMP-03)。
-        //   - ForegroundService: 34+ で foregroundServiceType 必須。現状 FOREGROUND_SERVICE のみ宣言、WorkManager 使用のため影響小だが将来 FGS 使用時は type 明示。
-        //   - プライバシー/セキュリティ: 36 のプライバシー変更 (Health Connect, Intent フィルタ厳格化等) は本アプリ非対象だが Play Console Target API 要件を満たすこと。
-        //   - AppFunctions: targetSdk 36 未満では AppSearch への schema 登録が行われず Gemini/Agent から発見されない。昇格後に service/ScanCardAppFunctionService.kt の KSP 生成物を確認。
+        // TODO(IMP-08): Upgrade targetSdk = 36 (AppFunctions requirement) — Value remains 35 due to JVM8 build constraints. Use the following steps to change to 36 when upgrading.
+        // Requirements: AppFunctions requires targetSdk 36+ and compileSdk 37+ (Android 16). Current compileSdk=37 is met; targetSdk is pending.
+        //       skill: .kiro/skills/appfunctions/SKILL.md Prerequisites / references/context.md reference.
+        // Upgrade procedure:
+        //   1. Change this line to targetSdk = 36 (change value only, remove this comment)
+        //   2. Confirm compileSdk=37 is maintained
+        //   3. Run ./gradlew :app:assembleDebug on JVM17 + AGP 9.3.1 environment and verify SUCCESS
+        //   4. Installation verification on Android 16+ (API 36) emu/device: adb shell getprop ro.build.version.sdk is 36 or higher
+        //   5. Verify AppFunctions registration with adb shell cmd app_function list-app-functions (see docs/appfunctions-discovery.md 8-6)
+        // Note — targetSdk 35->36 Behavior Changes (verify with Release Notes):
+        //   - Notifications (POST_NOTIFICATIONS): Introduced in 33+, but note stricter notification channel importance and foreground service notifications in 36.
+        //     Re-verify flows for BackgroundTaskManager / NotificationHelper / ExtractionPreviewScreen (permission request). Check WorkManager notification fallback when permission is not granted.
+        //   - Storage/Media: READ_EXTERNAL_STORAGE(maxSdkVersion=32) / READ_MEDIA_* maintained. Handle 36-added permissions or PhotoPicker extensions if any. This app delegates to SAF/Clipboard.
+        //   - Edge-to-Edge: Mandatory in 35+, continues in 36. Re-screenshot to verify MainActivity.enableEdgeToEdge() + WindowInsets consumption (IMP-03).
+        //   - ForegroundService: foregroundServiceType mandatory in 34+. Currently only FOREGROUND_SERVICE declared; minimal impact due to WorkManager use, but specify type if using FGS in future.
+        //   - Privacy/Security: 36 privacy changes (Health Connect, stricter Intent filters, etc.) don't target this app, but ensure Play Console Target API requirements are met.
+        //   - AppFunctions: Schema registration to AppSearch won't occur below targetSdk 36, so Gemini/Agent won't discover it. Verify KSP outputs of service/ScanCardAppFunctionService.kt after upgrade.
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -93,9 +93,9 @@ tasks.withType<Test> {
     extensions.findByType<JacocoTaskExtension>()?.isEnabled = false
 }
 
-// Jacoco report stub – AGP 8+ では Android カバレッジ連携が複雑なため雛形のみ。
-// 要手動対応: 実カバレッジ計測には buildTypes.debug.enableUnitTestCoverage / android Jacoco 連携が必要。
-// ビルドを壊さないようデフォルトは無効化し、タスク存在のみ保証する。
+// Jacoco report stub – Template only as Android coverage integration is complex in AGP 8+.
+// Manual action required: Real coverage measurement requires buildTypes.debug.enableUnitTestCoverage / android Jacoco integration.
+// Defaulted to disabled to avoid breaking the build, ensuring only task existence.
 tasks.register<JacocoReport>("jacocoTestReport") {
     group = "verification"
     description = "Stub Jacoco report – manual configuration required for AGP 8+ (see docs/testing.md)"
@@ -106,7 +106,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         html.outputLocation.set(file("${layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/html"))
         xml.outputLocation.set(file("${layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"))
     }
-    // 雛形: 将来有効化する際は以下を有効化
+    // Template: Enable the following when enabling in the future
     // dependsOn("testDebugUnitTest")
     // classDirectories.setFrom(files("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug"))
     // sourceDirectories.setFrom(files("src/main/java"))
@@ -123,27 +123,27 @@ tasks.register<JacocoReport>("jacocoTestDebugUnitTestReport") {
     }
 }
 
-// TODO(IMP-06) 6-1 Compose Preview Screenshot Testing 導入手順（JVM8制約でコメントのみ、gradleフル実行禁止のため適用はコメント留め）
-// 手順A: catalogありの場合（推奨）
-//   1. `gradle/libs.versions.toml` にバージョン追加:
+// TODO(IMP-06) 6-1 Compose Preview Screenshot Testing implementation procedure (Comments only due to JVM8 constraints; application commented out due to gradle full execution prohibition)
+// Option A: With version catalog (Recommended)
+//   1. Add version to `gradle/libs.versions.toml`:
 //      [versions]
-//      compose-screenshot = "0.0.1-alpha08" # AGP 9.3.1 / Kotlin 2.1.10 / Compose BOM 2026.08.00 と整合する最新を使う
+//      compose-screenshot = "0.0.1-alpha08" # Use latest compatible with AGP 9.3.1 / Kotlin 2.1.10 / Compose BOM 2026.08.00
 //      [plugins]
 //      compose-screenshotTest = { id = "com.android.compose.screenshot", version.ref = "compose-screenshot" }
-//   2. `app/build.gradle.kts` plugins ブロックに alias 追加:
+//   2. Add alias to `app/build.gradle.kts` plugins block:
 //      plugins {
-//          alias(libs.plugins.compose.screenshotTest) // TODO(IMP-06): 有効化時はコメントを外す
+//          alias(libs.plugins.compose.screenshotTest) // TODO(IMP-06): Uncomment when enabling
 //      }
-// 手順B: catalogなしの場合（本プロジェクトは直書きのためこちらでも可）
+// Option B: Without catalog (As this project uses direct declaration, this is also fine)
 //   plugins {
-//       id("com.android.compose.screenshot") version "0.0.1-alpha08" // TODO(IMP-06): 有効化時はコメントを外す（versionは AGP と整合）
+//       id("com.android.compose.screenshot") version "0.0.1-alpha08" // TODO(IMP-06): Uncomment when enabling (version matches AGP)
 //   }
-// 手順C: screenshotTest sourceSet 有効化後に自動生成されるタスク:
-//   ./gradlew :app:validateScreenshotTest --info   # 差分検証（CI用、閾値チェック）
-//   ./gradlew :app:updateScreenshotTest --info     # 参照画像更新（ローカルで目視承認後に実行）
-//   成果物: `app/src/screenshotTest/resources/` or `app/build/screenshots/` 配下に 9サイズ×theme×fontScale の参照 PNG が生成される想定
-// 要件: compileSdk 37 / JVM17 / AGP 9.3.1 で実行（JVM8では screenshotTest タスク実行不可）。有効化前に `./gradlew :app:assembleDebug` が SUCCESS であることを確認。
-// 参考: .kiro/skills/testing-setup/SKILL.md Step8, adaptive/SKILL.md Step1, docs/screenshot-testing.md 参照。
+// Option C: Tasks auto-generated after enabling screenshotTest sourceSet:
+//   ./gradlew :app:validateScreenshotTest --info   # Difference verification (CI, threshold check)
+//   ./gradlew :app:updateScreenshotTest --info     # Reference image update (run after local visual approval)
+//   Output: Expected 9 sizes x theme x fontScale reference PNGs under `app/src/screenshotTest/resources/` or `app/build/screenshots/`
+// Requirements: Run with compileSdk 37 / JVM17 / AGP 9.3.1 (screenshotTest task unavailable on JVM8). Ensure `./gradlew :app:assembleDebug` SUCCESS before enabling.
+// References: See .kiro/skills/testing-setup/SKILL.md Step 8, adaptive/SKILL.md Step 1, docs/screenshot-testing.md.
 
 dependencies {
     implementation("androidx.core:core-ktx:1.19.0")
@@ -180,20 +180,20 @@ dependencies {
     implementation("androidx.hilt:hilt-work:1.4.0")
     ksp("androidx.hilt:hilt-compiler:1.4.0")
 
-    // Navigation (Navigation 2 - 現行)
+    // Navigation (Navigation 2 - Current)
     implementation("androidx.navigation:navigation-compose:2.9.8")
-    // TODO(IMP-02): Navigation3 移行用依存追加手順 (JVM8制約でコメント留め、gradleフル実行禁止のためコメントのみ)
-    // 背景: .kiro/skills/navigation-3/SKILL.md migration-guide / .kiro/skills/adaptive/SKILL.md Navigation3必須
-    //       現行 compileSdk=37 / minSdk=26 は Navigation3 要件 (compileSdk 36+ / minSdk 23+) を充足。
-    //       JVM8環境では Navigation3 依存追加でビルド不可のため、本ブロックはコメントのまま。JVM17 + AGP 9.3.1 で有効化すること。
-    // 手順1: Kotlin Serialization plugin 追加 (NavKeyの @Serializable に必須)
-    // TODO(IMP-02): Kotlin Serialization 導入手順 (JVM8制約でコメントのみ)
-    //   Option A: libs.versions.toml に追加する場合
+    // TODO(IMP-02): Navigation3 migration dependency addition procedure (Commented out due to JVM8 constraints; comments only due to gradle full execution prohibition)
+    // Background: .kiro/skills/navigation-3/SKILL.md migration-guide / .kiro/skills/adaptive/SKILL.md Navigation3 mandatory
+    //       Current compileSdk=37 / minSdk=26 meet Navigation3 requirements (compileSdk 36+ / minSdk 23+).
+    //       Build impossible with Navigation3 dependencies in JVM8; this block remains commented. Enable with JVM17 + AGP 9.3.1.
+    // Step 1: Add Kotlin Serialization plugin (Mandatory for @Serializable in NavKey)
+    // TODO(IMP-02): Kotlin Serialization implementation procedure (Comments only due to JVM8 constraints)
+    //   Option A: When adding to libs.versions.toml
     //     [versions]
     //     kotlin = "2.1.10"
     //     kotlinxSerializationJson = "1.8.1"
-    //     nav3Core = "1.0.0" # navigation3-runtime/ui のバージョン。alphaを利用する場合は "1.0.0-alpha10" 等を指定
-    //     lifecycleViewmodelNav3 = "2.9.0" # ViewModel連携が必要な場合のみ
+    //     nav3Core = "1.0.0" # version of navigation3-runtime/ui. Specify "1.0.0-alpha10" etc. if using alpha
+    //     lifecycleViewmodelNav3 = "2.9.0" # Only if ViewModel integration is required
     //     [libraries]
     //     kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
     //     androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
@@ -201,30 +201,30 @@ dependencies {
     //     androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
     //     [plugins]
     //     kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-    //   Option B: 直書きする場合 (app/build.gradle.kts 先頭 plugins ブロックに追加):
+    //   Option B: Direct declaration (Add to top plugins block in app/build.gradle.kts):
     //     // TODO(IMP-02): id("org.jetbrains.kotlin.plugin.serialization") version "2.1.10"
-    //     // TODO(IMP-02): implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1") // @Serializable に必須
-    //   有効化時は上記コメントを外し、JVM17で Sync + ./gradlew :app:assembleDebug を実行
-    // 手順2: app/build.gradle.kts dependencies に追記 (コメントを外して Sync)
+    //     // TODO(IMP-02): implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1") // Mandatory for @Serializable
+    //   Uncomment the above when enabling, then Sync with JVM17 and run ./gradlew :app:assembleDebug
+    // Step 2: Add to app/build.gradle.kts dependencies (Uncomment and Sync)
     // TODO(IMP-02): implementation("androidx.navigation3:navigation3-runtime:1.0.0-alpha")
     // TODO(IMP-02): implementation("androidx.navigation3:navigation3-ui:1.0.0-alpha")
-    // TODO(IMP-02): implementation("androidx.navigation3:navigation3-runtime:1.0.0") // 安定版 (推奨)
-    // TODO(IMP-02): implementation("androidx.navigation3:navigation3-ui:1.0.0") // 安定版 (推奨)
-    //   // ViewModelで SavedStateHandle / toRoute() を使う場合のみ:
+    // TODO(IMP-02): implementation("androidx.navigation3:navigation3-runtime:1.0.0") // Stable (Recommended)
+    // TODO(IMP-02): implementation("androidx.navigation3:navigation3-ui:1.0.0") // Stable (Recommended)
+    //   // Only if using SavedStateHandle / toRoute() in ViewModel:
     //   // TODO(IMP-02): implementation("androidx.lifecycle:lifecycle-viewmodel-navigation3:2.9.0")
-    //   // または BOM利用時:
+    //   // Or with BOM:
     //   // TODO(IMP-02): implementation(platform("androidx.navigation3:navigation3-bom:1.0.0"))
     //   // TODO(IMP-02): implementation("androidx.navigation3:navigation3-runtime")
     //   // TODO(IMP-02): implementation("androidx.navigation3:navigation3-ui")
-    //   // Navigation3 移行の alpha を明示したい場合はタスク指定の以下を使用 (ただし最新安定版 1.0.0 を推奨):
+    //   // If you want to specify alpha for Navigation3 migration, use the following:
     //   // TODO(IMP-02): implementation("androidx.navigation3:navigation3-runtime:1.0.0-alpha10")
     //   // TODO(IMP-02): implementation("androidx.navigation3:navigation3-ui:1.0.0-alpha10")
-    // 手順3: 有効化後の検証
-    //   1. ./gradlew :app:assembleDebug が SUCCESS であることを確認 (JVM17必須)
-    //   2. ui/navigation/NavKeys.kt の `: NavKey` コメントを外し import androidx.navigation3.runtime.NavKey が解決されることを確認
-    //   3. docs/navigation3-migration.md の手順で ScanCardNavHost.kt を NavDisplay に置換
-    // 注意: Navigation2 の navigation-compose:2.9.8 は移行完了まで併存可。完全移行後に削除: implementation("androidx.navigation:navigation-compose:2.9.8")
-    // 参考: .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/migration-guide.md Step1, get-started.md
+    // Step 3: Post-activation verification
+    //   1. Confirm ./gradlew :app:assembleDebug SUCCESS (JVM17 mandatory)
+    //   2. Uncomment `: NavKey` in ui/navigation/NavKeys.kt and verify import androidx.navigation3.runtime.NavKey resolves
+    //   3. Replace ScanCardNavHost.kt with NavDisplay using steps in docs/navigation3-migration.md
+    // Note: Navigation 2's navigation-compose:2.9.8 can coexist until migration is complete. Remove after full migration: implementation("androidx.navigation:navigation-compose:2.9.8")
+    // References: See .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/migration-guide.md Step 1, get-started.md
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.7.0")
@@ -236,9 +236,9 @@ dependencies {
     val workVersion = "2.11.2"
     implementation("androidx.work:work-runtime-ktx:$workVersion")
 
-    // IMP-07 7-4 DataStore導入手順（JVM8制約でコメントのみ、gradleフル実行禁止のため依存追加はコメントに留める）
-    // 手順: implementation("androidx.datastore:datastore-preferences:1.1.1")
-    // 用途: StudyViewModel の filter_type 永続化（DataStore<Preferences>）。Req9.6 "filter persists across sessions" 対応。
+    // IMP-07 7-4 DataStore implementation procedure (Comments only due to JVM8 constraints; dependency addition commented out due to gradle full execution prohibition)
+    // Procedure: implementation("androidx.datastore:datastore-preferences:1.1.1")
+    // Use: filter_type persistence in StudyViewModel (DataStore<Preferences>). Addresses Req9.6 "filter persists across sessions".
 
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
@@ -274,8 +274,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    // TODO(IMP-05): Adaptive UI 依存 — JVM8 gradle制約でコメント留め、IMP-02 Navigation3移行後に有効化
-    // 手順: 下記3行のコメントを外し Sync する。versions は BOM 2026.08.00 と整合する 1.1.0 系を使用
+    // TODO(IMP-05): Adaptive UI dependencies — Commented out due to JVM8 gradle constraints; enable after IMP-02 Navigation3 migration
+    // Procedure: Uncomment the following 3 lines and Sync. Use 1.1.0 series compatible with BOM 2026.08.00
     // implementation("androidx.compose.material3.adaptive:adaptive:1.1.0")
     // implementation("androidx.compose.material3.adaptive:adaptive-layout:1.1.0")
     // implementation("androidx.compose.material3.adaptive:adaptive-navigation3:1.1.0")
@@ -284,19 +284,19 @@ dependencies {
 
     // IMP-01 done: deps implemented (mockk 1.13.13 etc) - see .kiro/skills/testing-setup
 
-    // TODO(IMP-08): AppFunctions 依存 — JVM8 gradle制約でコメント留め、targetSdk 36 昇格時に有効化
-    // 要件: targetSdk 36+ / compileSdk 37+ / KSP / Hilt。skill: .kiro/skills/appfunctions/references/implementation-configuration.md Step1 参照。
-    // 手順:
-    //   1. app/build.gradle.kts:14 の targetSdk を 36 に昇格 (本ファイル先頭の TODO(IMP-08) コメント参照)
-    //   2. 下記2行のコメントを外し Sync (version は maven.google.com の最新 alpha10+ を推奨、タスク指定の alpha01 は legacy):
+    // TODO(IMP-08): AppFunctions dependencies — Commented out due to JVM8 gradle constraints; enable when upgrading targetSdk to 36
+    // Requirements: targetSdk 36+ / compileSdk 37+ / KSP / Hilt. See .kiro/skills/appfunctions/references/implementation-configuration.md Step 1.
+    // Procedure:
+    //   1. Upgrade targetSdk to 36 in app/build.gradle.kts:14 (see TODO(IMP-08) comment at the top)
+    //   2. Uncomment the following 2 lines and Sync (latest alpha10+ from maven.google.com recommended; alpha01 is legacy):
     //      implementation("androidx.appfunctions:appfunctions:1.0.0-alpha01")
     //      ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha01")
-    //      推奨最新: implementation("androidx.appfunctions:appfunctions:1.0.0-alpha10") + ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha10")
-    //   3. KSP 引数を確認: ksp { arg("appfunctions.aggregateAppFunctions", "true") } が必要に応じて自動付与されることを確認 (AGP 9.3.1)
-    //   4. Hilt 連携: ScanCardAppFunctionService.kt は @AndroidEntryPoint + @AppFunctionServiceEntryPoint を併用。Hilt 2.60.1 / KSP 依存は既存で充足。
-    //   5. ビルド検証: JVM17 で ./gradlew :app:assembleDebug を実行。app/build/generated/ksp/debug/ 配下に schema XML が生成されることを確認
-    //   6. AndroidManifest.xml に <service android:permission="android.permission.BIND_APP_FUNCTION_SERVICE" ...> が KSP により自動/手動登録されることを確認
-    // 注意: 有効化前は本コメントのみ。依存を外したまま app/src/main/java/com/plath/scancard/service/ScanCardAppFunctionService.kt はコメント雛形でコンパイルエラーを回避。
+    //      Recommended: implementation("androidx.appfunctions:appfunctions:1.0.0-alpha10") + ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha10")
+    //   3. Check KSP arguments: Confirm ksp { arg("appfunctions.aggregateAppFunctions", "true") } is added automatically if needed (AGP 9.3.1)
+    //   4. Hilt integration: ScanCardAppFunctionService.kt uses @AndroidEntryPoint + @AppFunctionServiceEntryPoint. Existing Hilt 2.60.1 / KSP dependencies suffice.
+    //   5. Build verification: Run ./gradlew :app:assembleDebug on JVM17. Confirm schema XML generation in app/build/generated/ksp/debug/
+    //   6. Confirm automatic/manual registration of <service android:permission="android.permission.BIND_APP_FUNCTION_SERVICE" ...> in AndroidManifest.xml by KSP
+    // Note: Before activation, only this comment exists. service/ScanCardAppFunctionService.kt uses comment templates to avoid compilation errors without dependencies.
     // TODO(IMP-08): implementation("androidx.appfunctions:appfunctions:1.0.0-alpha01")
     // TODO(IMP-08): ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha01")
 }

@@ -25,8 +25,8 @@ class ExtractCardsUseCase @Inject constructor(
     private val cardValidator: CardValidator
 ) {
     /**
-     * スキャンを1枚ずつ処理し、ページ単位の進捗を onProgress に報告する（Req12.13）。
-     * onProgress: (current, total) — 最初のページ処理前に (0, N)、各ページ完了直後に (i, N)。
+     * Processes scans one by one and reports page-level progress to onProgress (Req12.13).
+     * onProgress: (current, total) — (0, N) before processing the first page, (i, N) immediately after each page completes.
      */
     suspend fun extractAndSaveCards(
         deckId: Long,
@@ -42,7 +42,8 @@ class ExtractCardsUseCase @Inject constructor(
         val combinedText = scans.joinToString("\n") { it.rawText }
 
         if (combinedText.isBlank()) {
-            // 抽出対象が空でもデッキの状態は完了にしておかないとレジュームが無限ループする（Req12.8）
+            // Even if the extraction target is empty, the deck status must be set to completed
+            // to avoid infinite resumption loops (Req12.8).
             deckRepository.updateExtractionStatus(deckId, ExtractionStatus.COMPLETED)
             return
         }
@@ -51,7 +52,8 @@ class ExtractCardsUseCase @Inject constructor(
         val extractedPairs = mutableListOf<com.plath.scancard.data.ml.ExtractedCard>()
         onProgress(0, total)
 
-        // 手動テスト: repeat+return@repeat はbreakせず3回常に実行されメモリ増(8.6→9.5GB)を招く。for+breakに修正
+        // Manual test: repeat+return@repeat does not break and always runs 3 times, causing
+        // memory increase (8.6->9.5GB). Fixed with for+break.
         for ((index, scan) in scans.withIndex()) {
             val pageText = scan.rawText
             var pagePairs = emptyList<com.plath.scancard.data.ml.ExtractedCard>()
@@ -94,8 +96,8 @@ class ExtractCardsUseCase @Inject constructor(
         }
         
         cardRepository.insertCards(cards)
-        // カード永続化と完了マークを worker の success 報告前に完了させる（Req12.8）。
-        // ここが失敗すれば worker は success を返さず、ステータスも COMPLETED にならない。
+        // Complete card persistence and mark as completed before worker reports success (Req12.8).
+        // If this fails, the worker will not return success and status will not become COMPLETED.
         deckRepository.updateExtractionStatus(deckId, ExtractionStatus.COMPLETED)
     }
 }

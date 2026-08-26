@@ -6,24 +6,25 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 /**
  * FakeDocumentScanner — IMP-10 10-4
  *
- * 目的: Mockito ではなく Fake で ScanDocumentUseCase / ScanViewModel の非同期ライフサイクルをテストする。
- * 準拠: `.kiro/skills/camerax/references/testing.md` Fakes over mocks / Google Truth / Explicit @RunWith
+ * Purpose: Test asynchronous lifecycles of ScanDocumentUseCase / ScanViewModel using Fakes instead of Mockito.
+ * Adheres to: `.kiro/skills/camerax/references/testing.md` Fakes over mocks / Google Truth / Explicit @RunWith
  *
- * 本物の DocumentScannerManager は Play Services (GmsDocumentScanning.getClient) に依存し
- * Robolectric / JVM ユニットテストで初期化不可。本 Fake は Play Services を一切呼ばず、
- * メモリ上でスキャン結果をシミュレートする。
+ * The actual DocumentScannerManager depends on Play Services (GmsDocumentScanning.getClient) and
+ * cannot be initialized in Robolectric / JVM unit tests. This Fake does not call Play Services at all
+ * and simulates scan results in memory.
  *
- * 使い方:
+ * Usage:
  * ```
- * @RunWith(AndroidJUnit4::class) // または RobolectricTestRunner
+ * @RunWith(AndroidJUnit4::class) // or RobolectricTestRunner
  * class ScanDocumentUseCaseTest {
  *     private val fakeScanner = FakeDocumentScanner()
- *     private val fakeRecognition = FakeTextRecognition() // 別Fake
+ *     private val fakeRecognition = FakeTextRecognition() // Separate Fake
  *     private lateinit var useCase: ScanDocumentUseCase
  *
  *     @Before fun setUp() {
- *         fakeScanner.setNextResult(listOf(mockUri1, mockUri2)) // 成功ケース
- *         // useCase = ScanDocumentUseCase(fakeRecognition, fakeRepo) // Scanner自体はUseCaseに直接依存しないためViewModel層で差替
+ *         fakeScanner.setNextResult(listOf(mockUri1, mockUri2)) // Success case
+ *         // Scanner itself doesn't directly depend on UseCase, so swap at the ViewModel layer
+ *         // useCase = ScanDocumentUseCase(fakeRecognition, fakeRepo) 
  *     }
  *
  *     @Test fun scanSuccess_addsPages() {
@@ -33,16 +34,16 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
  * }
  * ```
  *
- * 設計原則:
- * - 状態検証 (verify state) を優先し、Mockito の verify(behavior) は使わない。
- * - 非同期は CountDownLatch / IdlingResource ではなく kotlinx-coroutines-test の runTest + Turbine で検証。
- * - ScanScreen の ActivityResultLauncher 周りは Fake では再現しない — ViewModel の addPages/removePage/processScans を直接テスト。
+ * Design Principles:
+ * - Prioritize state verification (verify state) over Mockito's behavior verification (verify(behavior)).
+ * - Verify asynchronous operations using kotlinx-coroutines-test's runTest + Turbine instead of CountDownLatch / IdlingResource.
+ * - ScanScreen's ActivityResultLauncher vicinity is not reproduced in Fake — test ViewModel's addPages/removePage/processScans directly.
  *
- * 将来 CameraX 移行時は FakeCameraConfig (androidx.camera:camera-testing) と併用し、
- * ProcessCameraProvider.awaitInstance(context) の初期化を Fake で置換する (testing.md 参照)。
+ * Upon future CameraX migration, use with FakeCameraConfig (androidx.camera:camera-testing) and
+ * replace ProcessCameraProvider.awaitInstance(context) initialization with Fake (see testing.md).
  */
 
-// 軽量な GmsDocumentScanningResult の代替 — 本物の GmsDocumentScanningResult は final でモック困難なため Fake DTO を用意
+// Lightweight alternative to GmsDocumentScanningResult — as the actual GmsDocumentScanningResult is final and hard to mock, a Fake DTO is provided
 data class FakeScanPage(val imageUri: Uri)
 
 data class FakeScanResult(
@@ -51,31 +52,31 @@ data class FakeScanResult(
 )
 
 /**
- * FakeDocumentScanner — DocumentScannerManager の Fake 置換
+ * FakeDocumentScanner — Fake replacement for DocumentScannerManager
  *
- * 本物の DocumentScannerManager.createLauncher / startScan の代わりに、
- * テストコードから直接成功/失敗/キャンセルをトリガできる。
+ * Instead of the actual DocumentScannerManager.createLauncher / startScan,
+ * success/failure/cancellation can be triggered directly from the test code.
  */
 class FakeDocumentScanner {
 
-    // --- 設定可能な振る舞い (テストの given で操作) ---
+    // --- Configurable behaviors (Manipulate in test's given section) ---
 
-    // 次回スキャンで返す Uri 群。空ならキャンセル扱いにするテストも可能。
+    // URIs to return in the next scan. Tests can treat empty lists as cancellations.
     private var nextUris: List<Uri> = emptyList()
 
-    // エラーをシミュレートする場合は non-null にする
+    // Set to non-null to simulate an error
     private var nextError: Exception? = null
 
-    // キャンセルをシミュレートするフラグ
+    // Flag to simulate cancellation
     private var nextCanceled: Boolean = false
 
-    // 呼び出し履歴の検証用
+    // For verifying call history
     var startScanCallCount: Int = 0
         private set
     var lastLaunchedUris: List<Uri>? = null
         private set
 
-    // コールバックのキャプチャ (Escaping 検証用 — 本物では ActivityResultLauncher にエスケープする)
+    // Callback capture (For Escaping verification — the actual one escapes to ActivityResultLauncher)
     var onSuccessInvoked: Boolean = false
         private set
     var onErrorInvoked: Boolean = false
@@ -83,36 +84,36 @@ class FakeDocumentScanner {
     var onCanceledInvoked: Boolean = false
         private set
 
-    // --- テストからの操作 API ---
+    // --- Operation APIs from tests ---
 
-    /** 次回スキャンで成功する Uri 列を設定 */
+    /** Set URIs for success in the next scan */
     fun setNextResult(uris: List<Uri>) {
         nextUris = uris
         nextError = null
         nextCanceled = false
     }
 
-    /** 次回スキャンでエラーを返すように設定 */
+    /** Set to return an error in the next scan */
     fun setNextError(exception: Exception) {
         nextError = exception
         nextCanceled = false
     }
 
-    /** 次回スキャンでキャンセルを返すように設定 */
+    /** Set to return cancellation in the next scan */
     fun setNextCanceled() {
         nextCanceled = true
         nextError = null
     }
 
-    // --- 本物の DocumentScannerManager.startScan / createLauncher の Fake 実装 ---
+    // --- Fake implementation of actual DocumentScannerManager.startScan / createLauncher ---
 
     /**
-     * Fake の startScan — 本物の scanner.getStartScanIntent(activity).addOnSuccessListener 相当を
-     * 同期的にシミュレート。実際の IntentSender は生成せず、コールバックを直接呼ぶ。
+     * Fake startScan — synchronously simulates actual scanner.getStartScanIntent(activity).addOnSuccessListener
+     * equivalent. Directly calls callbacks without generating an actual IntentSender.
      *
-     * @param onSuccess 成功時に FakeScanResult を返す
-     * @param onError 失敗時
-     * @param onCanceled キャンセル時
+     * @param onSuccess Returns FakeScanResult on success
+     * @param onError On failure
+     * @param onCanceled On cancellation
      */
     fun startScan(
         onSuccess: (FakeScanResult) -> Unit,
@@ -139,11 +140,11 @@ class FakeDocumentScanner {
     }
 
     /**
-     * ScanScreen の scannerLauncher 相当をシミュレート — ActivityResultContracts.StartIntentSenderForResult の代わりに
-     * 直接 Uri リストを返すヘルパ。ViewModel.addPages() のテストに利用。
+     * Simulates ScanScreen's scannerLauncher equivalent — helper that directly returns a URI list
+     * instead of ActivityResultContracts.StartIntentSenderForResult. Used for testing ViewModel.addPages().
      */
     fun simulateScanSuccess(): FakeScanResult {
-        // デフォルトは setNextResult で設定された値、未設定なら空
+        // Defaults to value set via setNextResult, or empty if not set
         return FakeScanResult(pages = nextUris.map { FakeScanPage(it) })
     }
 
@@ -151,7 +152,7 @@ class FakeDocumentScanner {
 
     fun simulateCancel(): Boolean = nextCanceled
 
-    /** テスト間の状態リセット — @Before / @After で呼ぶ */
+    /** Reset state between tests — call in @Before / @After */
     fun reset() {
         nextUris = emptyList()
         nextError = null
@@ -163,7 +164,7 @@ class FakeDocumentScanner {
         onCanceledInvoked = false
     }
 
-    // --- Truth assertions 置換例 (docs/testing.md 10-5 参照) ---
+    // --- Truth assertions substitution examples (see docs/testing.md 10-5) ---
     // JUnit: assertEquals(2, result.pages.size)
     // Truth: assertThat(result.pages).hasSize(2)
     // Truth: assertThat(onSuccessInvoked).isTrue()

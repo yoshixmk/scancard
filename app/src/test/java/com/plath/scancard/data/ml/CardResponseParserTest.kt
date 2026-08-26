@@ -32,9 +32,9 @@ class CardResponseParserTest {
 
     @Test
     fun `parse with japaneseTranslation returns it`() {
-        val input = """[{"term": "Dog", "definition": "Animal", "japaneseTranslation": "犬"}]"""
+        val input = """[{"term": "Dog", "definition": "Animal", "japaneseTranslation": "dog_ja"}]"""
         val result = parser.parse(input)
         assertEquals(1, result.size)
-        assertEquals("犬", result[0].japaneseTranslation)
+        assertEquals("dog_ja", result[0].japaneseTranslation)
     }
 }

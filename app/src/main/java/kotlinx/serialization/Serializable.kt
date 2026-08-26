@@ -1,23 +1,24 @@
 package kotlinx.serialization
 
 /**
- * IMP-02 Navigation3 雛形用スタブ (ビルドを壊さないため)
+ * IMP-02 Navigation3 Template Stub (to avoid breaking the build)
  *
- * 本来は `org.jetbrains.kotlinx:kotlinx-serialization-json` により提供される annotation だが、
- * JVM8制約で依存をコメント留めしているため、NavKeys.kt の `import kotlinx.serialization.Serializable`
- * が解決せずビルドエラーになるのを防ぐための一時スタブ。
+ * This annotation is originally provided by `org.jetbrains.kotlinx:kotlinx-serialization-json`,
+ * but because dependencies are commented out due to JVM8 constraints, this is a temporary stub
+ * to prevent build errors caused by unresolved `import kotlinx.serialization.Serializable`
+ * in `NavKeys.kt`.
  *
- * 有効化手順 (JVM17で Navigation3 移行時):
- *   1. app/build.gradle.kts の TODO(IMP-02) をアンコメントし、下記を有効化:
+ * Activation Procedure (when migrating to Navigation3 with JVM17):
+ *   1. Uncomment TODO(IMP-02) in `app/build.gradle.kts` and enable the following:
  *      - implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
  *      - plugins { id("org.jetbrains.kotlin.plugin.serialization") version "2.1.10" }
- *   2. 本スタブファイルを削除する (実ライブラリの Serializable と重複するため)
+ *   2. Delete this stub file (to avoid duplication with the actual library's Serializable):
  *      - `rm app/src/main/java/kotlinx/serialization/Serializable.kt`
- *   3. `./gradlew :app:assembleDebug` で重複エラーが解消されたことを確認
+ *   3. Confirm that duplication errors are resolved with `./gradlew :app:assembleDebug`.
  *
- * 注意: このスタブは `KSerializer` / `serializer<T>()` 等は提供しない。Navigation3 の `NavKeySerializer`
- *       が必要な場合は実ライブラリが必須。現状の NavKeys.kt は `@Serializable` の付与のみで
- *       シリアライザ生成は行わないため本スタブで十分。
+ * Note: This stub does not provide `KSerializer` or `serializer<T>()`. If Navigation3's `NavKeySerializer`
+ *       is required, the actual library must be used. Current `NavKeys.kt` only applies `@Serializable`
+ *       and does not generate serializers, so this stub is sufficient.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)

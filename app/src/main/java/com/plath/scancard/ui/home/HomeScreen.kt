@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.plath.scancard.data.local.entities.Deck
-// TODO(IMP-05): Adaptive Grid 移行用 import（コメント留め — 有効化時にアンコメント）
+// TODO(IMP-05): Imports for Adaptive Grid migration (commented out — uncomment when enabling)
 // import androidx.compose.foundation.lazy.grid.GridCells
 // import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 // import androidx.compose.foundation.lazy.grid.items
@@ -34,8 +34,8 @@ fun HomeScreen(
     var newDeckTitle by remember { mutableStateOf("") }
 
     Scaffold(
-        // Edge-to-Edge SKILL.md Step2-3: Scaffold contentWindowInsets=safeDrawingで systemBars を処理、
-        // Adaptive: NavigationSuiteScaffold は PaddingValuesを伝播しないため個別画面で insets 処理が必要
+        // Edge-to-Edge SKILL.md Step2-3: Scaffold contentWindowInsets=safeDrawing handles systemBars.
+        // Adaptive: NavigationSuiteScaffold does not propagate PaddingValues, so individual screens need to handle insets.
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(title = { Text("ScanCard") })
@@ -72,14 +72,15 @@ fun HomeScreen(
                     Text("No decks yet. Tap camera to start scanning.")
                 }
             } else {
-                // TODO(IMP-05): LazyColumn → LazyVerticalGrid への adaptive 置換案
-                // 現状は IMP-03 の contentPadding 維持のため LazyColumn のまま。Foldable/Tablet で
-                // 列数自動可変させる場合は下記に置換（ビルドを壊さないためコメント留め、段階的適用）:
+                // TODO(IMP-05): Proposal for adaptive replacement of LazyColumn with LazyVerticalGrid
+                // Currently remains as LazyColumn to maintain contentPadding from IMP-03. To automatically
+                // vary the number of columns for Foldable/Tablet, replace with the following
+                // (commented out for staged application and to avoid breaking the build):
                 // ```
                 // LazyVerticalGrid(
                 //     columns = GridCells.Adaptive(320.dp),
                 //     modifier = Modifier.weight(1f),
-                //     contentPadding = padding, // IMP-03 の edge-to-edge 対応を維持
+                //     contentPadding = padding, // Maintains IMP-03 edge-to-edge support
                 //     verticalArrangement = Arrangement.spacedBy(0.dp),
                 //     horizontalArrangement = Arrangement.spacedBy(0.dp)
                 // ) {
@@ -88,10 +89,11 @@ fun HomeScreen(
                 //     }
                 // }
                 // ```
-                // 有効化手順: 上部 import のコメントを外し、この LazyColumn ブロックを上記で置換。
-                // 既存 Preview (HomeScreenPreview) は @FormFactorPreviews で 4形態検証すること。
-                // SKILL.md Lists章: contentPaddingに innerPadding を渡し先頭/末尾をsystemBarsから離す。
-                // 親Columnが Modifier.padding(padding) で既に inset しているため top は二重にならないよう bottom のみを contentPadding に委譲し FAB分の余白を加算
+                // Activation procedure: Uncomment top imports and replace this LazyColumn block with the above.
+                // Existing Preview (HomeScreenPreview) should be verified across 4 form factors using @FormFactorPreviews.
+                // SKILL.md Lists chapter: Pass innerPadding to contentPadding to keep top/bottom away from systemBars.
+                // Since the parent Column is already inset with Modifier.padding(padding), to avoid double
+                // insetting at the top, delegate only bottom to contentPadding and add margin for FAB.
                 LazyColumn(
                     modifier = Modifier.weight(1f).consumeWindowInsets(padding),
                     contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 80.dp)
@@ -143,8 +145,8 @@ fun HomeScreen(
     }
 }
 
-// TODO(IMP-05 5-7): 各Screen Preview に @FormFactorPreviews 適用
-// 手順: 下記プレビュー雛形を有効化し、電話/折畳/タブレット/デスクトップの4形態を同時検証
+// TODO(IMP-05 5-7): Apply @FormFactorPreviews to each Screen Preview
+// Procedure: Enable the preview template below to simultaneously verify 4 form factors (phone/foldable/tablet/desktop)
 // ```
 // @FormFactorPreviews
 // @Composable
@@ -157,7 +159,7 @@ fun HomeScreen(
 //     MaterialTheme { DeckItem(deck = Deck(id=1, title="Sample", createdAt=Date()), onClick={}, onDelete={}) }
 // }
 // ```
-// 注意: adaptive skill Step1準拠 — FormFactorPreviews は ui.preview.FormFactorPreviews.kt で定義
+// Note: Adheres to adaptive skill Step 1 — FormFactorPreviews is defined in ui.preview.FormFactorPreviews.kt
 
 // IMP-09 Styles API experimental - see .kiro/skills/styles
 

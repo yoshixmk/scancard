@@ -1,22 +1,23 @@
 package com.plath.scancard.ui.navigation
 
 /**
- * IMP-02 Navigation3 テスト雛形 (JVM8制約でコメント中心、Navigation3依存なしでコンパイル可能)
+ * IMP-02 Navigation3 Test Template (Comment-based to remain compilable without Navigation3
+ * dependencies under JVM8 constraints)
  *
- * 背景: Navigation2 (NavHost/composable/navArgument) → Navigation3 (NavDisplay/entryProvider/NavKey) 移行の
- *       テストを Robolectric + ComposeTestRule で検証する雛形。
- *       本ファイルは navigation3-runtime が未導入でもコンパイルが通るよう、Navigation3 API の使用箇所は
- *       コメントアウトしている。有効化時はコメントを外し、JVM17 + AGP 9.3.1 で実行すること。
+ * Background: Template for verifying Navigation2 (NavHost/composable/navArgument) ->
+ *       Navigation3 (NavDisplay/entryProvider/NavKey) migration with Robolectric + ComposeTestRule.
+ *       This file has Navigation3 API calls commented out so it compiles even without
+ *       navigation3-runtime. Uncomment and run with JVM17 + AGP 9.3.1 upon activation.
  *
- * 前提:
- *   - app/build.gradle.kts の TODO(IMP-02) を有効化し Navigation3 依存を Sync 済みであること
- *   - ui/navigation/NavKeys.kt の `: NavKey` を有効化済みであること
- *   - docs/navigation3-migration.md の移行手順を完了済みであること
+ * Prerequisites:
+ *   - TODO(IMP-02) in `app/build.gradle.kts` enabled and Navigation3 dependencies synced.
+ *   - ": NavKey" in `ui/navigation/NavKeys.kt` enabled.
+ *   - Migration steps in `docs/navigation3-migration.md` completed.
  *
- * 実行:
- *   ./gradlew :app:testDebugUnitTest --tests "com.plath.scancard.ui.navigation.NavigationTest"
+ * Execution:
+ *   `./gradlew :app:testDebugUnitTest --tests "com.plath.scancard.ui.navigation.NavigationTest"`
  *
- * 参考:
+ * References:
  *   - .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/recipes/basicdsl.md
  *   - .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/recipes/basicsaveable.md
  *   - .kiro/skills/navigation-3/references/android/guide/navigation/navigation-3/recipes/deeplinks-staticuri.md
@@ -39,15 +40,15 @@ package com.plath.scancard.ui.navigation
 // import org.robolectric.annotation.Config
 // import com.google.common.truth.Truth.assertThat
 
-// TODO(IMP-02): Navigation3 有効化時に下記アノテーションを有効化
+// TODO(IMP-02): Enable the following annotations when activating Navigation3
 // @RunWith(AndroidJUnit4::class)
-// @Config(sdk = [34]) // Robolectric SDK 34で実行
+// @Config(sdk = [34]) // Run on Robolectric SDK 34
 class NavigationTest {
 
-    // TODO(IMP-02): 有効化時は ComposeTestRule を使用
+    // TODO(IMP-02): Use ComposeTestRule upon activation
     // @get:Rule val composeTestRule = createComposeRule()
 
-    // --- 雛形1: Home → DeckDetail 遷移テスト ---
+    // --- Template 1: Home -> DeckDetail transition test ---
     // @Test
     // fun home_navigatesToDeckDetail_onDeckClick() {
     //     composeTestRule.setContent {
@@ -58,7 +59,7 @@ class NavigationTest {
     //             entryProvider = entryProvider {
     //                 entry<Home> {
     //                     // HomeScreen(onDeckClick = { deckId -> backStack.add(DeckDetail(deckId)) })
-    //                     // テスト用簡易UI:
+    //                     // Simplified UI for testing:
     //                     androidx.compose.material3.Button(onClick = { backStack.add(DeckDetail(deckId = 42L)) }) {
     //                         androidx.compose.material3.Text("Go to DeckDetail")
     //                     }
@@ -71,10 +72,10 @@ class NavigationTest {
     //     }
     //     composeTestRule.onNodeWithText("Go to DeckDetail").performClick()
     //     composeTestRule.onNodeWithText("DeckDetail id=42").assertIsDisplayed()
-    //     // backStack.last() == DeckDetail(42) を assertThat で検証
+    //     // Verify backStack.last() == DeckDetail(42) with assertThat
     // }
 
-    // --- 雛形2: 戻る挙動テスト ---
+    // --- Template 2: Back behavior test ---
     // @Test
     // fun backStack_removeLastOrNull_popsToHome() {
     //     composeTestRule.setContent {
@@ -96,23 +97,23 @@ class NavigationTest {
     //     }
     //     composeTestRule.onNodeWithText("Home").performClick()
     //     composeTestRule.onNodeWithText("Scan id=1").assertIsDisplayed()
-    //     // システムバックをシミュレート: backStack.removeLastOrNull() を直接呼ぶか、ComposeのBackHandler経由
-    //     // composeTestRule.activity.onBackPressed() 等で検証
-    //     // 期待: backStack.size == 1 && backStack.last() == Home
+    //     // Simulate system back: call backStack.removeLastOrNull() directly or via Compose's BackHandler.
+    //     // Verify with composeTestRule.activity.onBackPressed(), etc.
+    //     // Expectation: backStack.size == 1 && backStack.last() == Home
     // }
 
-    // --- 雛形3: 複数バックスタック (Home ↔ Detail) ---
-    // 将来 BottomNav / Adaptive ListDetail 導入時に有効化
+    // --- Template 3: Multiple BackStacks (Home <-> Detail) ---
+    // Enable upon future introduction of BottomNav / Adaptive ListDetail
     // @Test
     // fun multipleBackStacks_retainStateOnTabSwitch() {
-    //     // migration-guide.md Step3 の NavigationState / Navigator を使用
+    //     // Use NavigationState / Navigator from migration-guide.md Step 3
     //     // val navigationState = rememberNavigationState(startRoute = Home, topLevelRoutes = setOf(Home, Settings))
     //     // val navigator = remember { Navigator(navigationState) }
     //     // NavDisplay(entries = navigationState.toEntries(entryProvider), onBack = { navigator.goBack() })
-    //     // タブ切替で backStacks[topLevelRoute] が保持されることを assertThat で検証
+    //     // Verify that backStacks[topLevelRoute] is retained during tab switching using assertThat
     // }
 
-    // --- 雛形4: DeepLink scancard://deck/{deckId} テスト ---
+    // --- Template 4: DeepLink scancard://deck/{deckId} test ---
     // @Test
     // fun deepLink_scancardDeck_matchesDeckDetail() {
     //     // import androidx.navigation3.runtime.deeplink.DeepLinkRequest
@@ -127,10 +128,10 @@ class NavigationTest {
     //     // val request = DeepLinkRequest(intent)
     //     // val result = matcher.match(request)
     //     // assertThat(result?.key).isEqualTo(DeckDetail(deckId = 99L))
-    //     // // Synthetic backStack: rememberNavBackStack(Home, DeckDetail(99)) で Home→Detail の階層を再現
+    //     // // Synthetic backStack: Reproduce Home->Detail hierarchy with rememberNavBackStack(Home, DeckDetail(99))
     // }
 
-    // --- 雛形5: ExtractionPreview → DeckDetail の popUpTo(Home) 相当テスト ---
+    // --- Template 5: ExtractionPreview -> DeckDetail equivalent of popUpTo(Home) test ---
     // @Test
     // fun extractionPreview_onFinish_clearsBackStackToHome() {
     //     // composeTestRule.setContent {
@@ -153,10 +154,10 @@ class NavigationTest {
     //     // }
     //     // composeTestRule.onNodeWithText("Finish").performClick()
     //     // composeTestRule.onNodeWithText("DeckDetail 5").assertIsDisplayed()
-    //     // // backStack == [Home, DeckDetail(5)] であることを検証
+    //     // // Verify backStack == [Home, DeckDetail(5)]
     // }
 
-    // --- 雛形6: DeviceConfigurationOverride で windowSize/fontScale シミュレーション ---
+    // --- Template 6: windowSize/fontScale simulation via DeviceConfigurationOverride ---
     // @Test
     // fun adaptive_listDetail_scene_isDisplayedOnTablet() {
     //     // composeTestRule.setContent {
@@ -178,6 +179,8 @@ class NavigationTest {
     // }
 }
 
-// 注意: 本ファイルは雛形のためテストケースはコメントアウト済み。Navigation3 有効化時にアンコメントし、
-//       `Truth.assertThat` / `composeTestRule.onNodeWithText` 等で検証を実装すること。
-//       現状はコンパイルエラーを避けるため import もコメント化している。
+/**
+ * Note: This file is a template, so test cases are commented out. Uncomment and implement
+ * verification using Truth.assertThat / composeTestRule.onNodeWithText, etc., when
+ * activating Navigation3. Imports are also commented out to avoid compilation errors.
+ */

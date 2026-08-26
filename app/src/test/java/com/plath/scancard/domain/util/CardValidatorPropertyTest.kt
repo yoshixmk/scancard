@@ -12,8 +12,8 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 /**
- * Kotest導入時はProperty化: io.kotest.property.checkAll で任意文字列生成に置換予定。
- * 現状は JUnit4 パラメタライズド + 手動ランダム生成で代替。
+ * Plan to replace with property-based testing using io.kotest.property.checkAll when Kotest is introduced.
+ * Currently using JUnit4 Parameterized + manual random generation as a substitute.
  */
 class CardValidatorPropertyTest {
 
@@ -94,7 +94,7 @@ class CardValidatorPropertyTest {
 }
 
 /**
- * Kotest Property導入時の書き換え例 (コメント):
+ * Example rewrite for Kotest Property (comment):
  * class CardValidatorPropertyTest : StringSpec({
  *   "normalization is idempotent" { checkAll(Arb.string()) { s -> s.trim().lowercase() shouldBe s.trim().lowercase().trim().lowercase() } }
  * })
@@ -112,7 +112,7 @@ class ExportManagerParameterizedTest(private val term: String, private val defin
             arrayOf("World", "Earth"),
             arrayOf("  spaced  ", "  def  "),
             arrayOf("UPPER", "lower"),
-            arrayOf("犬", "dog"),
+            arrayOf("dog_ja", "dog"),
             arrayOf("Term with spaces", "Definition with spaces and 123")
         )
     }

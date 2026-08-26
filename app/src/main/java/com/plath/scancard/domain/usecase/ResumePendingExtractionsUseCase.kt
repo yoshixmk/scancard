@@ -5,9 +5,9 @@ import com.plath.scancard.domain.repository.DeckRepository
 import javax.inject.Inject
 
 /**
- * アプリ起動時に PENDING/RUNNING のまま取り残されたデッキの抽出を再キューする（Req12.10）。
- * WorkManager 自身もプロセス死亡後の ENQUEUED work を自動再実行するため、
- * アクティブな work が存在するデッキは二重実行防止のためスキップする。
+ * Re-queue extraction for decks left in PENDING/RUNNING status upon app startup (Req12.10).
+ * Since WorkManager itself automatically re-executes ENQUEUED work after process death,
+ * decks with active work are skipped to prevent double execution.
  */
 class ResumePendingExtractionsUseCase @Inject constructor(
     private val deckRepository: DeckRepository,

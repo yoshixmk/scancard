@@ -1,30 +1,30 @@
 package com.plath.scancard.service
 
 // =============================================================================
-// IMP-08 AppFunctions Service 雛形 — コメント中心でコンパイルエラーを回避
+// IMP-08 AppFunctions Service Template — Comment-based to avoid compilation errors
 // =============================================================================
-// 要件: targetSdk 36 + compileSdk 37 + androidx.appfunctions 1.0.0-alpha10+ + KSP + Hilt
+// Requirements: targetSdk 36 + compileSdk 37 + androidx.appfunctions 1.0.0-alpha10+ + KSP + Hilt
 // skill: .kiro/skills/appfunctions/references/implementation-configuration.md Step4 / context.md
-// 制約: gradle フル実行禁止のため依存は app/build.gradle.kts でコメント留め。
-//       AppFunctions 依存が無い状態でも ./gradlew :app:assembleDebug が SUCCESS するよう
-//       実装本体はブロックコメントで無効化し、ダミープレースホルダのみをコンパイル対象とする。
+// Constraints: Dependencies are commented out in app/build.gradle.kts to avoid full gradle execution.
+//       The implementation body is disabled with block comments, making only the dummy placeholder
+//       a compilation target so that ./gradlew :app:assembleDebug succeeds.
 // =============================================================================
 
 // ---------------------------------------------------------------------------
-// 有効化手順 (targetSdk 36 昇格時にコメントを外す)
+// Activation Procedure (Uncomment when upgrading to targetSdk 36)
 // ---------------------------------------------------------------------------
-// 1. app/build.gradle.kts:14 の targetSdk を 36 に変更 (TODO(IMP-08) コメント参照)
-// 2. app/build.gradle.kts dependencies の AppFunctions 2行のコメントを外し Sync:
+// 1. Change targetSdk to 36 in app/build.gradle.kts:14 (see TODO(IMP-08))
+// 2. Uncomment AppFunctions lines in app/build.gradle.kts dependencies and Sync:
 //      implementation("androidx.appfunctions:appfunctions:1.0.0-alpha10")
 //      ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha10")
-//      ksp { arg("appfunctions.aggregateAppFunctions", "true") } // 必要に応じて
-// 3. 本ファイルのブロックコメントを外し、下記 import/アノテーションを有効化
-// 4. res/xml/app_metadata.xml を作成し AndroidManifest.xml に service/app_metadata を登録
-// 5. JVM17 で ./gradlew :app:assembleDebug → 生成物 app/build/generated/ksp/debug/assets/*.xml を確認
-// 6. adb shell cmd app_function list-app-functions で登録確認 (docs/appfunctions-discovery.md 4章)
+//      ksp { arg("appfunctions.aggregateAppFunctions", "true") } // if necessary
+// 3. Uncomment block comments in this file and enable the imports/annotations below
+// 4. Create res/xml/app_metadata.xml and register service/app_metadata in AndroidManifest.xml
+// 5. Run ./gradlew :app:assembleDebug on JVM17 -> verify generated files in app/build/generated/ksp/debug/assets/*.xml
+// 6. Verify registration with adb shell cmd app_function list-app-functions (docs/appfunctions-discovery.md Chapter 4)
 // ---------------------------------------------------------------------------
 
-// --- 有効化時にアンコメントする imports ---
+// --- Imports to uncomment during activation ---
 // import android.net.Uri
 // import android.os.Build
 // import androidx.annotation.RequiresApi
@@ -45,7 +45,8 @@ package com.plath.scancard.service
 
 /**
  * Placeholder object to keep this file compilable without AppFunctions dependency.
- * 実装本体は下記ブロックコメントに雛形として保持。有効化時にコメントを外す。
+ * The implementation body is kept as a template in the block comments below.
+ * Uncomment when enabling.
  */
 object ScanCardAppFunctionServicePlaceholder {
     const val SERVICE_NAME = "ScanCardAppFunctionService"
@@ -56,9 +57,9 @@ object ScanCardAppFunctionServicePlaceholder {
 
 /*
  * ===========================================================================
- * 有効化時にアンコメントする実装雛形 (Hilt + ServiceEntryPoint パターン)
+ * Implementation template to be uncommented upon activation (Hilt + ServiceEntryPoint pattern)
  * ===========================================================================
- * // res/xml/app_metadata.xml 例:
+ * // res/xml/app_metadata.xml example:
  * // <AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
  * //     appfn:description="ScanCard manages vocabulary decks via OCR and on-device AI extraction.
  * //     Operational Patterns:
@@ -69,7 +70,7 @@ object ScanCardAppFunctionServicePlaceholder {
  * //     - scanAndExtract requires valid content URI and downloaded Gemma model."
  * //     appfn:displayDescription="@string/appfunctions_display_description" />
  *
- * // AndroidManifest.xml 登録例 (<application> 内):
+ * // AndroidManifest.xml registration example (within <application>):
  * // <service
  * //     android:name="com.plath.scancard.service.ScanCardAppFunctionService"
  * //     android:permission="android.permission.BIND_APP_FUNCTION_SERVICE"
@@ -89,15 +90,15 @@ object ScanCardAppFunctionServicePlaceholder {
  * )
  * abstract class ScanCardAppFunctionService : AppFunctionService() {
  *
- *     // Hilt 注入 — 既存 UseCase/Repository を再利用し冗長な抽象化を作らない
+ *     // Hilt injection — reuse existing UseCase/Repository to avoid redundant abstractions
  *     @Inject internal lateinit var manageDeckUseCase: com.plath.scancard.domain.usecase.ManageDeckUseCase
  *     @Inject internal lateinit var extractCardsUseCase: com.plath.scancard.domain.usecase.ExtractCardsUseCase
  *     @Inject internal lateinit var studyCardsUseCase: com.plath.scancard.domain.usecase.StudyCardsUseCase
  *     @Inject internal lateinit var exportDataUseCase: com.plath.scancard.domain.usecase.ExportDataUseCase
- *     // 必要に応じて ScanRepository / ModelRepository も注入
+ *     // Inject ScanRepository / ModelRepository as needed
  *
  *     // -----------------------------------------------------------------------
- *     // Serializable 定義 — inline KDoc 必須 (KSP は class-level @param を無視)
+ *     // Serializable definition — inline KDoc mandatory (KSP ignores class-level @param)
  *     // -----------------------------------------------------------------------
  *
  *     /** Result of creating a deck. */
@@ -120,7 +121,7 @@ object ScanCardAppFunctionServicePlaceholder {
  *         val term: String,
  *         /** English definition. Example: "a fruit". */
  *         val definition: String,
- *         /** Japanese translation. May be empty. Example: "りんご". */
+ *         /** Japanese translation. May be empty. Example: "apple" (translated). */
  *         val japaneseTranslation: String,
  *         /** Learning status: NEW, LEARNING, or REVIEW. */
  *         val status: String,
@@ -151,8 +152,8 @@ object ScanCardAppFunctionServicePlaceholder {
  *     )
  *
  *     // -----------------------------------------------------------------------
- *     // AppFunctions — KDoc 最適化済み (docs/appfunctions-discovery.md 3章)
- *     // 全関数は suspend + withContext(Dispatchers.IO) で UI スレッドをブロックしない
+ *     // AppFunctions — KDoc optimized (docs/appfunctions-discovery.md Chapter 3)
+ *     // All functions are suspend + withContext(Dispatchers.IO) to avoid blocking the UI thread
  *     // -----------------------------------------------------------------------
  *
  *     /**
@@ -192,19 +193,19 @@ object ScanCardAppFunctionServicePlaceholder {
  *     ): ScanAndExtractResult = withContext(Dispatchers.IO) {
  *         val deck = manageDeckUseCase.getDeck(deckId)
  *             ?: throw AppFunctionElementNotFoundException("Deck not found for id=$deckId")
- *         // imageUri の権限チェック — SecurityException は InvalidArgument にマップ
- *         // 注意: 実際の OCR→Gemma 抽出は ExtractCardsUseCase.extractAndSaveCards(deckId, modelConfig) に委譲。
- *         //       本雛形では scanRepository.getScansByDeck + Gemma の同期呼び出しを想定するが、
- *         //       画像URIからの直接抽出パイプラインは将来拡張 (ScanRepository.insertScan 後に extract)。
+ *         // imageUri permission check — SecurityException is mapped to InvalidArgument
+ *         // Note: Actual OCR->Gemma extraction is delegated to ExtractCardsUseCase.extractAndSaveCards(deckId, modelConfig).
+ *         //       This template assumes synchronous calls of scanRepository.getScansByDeck + Gemma,
+ *         //       but direct extraction pipeline from image URI will be extended in the future (extract after ScanRepository.insertScan).
  *         try {
- *             // 例: extractCardsUseCase.extractAndSaveCards(deckId, ModelConfig(modelConfig ?: "default"))
- *             // 成功後は studyCardsUseCase.getCards(deckId).first() で抽出結果を取得
+ *             // Example: extractCardsUseCase.extractAndSaveCards(deckId, ModelConfig(modelConfig ?: "default"))
+ *             // After success, retrieve extraction results with studyCardsUseCase.getCards(deckId).first()
  *         } catch (e: SecurityException) {
  *             throw AppFunctionInvalidArgumentException("Cannot read imageUri: $imageUri — permission denied")
  *         } catch (e: IllegalStateException) {
  *             throw AppFunctionExecutionException("Model not found: $modelConfig — please download it first")
  *         }
- *         // ダミー返却 — 実装時は上記で得た cards を CardSummary にマップ
+ *         // Dummy return — map cards obtained above to CardSummary when implementing
  *         ScanAndExtractResult(deckId = deckId, extractedCount = 0, cards = emptyList())
  *     }
  *
@@ -225,7 +226,7 @@ object ScanCardAppFunctionServicePlaceholder {
  *     ): List<CardSummary> = withContext(Dispatchers.IO) {
  *         manageDeckUseCase.getDeck(deckId)
  *             ?: throw AppFunctionElementNotFoundException("Deck not found for id=$deckId")
- *         // 実装: studyCardsUseCase.getCards(deckId).first()
+ *         // Implementation: studyCardsUseCase.getCards(deckId).first()
  *         //       .filter { it.term.contains(query.trim(), ignoreCase=true) || it.definition.contains(...) }
  *         //       .filter { filterStatus == null || it.status.name == filterStatus }
  *         //       .take(20).map { CardSummary(...) }
@@ -259,25 +260,25 @@ object ScanCardAppFunctionServicePlaceholder {
  * }
  *
  * // ---------------------------------------------------------------------------
- * // 破壊的 action 確認ダイアログ手順 (Security 制約)
+ * // Destructive action confirmation dialog procedure (Security constraints)
  * // ---------------------------------------------------------------------------
- * // deleteDeck / deleteCard は不可逆のため本IMPでは AppFunction として公開しない。
- * // 公開する場合の安全なパターン:
- * // 1. AppFunction は直接削除せず PendingIntent を返す:
+ * // deleteDeck / deleteCard are irreversible and will not be exposed as AppFunctions in this IMP.
+ * // Safe pattern for exposure:
+ * // 1. AppFunction returns a PendingIntent instead of deleting directly:
  * //      @AppFunction fun requestDeleteDeck(deckId: Long): PendingIntent
- * //      → PendingIntent は MainActivity の確認ダイアログ (AlertDialog) を起動する Intent をラップ
- * // 2. ユーザがダイアログで「削除」をタップして初めて ManageDeckUseCase.deleteDeck が実行される
- * // 3. Agent には「User confirmation required — pendingIntent を起動して確認ダイアログを表示してください」
- * //    と KDoc/throws で伝える
- * // 4. 代替: AppFunction 内で削除前に AppFunctionExecutionException で確認を要求し、
- * //    2回目の呼び出しで confirmed=true パラメータを必須にするパターンも可
- * // いずれも「確認なしの破壊的実行は禁止」 (skill Critical constraints: Security)
+ * //      -> PendingIntent wraps an Intent that launches a confirmation dialog (AlertDialog) in MainActivity
+ * // 2. ManageDeckUseCase.deleteDeck is executed only after the user taps "Delete" in the dialog
+ * // 3. Inform the Agent: "User confirmation required — please launch pendingIntent to show the confirmation dialog"
+ * //    via KDoc/throws
+ * // 4. Alternative: Request confirmation via AppFunctionExecutionException before deletion within AppFunction,
+ * //    and require a confirmed=true parameter in the second call
+ * // Both follow "No destructive execution without confirmation" (skill Critical constraints: Security)
  * //
- * // 例 (有効化時に参考):
+ * // Example (for reference when enabling):
  * // @AppFunction(isDescribedByKDoc = true)
  * // suspend fun requestDeleteDeck(deckId: Long): PendingIntent = withContext(Dispatchers.IO) {
  * //     val deck = manageDeckUseCase.getDeck(deckId) ?: throw AppFunctionElementNotFoundException(...)
- * //     // 確認ダイアログ用 Intent を PendingIntent 化して返却
+ * //     // Return confirmation dialog Intent as PendingIntent
  * //     // Intent(context, MainActivity::class.java).apply { action="confirm_delete_deck"; putExtra("deckId", deckId) }
  * // }
  *

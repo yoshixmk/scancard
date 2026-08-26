@@ -27,8 +27,8 @@ fun ScanCardTheme(
         SideEffect {
             val window = (view.context as? Activity)?.window ?: return@SideEffect
             val controller = WindowCompat.getInsetsController(window, view)
-            // 自動処理を確認: ComponentActivity.enableEdgeToEdge()が自動でアイコン色を制御するため
-            // ここはフォールバック/明示的制御。必要に応じてコメントアウト可。
+            // Verify automatic handling: ComponentActivity.enableEdgeToEdge() automatically controls icon colors.
+            // This is a fallback/explicit control. Can be commented out if necessary.
             controller.isAppearanceLightStatusBars = !darkTheme
             controller.isAppearanceLightNavigationBars = !darkTheme
         }

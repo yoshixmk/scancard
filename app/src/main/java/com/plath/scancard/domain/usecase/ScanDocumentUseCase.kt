@@ -4,6 +4,9 @@ import android.net.Uri
 import com.plath.scancard.data.local.entities.Scan
 import com.plath.scancard.data.ml.TextRecognitionManager
 import com.plath.scancard.domain.repository.ScanRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
 class ScanDocumentUseCase @Inject constructor(
@@ -23,18 +26,19 @@ class ScanDocumentUseCase @Inject constructor(
         return deckId
     }
 
-    suspend fun processScannedPages(deckId: Long, pageUris: List<Uri>): List<Scan> {
-        val scans = mutableListOf<Scan>()
-        for (uri in pageUris) {
-            val recognizedText = textRecognitionManager.recognizeText(uri)
-            val scan = Scan(
-                deckId = deckId,
-                imagePath = uri.toString(),
-                rawText = recognizedText
-            )
-            scanRepository.insertScan(scan)
-            scans.add(scan)
-        }
-        return scans
+    // Run OCR in parallel as pages are independent (Req18.1). ML Kit's recognizer is concurrency-safe.
+    // Results and DB insertion maintain page order.
+    suspend fun processScannedPages(deckId: Long, pageUris: List<Uri>): List<Scan> = coroutineScope {
+        val scans: List<Scan> = pageUris.map { uri ->
+            async {
+                Scan(
+                    deckId = deckId,
+                    imagePath = uri.toString(),
+                    rawText = textRecognitionManager.recognizeText(uri)
+                )
+            }
+        }.awaitAll()
+        scans.forEach { scanRepository.insertScan(it) }
+        scans
     }
 }

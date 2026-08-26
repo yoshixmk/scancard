@@ -11,48 +11,57 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
- * IMP-10 10-1 監査結果 (2026-08-23) — camerax/SKILL.md threading / immutability / testing 照合
+ * IMP-10 10-1 Audit results (2026-08-23) — Comparison with camerax/SKILL.md threading / immutability / testing
  *
- * [スレッド / 競合] 要注意 (既存動作は維持、コメントのみ):
- *   - engine / conversation は mutable nullable var で withContext(Dispatchers.IO) 内で読み書き。
- *     initialize() の `if (engine != null && conversation != null) return` は非アトミック (TOCTOU)。
- *     2つのコルーチンが同時に initialize() を呼ぶと Engine が二重生成される可能性。
- *     対策案: Mutex でガードするか @Singleton スコープ + synchronized。現状は ScanDocumentUseCase が
- *     直列呼び出しのため実害小だが、将来並列抽出する際は要修正。
- *   - extractCards() の `val currentConversation = conversation ?: return emptyList()` はスナップショット取得で OK。
- *     ただし close() が別スレッドで呼ばれると currentConversation が close 済みになる競合あり。
- *     対策案: close() も Mutex で同期、または extractCards 内で isClosed チェック。
- *   - EngineConfig / SamplerConfig / ConversationConfig は data class builder 相当で、
- *     Engine(engineConfig).initialize() は副作用ありの suspend 的初期化 — Dispatchers.IO で正しく実行。
+ * [Threading / Contention] Note (existing behavior maintained, comments only):
+ *   - engine / conversation are mutable nullable vars read/written within withContext(Dispatchers.IO).
+ *     initialize()'s "if (engine != null && conversation != null) return" is non-atomic (TOCTOU).
+ *     If two coroutines call initialize() simultaneously, Engine might be double-created.
+ *     Countermeasure: Guard with Mutex or use @Singleton scope + synchronized. Currently
+ *     ScanDocumentUseCase calls serially, so actual harm is minor, but fix is required for future
+ *     parallel extraction.
+ *   - extractCards()'s "val currentConversation = conversation ?: return emptyList()" is OK as it
+ *     takes a snapshot. However, if close() is called from another thread, currentConversation
+ *     might be already closed (contention). Countermeasure: Synchronize close() with Mutex,
+ *     or check isClosed within extractCards.
+ *   - EngineConfig / SamplerConfig / ConversationConfig are equivalent to data class builders,
+ *     and Engine(engineConfig).initialize() is a suspend-like initialization with side effects —
+ *     correctly executed on Dispatchers.IO.
  *
- * [Escaping / リソース] 要注意:
- *   - conversation.sendMessageAsync(input, MessageCallback) の callback は suspendCancellableCoroutine の
- *     continuation にエスケープする closure。continuation.resume が2回呼ばれるリスクを isActive でガードしており OK。
- *     ただし coroutine cancel 時に LiteRT 側の推論がキャンセルされない (LiteRT は cancel API を持たない)。
- *     改善案: continuation.invokeOnCancellation { /* conversation 側で中断できれば呼ぶ */ } を追加。
- *     現状は LiteRT 0.16.1 に cancel API がないためコメント留め。
- *   - close() は conversation?.close() / engine?.close() でネイティブ解放を行うが、null クリア前に例外が出ると
- *     片方のみ close される可能性。改善案: try/finally で両方 close。
+ * [Escaping / Resources] Note:
+ *   - callback in conversation.sendMessageAsync(input, MessageCallback) is a closure that escapes
+ *     to suspendCancellableCoroutine's continuation. Guarded with isActive against risk of
+ *     double-calling continuation.resume, so it's OK. However, LiteRT-side inference is not
+ *     canceled upon coroutine cancellation (LiteRT has no cancel API). Countermeasure: Add
+ *     "continuation.invokeOnCancellation { /* call if interruption possible on conversation side */ }".
+ *     Currently commented out as LiteRT 0.16.1 lacks a cancel API.
+ *   - close() performs native release via conversation?.close() / engine?.close(), but if an
+ *     exception occurs before null-clearing, one might remain open. Improvement: close both
+ *     in try/finally.
  *
- * [Immutability / Builder再代入] OK:
- *   - EngineConfig(modelPath, Backend.CPU(), maxNumTokens) / SamplerConfig(topK, topP, temp) は
- *     コンストラクタで不変、Builder の fluent 再代入パターン非該当。
- *   - StringBuilder はスレッド非安全だが MessageCallback.onMessage は LiteRT の単一スレッド(executor)から
- *     逐次呼ばれる想定のため実害なし。並列呼び出しされる場合は StringBuffer に置換を検討。
- *   - camerax/references/immutability.md の PendingRecording.withAudioEnabled() のような "戻り値捨て" 漏れは本ファイルになし。
+ * [Immutability / Builder reassignment] OK:
+ *   - EngineConfig(modelPath, Backend.CPU(), maxNumTokens) / SamplerConfig(topK, topP, temp) are
+ *     immutable via constructor; doesn't fall into Builder's fluent reassignment pattern.
+ *   - StringBuilder is thread-unsafe, but as MessageCallback.onMessage is expected to be called
+ *     sequentially from LiteRT's single thread (executor), there's no actual harm. Consider
+ *     replacing with StringBuffer if called in parallel.
+ *   - No "discarding return value" omissions like PendingRecording.withAudioEnabled() in
+ *     camerax/references/immutability.md.
  *
- * [Testing] — 本監査に伴い FakeGemmaExtractor を app/src/test/fakes/FakeGemmaExtractor.kt に作成。
- *   Mockito ではなく Fake で ScanDocumentUseCase の非同期ライフサイクルをテスト可能にする (camerax/testing.md 準拠)。
- *   本クラス自体は on-device LLM のため Robolectric では初期化不可 — Fake に委譲してテスト。
+ * [Testing] — Created FakeGemmaExtractor in app/src/test/fakes/FakeGemmaExtractor.kt following this audit.
+ *   Allows testing of ScanDocumentUseCase's asynchronous lifecycle using Fakes instead of Mockito
+ *   (adheres to camerax/testing.md). Since this class is an on-device LLM, it cannot be initialized
+ *   in Robolectric — test via delegation to Fake.
  *
- * [Thermal] — LiteRT 推論は CPU/GPU 高負荷。docs/camera-thermals.md の Severe tier では
- *   推論を延期 or 解像度ダウングレード→OCR文字数削減でトークン数を減らす設計を参照。
+ * [Thermal] — LiteRT inference is heavy on CPU/GPU. Refer to designs for reducing token counts
+ *   via postponing inference or resolution downgrade -> OCR character reduction in
+ *   docs/camera-thermals.md's Severe tier.
  */
 class GemmaCardExtractor @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val parser: CardResponseParser
 ) {
-    // AUDIT NOTE: 競合対策が必要な mutable state — 将来 Mutex でガードする場合は下記を有効化:
+    // AUDIT NOTE: Mutable state requiring contention measures — activate the following if guarding with Mutex in the future:
     // private val mutex = Mutex()
     private var engine: Engine? = null
     private var conversation: Conversation? = null
@@ -108,12 +117,12 @@ class GemmaCardExtractor @Inject constructor(
     suspend fun extractCards(text: String): List<ExtractedCard> = withContext(Dispatchers.IO) {
         if (isDummyMode) {
             // E2E fast path: simulate 8s inference and return parsed dummy.
-            // 8s: エミュレータのクロックずれ/poll間隔を考慮し、通知エリアの "Page n of m"
-            // 進捗をE2Eが確実にポーリングできる窓を確保するため（Req12.12）
+            // 8s: To ensure a window where E2E can reliably poll the "Page n of m" progress in
+            // the notification area, considering emulator clock drift/polling intervals (Req12.12)
             kotlinx.coroutines.delay(8000)
             return@withContext listOf(
-                ExtractedCard(term = "Apple", definition = "A fruit", japaneseTranslation = "りんご"),
-                ExtractedCard(term = "Banana", definition = "Yellow fruit", japaneseTranslation = "バナナ")
+                ExtractedCard(term = "Apple", definition = "A fruit", japaneseTranslation = "apple_ja"),
+                ExtractedCard(term = "Banana", definition = "Yellow fruit", japaneseTranslation = "banana_ja")
             )
         }
         val currentConversation = conversation ?: return@withContext emptyList()

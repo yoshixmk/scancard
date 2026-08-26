@@ -1,7 +1,7 @@
 package com.plath.scancard.domain.util
 
-// IMP-07 7-6: isValid() は ExtractCardsUseCase の3回リトライループ内で all { isValid } として評価（design.md 483-543）。
-// generic/insufficient context 検出時は TranslationPromptBuilder.buildImprovedPrompt でリトライ。配線は ExtractCardsUseCase:42 で確認済み。
+// IMP-07 7-6: isValid() is evaluated as "all { isValid }" within ExtractCardsUseCase's 3-retry loop (design.md 483-543).
+// Retry with TranslationPromptBuilder.buildImprovedPrompt upon generic/insufficient context detection. Wiring is verified in ExtractCardsUseCase:42.
 class PromptValidator {
     fun isValid(term: String, definition: String): Boolean {
         if (definition.isBlank()) return false

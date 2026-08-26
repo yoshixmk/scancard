@@ -28,7 +28,8 @@ class CardExtractionWorker @AssistedInject constructor(
         val deckId = inputData.getLong("deckId", -1)
         val notification = notificationHelper.createForegroundNotification(deckId)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            // dataSync: shortServiceは~3分のハードリミットがあり実抽出（数分）が途中killされるため変更（Req12.6）
+            // dataSync: Changed because shortService has a ~3-minute hard limit and actual
+            // extraction (several minutes) might be killed midway (Req12.6)
             ForegroundInfo(
                 deckId.toInt(),
                 notification,
@@ -45,8 +46,8 @@ class CardExtractionWorker @AssistedInject constructor(
 
         if (deckId == -1L) return Result.failure()
 
-        // MIUI / Android 14+ では 10秒で SystemJobService が onStopJob するため
-        // 開始直後に foreground 昇格して kill を防ぐ。
+        // On MIUI / Android 14+, SystemJobService performs onStopJob in 10 seconds,
+        // so promote to foreground immediately after starting to prevent being killed.
         try {
             setForeground(getForegroundInfo())
         } catch (e: Exception) {
@@ -60,8 +61,9 @@ class CardExtractionWorker @AssistedInject constructor(
 
         return try {
             extractCardsUseCase.extractAndSaveCards(deckId, modelConfig) { current, total ->
-                // 進捗ミラー（Req12.14）+ 通知エリア表示（Req12.12）。
-                // 進捗通知はアプリ管理の別IDで投稿する（同一IDだとWMが元FGS通知を再投稿して上書きする）
+                // Progress mirror (Req12.14) + notification area display (Req12.12).
+                // Post progress notification with a different app management ID (if the
+                // same ID is used, WM reposts and overwrites the original FGS notification)
                 setProgress(
                     androidx.work.workDataOf(
                         "progress_current" to current,
@@ -73,13 +75,13 @@ class CardExtractionWorker @AssistedInject constructor(
             notificationHelper.showCompletionNotification(deckId)
             Result.success()
         } catch (e: kotlinx.coroutines.CancellationException) {
-            // WorkManagerのstop/cancelセマンティクスを保持するため再スローする（Req12.10）。
-            // failure()に変換するとsystem stop後の自動再スケジュールが死に、
-            // 「アプリ再起動→job cancel→失敗」の原因になっていた。
+            // Rethrow to maintain WorkManager's stop/cancel semantics (Req12.10).
+            // Converting to failure() broke automatic rescheduling after system stop,
+            // causing "App restart -> job cancel -> failure".
             android.util.Log.w(TAG, "Work cancelled for deck $deckId — deferring to WorkManager retry", e)
             throw e
         } catch (e: Exception) {
-            // 一時的エラーはバックオフ付きで最大3回リトライし、恒久失敗時のみFAILED+通知（Req12.9/12.11）
+            // Retry temporary errors up to 3 times with backoff; FAILED + notification only upon permanent failure (Req12.9/12.11)
             if (runAttemptCount < MAX_ATTEMPTS - 1) {
                 android.util.Log.w(
                     TAG,
