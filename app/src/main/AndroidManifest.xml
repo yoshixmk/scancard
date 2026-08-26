@@ -57,11 +57,13 @@
         </provider>
 
         <!-- WorkManager foreground service must declare foregroundServiceType for targetSDK 34+.
-             Without this, ForegroundInfo with SHORT_SERVICE crashes with 0x800 not subset of 0x0,
-             and type none is prohibited on SDK 35+. -->
+             Without this, ForegroundInfo with a type crashes with 0x800 not subset of 0x0,
+             and type none is prohibited on SDK 35+.
+             dataSync (not shortService): shortService has a hard ~3 min cap that killed
+             real LLM extraction mid-run. FOREGROUND_SERVICE_DATA_SYNC is declared above. -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="shortService"
+            android:foregroundServiceType="dataSync"
             tools:node="merge" />
     </application>
 

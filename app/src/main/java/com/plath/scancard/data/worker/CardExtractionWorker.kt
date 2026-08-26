@@ -7,7 +7,9 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import com.plath.scancard.domain.model.ExtractionStatus
 import com.plath.scancard.domain.model.ModelConfig
+import com.plath.scancard.domain.repository.DeckRepository
 import com.plath.scancard.domain.usecase.ExtractCardsUseCase
 import com.plath.scancard.util.NotificationHelper
 import dagger.assisted.Assisted
@@ -18,6 +20,7 @@ class CardExtractionWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val extractCardsUseCase: ExtractCardsUseCase,
+    private val deckRepository: DeckRepository,
     private val notificationHelper: NotificationHelper
 ) : CoroutineWorker(context, params) {
 
@@ -25,10 +28,11 @@ class CardExtractionWorker @AssistedInject constructor(
         val deckId = inputData.getLong("deckId", -1)
         val notification = notificationHelper.createForegroundNotification(deckId)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // dataSync: shortServiceは~3分のハードリミットがあり実抽出（数分）が途中killされるため変更（Req12.6）
             ForegroundInfo(
                 deckId.toInt(),
                 notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
         } else {
             ForegroundInfo(deckId.toInt(), notification)
@@ -37,19 +41,21 @@ class CardExtractionWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val deckId = inputData.getLong("deckId", -1)
-        val modelId = inputData.getString("modelId") ?: "gemma-4-e2b"
-        
+        val modelId = inputData.getString("modelId") ?: ModelConfig.DEFAULT_ID
+
         if (deckId == -1L) return Result.failure()
 
         // MIUI / Android 14+ では 10秒で SystemJobService が onStopJob するため
-        // 開始直後に foreground 昇格して kill を防ぐ。64f20a7 以前はフォアグラウンド直接実行で成功していた経緯あり。
+        // 開始直後に foreground 昇格して kill を防ぐ。
         try {
             setForeground(getForegroundInfo())
         } catch (e: Exception) {
-            android.util.Log.w("CardExtractionWorker", "setForeground failed, continue without foreground", e)
+            android.util.Log.w(TAG, "setForeground failed, continue without foreground", e)
         }
-        
-        val modelConfig = ModelConfig.AVAILABLE_MODELS.find { it.id == modelId } 
+
+        deckRepository.updateExtractionStatus(deckId, ExtractionStatus.RUNNING)
+
+        val modelConfig = ModelConfig.AVAILABLE_MODELS.find { it.id == modelId }
             ?: ModelConfig.GEMMA_4_E2B
 
         return try {
@@ -57,14 +63,31 @@ class CardExtractionWorker @AssistedInject constructor(
             notificationHelper.showCompletionNotification(deckId)
             Result.success()
         } catch (e: kotlinx.coroutines.CancellationException) {
-            // Manual test: REPLACEキャンセル時はCancellationException。エラー通知せずfailureで終了し通知スパムを防ぐ
-            android.util.Log.w("CardExtractionWorker", "Work cancelled for deck $deckId", e)
-            Result.failure()
+            // WorkManagerのstop/cancelセマンティクスを保持するため再スローする（Req12.10）。
+            // failure()に変換するとsystem stop後の自動再スケジュールが死に、
+            // 「アプリ再起動→job cancel→失敗」の原因になっていた。
+            android.util.Log.w(TAG, "Work cancelled for deck $deckId — deferring to WorkManager retry", e)
+            throw e
         } catch (e: Exception) {
-            android.util.Log.e("CardExtractionWorker", "Error during background extraction", e)
-            // 一度きりのfailure通知に留め、Result.retry()による無限リトライと複数通知を避ける
-            notificationHelper.showErrorNotification(deckId, e.message ?: "Unknown error")
-            Result.failure()
+            // 一時的エラーはバックオフ付きで最大3回リトライし、恒久失敗時のみFAILED+通知（Req12.9/12.11）
+            if (runAttemptCount < MAX_ATTEMPTS - 1) {
+                android.util.Log.w(
+                    TAG,
+                    "Extraction attempt ${runAttemptCount + 1}/$MAX_ATTEMPTS failed for deck $deckId — retrying",
+                    e
+                )
+                Result.retry()
+            } else {
+                android.util.Log.e(TAG, "Extraction permanently failed for deck $deckId", e)
+                deckRepository.updateExtractionStatus(deckId, ExtractionStatus.FAILED)
+                notificationHelper.showErrorNotification(deckId, e.message ?: "Unknown error")
+                Result.failure()
+            }
         }
+    }
+
+    companion object {
+        private const val TAG = "CardExtractionWorker"
+        private const val MAX_ATTEMPTS = 3
     }
 }
