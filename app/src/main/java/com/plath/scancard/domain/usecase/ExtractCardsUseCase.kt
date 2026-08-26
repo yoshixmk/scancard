@@ -2,8 +2,10 @@ package com.plath.scancard.domain.usecase
 
 import com.plath.scancard.data.local.entities.Card
 import com.plath.scancard.data.ml.GemmaCardExtractor
+import com.plath.scancard.domain.model.ExtractionStatus
 import com.plath.scancard.domain.model.ModelConfig
 import com.plath.scancard.domain.repository.CardRepository
+import com.plath.scancard.domain.repository.DeckRepository
 import com.plath.scancard.domain.repository.ModelRepository
 import com.plath.scancard.domain.repository.ScanRepository
 import com.plath.scancard.domain.util.CardValidator
@@ -16,6 +18,7 @@ class ExtractCardsUseCase @Inject constructor(
     private val cardExtractor: GemmaCardExtractor,
     private val scanRepository: ScanRepository,
     private val cardRepository: CardRepository,
+    private val deckRepository: DeckRepository,
     private val modelRepository: ModelRepository,
     private val promptBuilder: TranslationPromptBuilder,
     private val promptValidator: PromptValidator,
@@ -24,13 +27,17 @@ class ExtractCardsUseCase @Inject constructor(
     suspend fun extractAndSaveCards(deckId: Long, modelConfig: ModelConfig) {
         val modelPath = modelRepository.getModelPath(modelConfig)
             ?: throw IllegalStateException("Model ${modelConfig.name} not found. Please download it first.")
-        
+
         cardExtractor.initialize(modelPath)
 
         val scans = scanRepository.getScansByDeck(deckId).first()
         val combinedText = scans.joinToString("\n") { it.rawText }
-        
-        if (combinedText.isBlank()) return
+
+        if (combinedText.isBlank()) {
+            // 抽出対象が空でもデッキの状態は完了にしておかないとレジュームが無限ループする（Req12.8）
+            deckRepository.updateExtractionStatus(deckId, ExtractionStatus.COMPLETED)
+            return
+        }
 
         var currentPrompt = promptBuilder.buildPrompt(combinedText)
         var extractedPairs = emptyList<com.plath.scancard.data.ml.ExtractedCard>()
@@ -69,5 +76,8 @@ class ExtractCardsUseCase @Inject constructor(
         }
         
         cardRepository.insertCards(cards)
+        // カード永続化と完了マークを worker の success 報告前に完了させる（Req12.8）。
+        // ここが失敗すれば worker は success を返さず、ステータスも COMPLETED にならない。
+        deckRepository.updateExtractionStatus(deckId, ExtractionStatus.COMPLETED)
     }
 }

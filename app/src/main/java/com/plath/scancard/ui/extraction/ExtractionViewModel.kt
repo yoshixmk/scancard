@@ -70,6 +70,8 @@ class ExtractionViewModel @Inject constructor(
         android.util.Log.d("ExtractionVM", "Starting background extraction for deck: $deckId")
         _deckId.value = deckId
         _error.value = null
-        backgroundTaskManager.startExtraction(deckId, _selectedModel.value.id)
+        viewModelScope.launch {
+            backgroundTaskManager.startExtraction(deckId, _selectedModel.value.id)
+        }
     }
 }

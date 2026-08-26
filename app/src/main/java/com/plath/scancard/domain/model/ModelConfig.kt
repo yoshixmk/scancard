@@ -9,6 +9,8 @@ data class ModelConfig(
     val aiPackName: String
 ) {
     companion object {
+        const val DEFAULT_ID = "gemma-4-e2b"
+
         // Gemma 4 family - Delivered via Google Play AI Packs
         val GEMMA_4_E2B = ModelConfig(
             id = "gemma-4-e2b",
