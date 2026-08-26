@@ -51,7 +51,11 @@ export const config = {
     reporters: ['spec'],
     mochaOpts: {
         ui: 'bdd',
-        timeout: 120000
+        timeout: 120000,
+        // @slow tests (manual-verification equivalent) are excluded from default `npm test`.
+        // Run them with `npm run test:slow` (wdio.slow.conf.js). Tag via `@slow` in title.
+        grep: '@slow',
+        invert: true
     },
 
     // Appium helpers: clearState equivalent -> terminate + activate + clear data via adb if needed
