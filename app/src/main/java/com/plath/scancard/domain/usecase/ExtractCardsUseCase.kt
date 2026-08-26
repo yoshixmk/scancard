@@ -24,7 +24,15 @@ class ExtractCardsUseCase @Inject constructor(
     private val promptValidator: PromptValidator,
     private val cardValidator: CardValidator
 ) {
-    suspend fun extractAndSaveCards(deckId: Long, modelConfig: ModelConfig) {
+    /**
+     * スキャンを1枚ずつ処理し、ページ単位の進捗を onProgress に報告する（Req12.13）。
+     * onProgress: (current, total) — 最初のページ処理前に (0, N)、各ページ完了直後に (i, N)。
+     */
+    suspend fun extractAndSaveCards(
+        deckId: Long,
+        modelConfig: ModelConfig,
+        onProgress: suspend (current: Int, total: Int) -> Unit = { _, _ -> }
+    ) {
         val modelPath = modelRepository.getModelPath(modelConfig)
             ?: throw IllegalStateException("Model ${modelConfig.name} not found. Please download it first.")
 
@@ -39,25 +47,35 @@ class ExtractCardsUseCase @Inject constructor(
             return
         }
 
-        var currentPrompt = promptBuilder.buildPrompt(combinedText)
-        var extractedPairs = emptyList<com.plath.scancard.data.ml.ExtractedCard>()
+        val total = scans.size
+        val extractedPairs = mutableListOf<com.plath.scancard.data.ml.ExtractedCard>()
+        onProgress(0, total)
 
         // 手動テスト: repeat+return@repeat はbreakせず3回常に実行されメモリ増(8.6→9.5GB)を招く。for+breakに修正
-        for (attempt in 0 until 3) {
-            extractedPairs = cardExtractor.extractCards(currentPrompt)
-            
-            val allValid = extractedPairs.all { 
-                promptValidator.isValid(it.term, it.definition) 
+        for ((index, scan) in scans.withIndex()) {
+            val pageText = scan.rawText
+            var pagePairs = emptyList<com.plath.scancard.data.ml.ExtractedCard>()
+            var currentPrompt = promptBuilder.buildPrompt(pageText)
+
+            for (attempt in 0 until 3) {
+                pagePairs = cardExtractor.extractCards(currentPrompt)
+
+                val allValid = pagePairs.all {
+                    promptValidator.isValid(it.term, it.definition)
+                }
+
+                if (allValid && pagePairs.isNotEmpty()) {
+                    break
+                }
+
+                if (attempt < 2 && pagePairs.isNotEmpty()) {
+                    val failedTerm = pagePairs.find { !promptValidator.isValid(it.term, it.definition) }?.term ?: ""
+                    currentPrompt = promptBuilder.buildImprovedPrompt(pageText, failedTerm)
+                }
             }
-            
-            if (allValid && extractedPairs.isNotEmpty()) {
-                break
-            }
-            
-            if (attempt < 2 && extractedPairs.isNotEmpty()) {
-                val failedTerm = extractedPairs.find { !promptValidator.isValid(it.term, it.definition) }?.term ?: ""
-                currentPrompt = promptBuilder.buildImprovedPrompt(combinedText, failedTerm)
-            }
+
+            extractedPairs += pagePairs
+            onProgress(index + 1, total)
         }
         
         val cards = extractedPairs.mapNotNull { pair ->
