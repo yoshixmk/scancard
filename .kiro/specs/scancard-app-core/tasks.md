@@ -255,6 +255,15 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - [x] 15.7 DEBUG-only E2E helpers (NOT in release): `ScanScreen.kt:199,245` `scanDummyInsertBtn` + `ScanViewModel.insertDummyScanForE2E()` + `ScanDocumentUseCase.insertDummyScan()` + `ExtractionPreviewScreen` `createDummyModelBtn` (Idle+DEBUG) + `GemmaCardExtractor` dummy mode (<5MB → 1s 2 cards), all gated by `BuildConfig.DEBUG`
 - [x] 15.8 Appium E2E `specs/backgroundExtraction.e2e.js`: GMS `Discard` dialog handling, `clearStateAndLaunch` grants `CAMERA`+`POST_NOTIFICATIONS`, verifies `2 Cards` and `Dummy mode enabled` with no `Work cancelled`
 
+### 16. Durable Extraction Persistence & Resume (Requirement 12.8–12.11)
+
+- [x] 16.1 Add `Deck.extractionStatus: ExtractionStatus` (`NONE, PENDING, RUNNING, COMPLETED, FAILED`) + Room TypeConverter, DB version 3→4, `DeckDao.updateExtractionStatus()` / `getStuckExtractionDecks()`, `DeckRepository` pass-throughs
+- [x] 16.2 Fix foreground type `shortService` → `dataSync` (~3min hard cap killed real extraction): manifest service override + worker `FOREGROUND_SERVICE_TYPE_DATA_SYNC`
+- [x] 16.3 `BackgroundTaskManager`: suspend enqueue with Flow-based active-work check, `ExistingWorkPolicy.APPEND_OR_REPLACE`, `BackoffPolicy.EXPONENTIAL 10s`, PENDING status at enqueue
+- [x] 16.4 `CardExtractionWorker`: RUNNING status at start, rethrow `CancellationException` (no more swallow→failure), `Result.retry()` up to 3 attempts, FAILED on permanent failure
+- [x] 16.5 `ExtractCardsUseCase`: set COMPLETED immediately after `insertCards` (before `Result.success()`)
+- [x] 16.6 `ResumePendingExtractionsUseCase` + launch from `ScanCardApplication.onCreate`: reconcile stuck PENDING/RUNNING decks with WorkManager state and re-enqueue only decks without active work
+
 ---
 
 ## Implementation Order
