@@ -59,7 +59,17 @@ class CardExtractionWorker @AssistedInject constructor(
             ?: ModelConfig.GEMMA_4_E2B
 
         return try {
-            extractCardsUseCase.extractAndSaveCards(deckId, modelConfig)
+            extractCardsUseCase.extractAndSaveCards(deckId, modelConfig) { current, total ->
+                // 進捗ミラー（Req12.14）+ 通知エリア表示（Req12.12）。
+                // 進捗通知はアプリ管理の別IDで投稿する（同一IDだとWMが元FGS通知を再投稿して上書きする）
+                setProgress(
+                    androidx.work.workDataOf(
+                        "progress_current" to current,
+                        "progress_total" to total
+                    )
+                )
+                notificationHelper.showProgressNotification(deckId, current, total)
+            }
             notificationHelper.showCompletionNotification(deckId)
             Result.success()
         } catch (e: kotlinx.coroutines.CancellationException) {

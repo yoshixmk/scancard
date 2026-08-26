@@ -14,6 +14,13 @@ class NotificationHelper(private val context: Context) {
     companion object {
         private const val CHANNEL_ID = "extraction_channel"
         private const val CHANNEL_NAME = "Extraction Progress"
+
+        // アプリ管理通知（progress/completion/error）のベースid。
+        // WorkManagerのFGS通知は deckId をそのまま使うため、衝突を避けてオフセットする。
+        // 同一IDでのraw notifyはWMがsetProgress毎に元FGS通知を再投稿して上書きされるため機能しない
+        // （実測 2026-08-26）。別IDなら常にシェードに表示される。
+        private const val APP_NOTIF_ID_OFFSET = 100_000
+        fun appNotificationId(deckId: Long): Int = APP_NOTIF_ID_OFFSET + deckId.toInt()
     }
 
     init {
@@ -58,7 +65,7 @@ class NotificationHelper(private val context: Context) {
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         try {
-            manager.notify(deckId.toInt(), notification)
+            manager.notify(appNotificationId(deckId), notification)
         } catch (e: SecurityException) {
             android.util.Log.e("NotificationHelper", "Missing notification permission", e)
         }
@@ -86,7 +93,40 @@ class NotificationHelper(private val context: Context) {
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         try {
-            manager.notify(deckId.toInt(), notification)
+            manager.notify(appNotificationId(deckId), notification)
+        } catch (e: SecurityException) {
+            android.util.Log.e("NotificationHelper", "Missing notification permission", e)
+        }
+    }
+
+    fun showProgressNotification(deckId: Long, current: Int, total: Int) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("scancard://deck/$deckId")).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            `package` = context.packageName
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            deckId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val safeTotal = total.coerceAtLeast(1)
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Extracting flashcards")
+            .setContentText("Page $current of $safeTotal")
+            .setProgress(safeTotal, current.coerceIn(0, safeTotal), false)
+            .setOngoing(true)
+            // 進捗更新のたびに通知音/ヘッドアップを鳴らさない
+            .setOnlyAlertOnce(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        try {
+            manager.notify(appNotificationId(deckId), notification)
+            android.util.Log.d("NotificationHelper", "Progress notif posted deck=$deckId $current/$safeTotal")
         } catch (e: SecurityException) {
             android.util.Log.e("NotificationHelper", "Missing notification permission", e)
         }
