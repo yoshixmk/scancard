@@ -264,6 +264,14 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - [x] 16.5 `ExtractCardsUseCase`: set COMPLETED immediately after `insertCards` (before `Result.success()`)
 - [x] 16.6 `ResumePendingExtractionsUseCase` + launch from `ScanCardApplication.onCreate`: reconcile stuck PENDING/RUNNING decks with WorkManager state and re-enqueue only decks without active work
 
+### 17. Extraction Progress Notification (Requirement 12.12–12.14)
+
+- [x] 17.1 `ExtractCardsUseCase`: process scans page-by-page (one LLM call per page, per-page retry loop), add `onProgress: suspend (current: Int, total: Int) -> Unit` reporting `(0,N)` before first page and `(i,N)` after each page
+- [x] 17.2 `NotificationHelper.showProgressNotification(deckId, current, total)`: ongoing determinate notification (`setProgress`, `setOnlyAlertOnce`) posted under an app-managed id (`deckId + 100_000`) — same-id updates get overwritten by WorkManager's FGS re-post on every `setProgress` (verified on emulator)
+- [x] 17.3 `CardExtractionWorker`: pass an `onProgress` lambda that posts the progress notification and mirrors it via WorkManager `setProgress` (`progress_current`/`progress_total`)
+- [x] 17.4 `GemmaCardExtractor` dummy mode delay 1s → 8s (E2E shade-check window despite clock skew)
+- [x] 17.5 E2E `backgroundExtraction.e2e.js`: open the notification shade mid-extraction and assert `Page n of m` is visible; verify completion still reaches `2 Cards` + persistence across restart
+
 ---
 
 ## Implementation Order
