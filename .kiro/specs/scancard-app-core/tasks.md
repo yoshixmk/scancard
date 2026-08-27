@@ -141,7 +141,10 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "21.3", "name": "NavHost Study popBackStack wiring", "status": "completed", "dependencies": ["21.1"], "optional": false },
     { "id": "22.1", "name": "BackgroundTaskManager hasRunningOrEnqueued + REPLACE resume", "status": "completed", "dependencies": ["16.3"], "optional": false },
     { "id": "22.2", "name": "ResumePendingExtractionsUseCase BLOCKED fix", "status": "completed", "dependencies": ["22.1"], "optional": false },
-    { "id": "22.3", "name": "E2E studyAndResume.e2e.js kill+resume verification", "status": "completed", "dependencies": ["20.2", "22.2"], "optional": false }
+    { "id": "22.3", "name": "E2E studyAndResume.e2e.js kill+resume verification", "status": "completed", "dependencies": ["20.2", "22.2"], "optional": false },
+    { "id": "23.1", "name": "ScanScreen post-photo visibility (retry + saveable + background)", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "23.2", "name": "ScanScreen thumbnails ImageRequest + MainActivity ScanCardTheme", "status": "completed", "dependencies": ["23.1"], "optional": false },
+    { "id": "23.3", "name": "E2E scanPostPhoto.e2e.js grid and retry verification", "status": "completed", "dependencies": ["23.1"], "optional": false }
   ],
   "waves": [
     {
@@ -333,6 +336,12 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - [x] 22.1 `BackgroundTaskManager`: add `hasRunningOrEnqueuedWork()` (checks `RUNNING`/`ENQUEUED` only) and `resumeExtraction` uses `REPLACE` to clear `BLOCKED` chains; `enqueue()` now takes `policy` param (default `APPEND_OR_REPLACE`)
 - [x] 22.2 `ResumePendingExtractionsUseCase`: skip only `RUNNING`/`ENQUEUED`, force-resume `BLOCKED`/`CANCELLED`/`FAILED`/empty with `REPLACE` — fixes kill+restart resume deadlock
 - [x] 22.3 E2E verification in `studyAndResume.e2e.js`: kill→restart still shows decks/cards and resume re-enqueues
+
+### 23. Scan Capture Post-Photo Visibility Fix (Requirement 22)
+
+- [x] 23.1 `ScanScreen`: handle `RESULT_OK`/empty/`RESULT_CANCELED`/failure with `scannerError` + `SnackbarHost` + `scanRetryBtn`, `alreadyAutoLaunched` via `rememberSaveable` to prevent rotation double-launch black overlay, `Scaffold(containerColor=background)` + `background()` on content/grid
+- [x] 23.2 `ScanScreen` thumbnails: `AsyncImage(ImageRequest.Builder(uri).crossfade)` with `surfaceVariant` background, `Page` label fallback and `onError` log — never black cell; `MainActivity` wraps in `ScanCardTheme` for correct `DayNight` windowBackground
+- [x] 23.3 E2E `scanPostPhoto.e2e.js`: dummy insert shows `Extract Cards (1)` and `scanThumb_*`, retry path shows `scanRetryBtn` when scanner unavailable
 
 ---
 

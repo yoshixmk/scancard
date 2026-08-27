@@ -213,3 +213,17 @@ ScanCard is an Android application that enables users to photograph book pages u
 1. `StudyViewModel` SHALL expose `isComplete: StateFlow<Boolean>` that becomes `true` when the user reviews the last card (`currentIndex == size-1` before mark) or calls `nextCard()` on the last card. `consumeComplete()` SHALL reset it to `false`.
 2. WHEN `isComplete` becomes `true`, THEN `StudyScreen` SHALL call `onBack()` via `LaunchedEffect`, popping back to `DeckDetailScreen` (the deck list). On filtered views (`FilterType != ALL`), non-last reviews SHALL NOT advance the index (the filtered card leaves the list and the next card slides into place); on `ALL` filter, non-last reviews SHALL advance via `nextCard()`.
 3. THE navigation graph SHALL provide `StudyScreen(onBack = { navController.popBackStack() })` so that completion returns to the caller without creating a new back-stack entry.
+
+---
+
+### Requirement 22: Scan Capture Post-Photo Visibility (Camera Dark Screen Fix)
+
+**User Story:** As a user, after I take a photo with the camera scanner, I want the scanned pages to be visible instead of a black screen.
+
+#### Acceptance Criteria
+
+1. WHEN `GmsDocumentScanning` returns `RESULT_OK` with pages, THEN `ScanScreen` SHALL call `viewModel.addPages(uris)` and display the `LazyVerticalGrid` with thumbnails (`AsyncImage` via `ImageRequest` + `crossfade`) and the `Extract Cards (N)` bottom bar; the screen SHALL NOT remain black/dark.
+2. WHEN the scanner returns `RESULT_CANCELED` or `null`/empty pages, THEN `ScanScreen` SHALL NOT set `isProcessing=true` and SHALL show the empty state with `Start Scanning` and, if `scannerError` is set, a retry `Card` with `testTag="scanRetryBtn"` and `Snackbar` — never a silent black screen.
+3. WHEN `getStartScanIntent` fails, THEN `ScanScreen` SHALL set `scannerError="Scanner unavailable: …"` and surface it via `SnackbarHost` + retry card, allowing gallery import or manual retry.
+4. `alreadyAutoLaunched` SHALL be `rememberSaveable` so that rotation/config change does not re-launch the scanner while the previous overlay is dimming (which was perceived as black). `MainActivity` SHALL wrap content in `ScanCardTheme` and `Scaffold(containerColor=background)` with `Surface` background to avoid `DayNight` windowBackground mismatch.
+5. `AsyncImage` for each `uri` SHALL have `onError` logging and a `surfaceVariant` background + `Page` label fallback so that a failed load is visible as a placeholder rather than a black cell.

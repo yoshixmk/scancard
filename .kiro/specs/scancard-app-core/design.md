@@ -273,7 +273,11 @@ enum class LanguagePreference {
 - **DeckDetailScreen**: `CardListItem` shows `status` via `AssistChip` and trailing label `testTag="cardStatus_<id>_<STATUS>"` / `cardStatusLabel_<id>`; `NEW` chip is hidden but label always visible, verifying persistence across kills.
 - **Navigation**: `ScanCardNavHost` wires `StudyScreen(onBack={popBackStack()})` — completion returns to DeckDetail list without new entry.
 
-### 8. Test-Only E2E Helpers (DEBUG only, not in release)
+### 8. Scan Capture Post-Photo (Req 22)
+- **ScanScreen**: `scannerLauncher` handles `RESULT_OK`→`addPages(uris)` and grid, `RESULT_CANCELED`/empty→empty state + `Start Scanning`, failures→`scannerError` `Snackbar`+retry `Card` `scanRetryBtn`. `alreadyAutoLaunched` is `rememberSaveable` to avoid double launch on rotation while overlay dims (root cause of black screen). `Scaffold(containerColor=background)` + `Box(background)` ensures `DayNight` windowBackground never shows black; `MainActivity` wraps in `ScanCardTheme` (not plain `MaterialTheme`) so `WindowCompat` status-bar icons match. `AsyncImage` uses `ImageRequest.Builder(uri).crossfade(true)` with `surfaceVariant` background, `Page` label fallback and `onError` log — failed load shows placeholder, not black cell.
+- **GmsDocumentScanning**: `getStartScanIntent` `addOnFailureListener` sets `scannerError="Scanner unavailable…"` so Play Services absence (emulator) never leaves silent black screen.
+
+### 9. Test-Only E2E Helpers (DEBUG only, not in release)
 - **ScanScreen `scanDummyInsertBtn`**: `Modifier.testTag("scanDummyInsertBtn")`, `BuildConfig.DEBUG` only. Calls `insertDummyScanForE2E()` → `ScanDocumentUseCase.insertDummyScan()` (Apple/Banana).
 - **ExtractionPreviewScreen `createDummyModelBtn`**: `Idle`+`DEBUG` only, writes `<5MB` dummy model file and refreshes `ModelManager` to `Ready`.
 - **GemmaCardExtractor dummy mode**: `BuildConfig.DEBUG && file.length()<5MB` → `isDummyMode=true`, delays 8s and returns 2 cards without LiteRT init.
