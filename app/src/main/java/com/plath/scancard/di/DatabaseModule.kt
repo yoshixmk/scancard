@@ -3,6 +3,8 @@ package com.plath.scancard.di
 import android.content.Context
 import androidx.room.Room
 import com.plath.scancard.data.local.AppDatabase
+import com.plath.scancard.data.local.MIGRATION_2_3
+import com.plath.scancard.data.local.MIGRATION_3_4
 import com.plath.scancard.data.local.dao.CardDao
 import com.plath.scancard.data.local.dao.DeckDao
 import com.plath.scancard.data.local.dao.ScanDao
@@ -53,8 +55,8 @@ object DatabaseModule {
             AppDatabase::class.java,
             "scancard_db"
         )
-        .fallbackToDestructiveMigration()
-        .build()
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+            .build()
     }
 
     @Provides
