@@ -39,8 +39,16 @@ fun StudyScreen(
     val cards by viewModel.cards.collectAsState()
     val currentIndex by viewModel.currentIndex.collectAsState()
     val filter by viewModel.filter.collectAsState()
-    
+    val isComplete by viewModel.isComplete.collectAsState()
+
     var languagePreference by remember { mutableStateOf(LanguagePreference.ENGLISH) }
+
+    LaunchedEffect(isComplete) {
+        if (isComplete) {
+            viewModel.consumeComplete()
+            onBack()
+        }
+    }
 
     Scaffold(
         // SKILL.md Step 3: Scaffold PREFERRED — specify contentWindowInsets=safeDrawing and propagate innerPadding
@@ -120,27 +128,30 @@ fun StudyScreen(
                     }
                 }
 
+                // Status badge for current card — verifies persistence visually (Req 9/10)
+                AssistChip(
+                    onClick = {},
+                    label = { Text(currentCard.status.name) },
+                    modifier = Modifier.testTag("studyStatus_${currentCard.status.name}")
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = { 
-                            viewModel.markAsReviewNeeded(currentCard.id)
-                            viewModel.nextCard()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        onClick = { viewModel.markAsReviewNeeded(currentCard.id) },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier.testTag("studyReviewBtn")
                     ) {
                         Icon(Icons.Default.Close, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text("Need Review")
                     }
                     Button(
-                        onClick = { 
-                            viewModel.markAsLearned(currentCard.id)
-                            viewModel.nextCard()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        onClick = { viewModel.markAsLearned(currentCard.id) },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier.testTag("studyLearnedBtn")
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null)
                         Spacer(Modifier.width(8.dp))

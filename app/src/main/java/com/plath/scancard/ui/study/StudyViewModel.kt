@@ -64,9 +64,14 @@ class StudyViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
+    private val _isComplete = MutableStateFlow(false)
+    val isComplete: StateFlow<Boolean> = _isComplete.asStateFlow()
+
     fun nextCard() {
         if (_currentIndex.value < cards.value.size - 1) {
             _currentIndex.value++
+        } else if (cards.value.isNotEmpty() && _currentIndex.value == cards.value.size - 1) {
+            _isComplete.value = true
         }
     }
 
@@ -77,15 +82,42 @@ class StudyViewModel @Inject constructor(
     }
 
     fun markAsLearned(cardId: Long) {
+        val wasLast = _currentIndex.value == cards.value.size - 1 && cards.value.isNotEmpty()
+        val filterAtCall = _filter.value
         viewModelScope.launch {
             studyCardsUseCase.markAsLearned(cardId)
+            if (wasLast) {
+                _isComplete.value = true
+            } else if (filterAtCall == FilterType.ALL) {
+                nextCard()
+            } else {
+                // Filtered: card leaves current filter, next card slides into same index — clamp if needed
+                if (_currentIndex.value >= cards.value.size && cards.value.isNotEmpty()) {
+                    _currentIndex.value = (cards.value.size - 1).coerceAtLeast(0)
+                }
+            }
         }
     }
 
     fun markAsReviewNeeded(cardId: Long) {
+        val wasLast = _currentIndex.value == cards.value.size - 1 && cards.value.isNotEmpty()
+        val filterAtCall = _filter.value
         viewModelScope.launch {
             studyCardsUseCase.markAsReviewNeeded(cardId)
+            if (wasLast) {
+                _isComplete.value = true
+            } else if (filterAtCall == FilterType.ALL) {
+                nextCard()
+            } else {
+                if (_currentIndex.value >= cards.value.size && cards.value.isNotEmpty()) {
+                    _currentIndex.value = (cards.value.size - 1).coerceAtLeast(0)
+                }
+            }
         }
+    }
+
+    fun consumeComplete() {
+        _isComplete.value = false
     }
 
     fun setFilter(filter: FilterType) {

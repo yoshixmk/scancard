@@ -219,9 +219,25 @@ fun CardListItem(
     ListItem(
         modifier = Modifier.testTag("cardItem_${card.id}").clickable(onClick = onClick),
         headlineContent = { Text(card.term, modifier = Modifier.testTag("cardTerm_${card.id}")) },
-        supportingContent = { Text(card.definition) },
+        supportingContent = {
+            Column {
+                Text(card.definition)
+                if (card.status.name != "NEW") {
+                    AssistChip(
+                        onClick = {},
+                        label = { Text(card.status.name) },
+                        modifier = Modifier.testTag("cardStatus_${card.id}_${card.status.name}")
+                    )
+                }
+            }
+        },
         trailingContent = {
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    card.status.name,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.testTag("cardStatusLabel_${card.id}")
+                )
                 IconButton(
                     onClick = onDelete,
                     modifier = Modifier.testTag("cardDelete_${card.id}")
