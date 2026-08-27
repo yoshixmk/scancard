@@ -19,10 +19,12 @@ class ResumePendingExtractionsUseCase @Inject constructor(
 
         android.util.Log.i(TAG, "Resuming ${stuck.size} stuck extraction deck(s): ${stuck.map { it.id }}")
         for (deck in stuck) {
-            if (backgroundTaskManager.hasActiveWork(deck.id)) {
-                android.util.Log.d(TAG, "Deck ${deck.id} already has active WorkManager work — skipping")
+            if (backgroundTaskManager.hasRunningOrEnqueuedWork(deck.id)) {
+                android.util.Log.d(TAG, "Deck ${deck.id} already has RUNNING/ENQUEUED work — skipping (auto-resume)")
                 continue
             }
+            // BLOCKED, CANCELLED, FAILED or no work → force resume with REPLACE (clears BLOCKED chain)
+            android.util.Log.i(TAG, "Deck ${deck.id} has no RUNNING/ENQUEUED work — force resuming")
             backgroundTaskManager.resumeExtraction(deck.id)
         }
     }

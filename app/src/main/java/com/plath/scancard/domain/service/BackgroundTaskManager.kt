@@ -42,7 +42,8 @@ class BackgroundTaskManager @Inject constructor(
 
     suspend fun resumeExtraction(deckId: Long) {
         deckRepository.updateExtractionStatus(deckId, ExtractionStatus.PENDING)
-        enqueue(deckId, ModelConfig.DEFAULT_ID)
+        // Use REPLACE for resume: BLOCKED chains (APPEND_OR_REPLACE artifact after kill) would otherwise stay blocked forever.
+        enqueue(deckId, ModelConfig.DEFAULT_ID, ExistingWorkPolicy.REPLACE)
     }
 
     suspend fun hasActiveWork(deckId: Long): Boolean {
@@ -51,7 +52,13 @@ class BackgroundTaskManager @Inject constructor(
             .any { !it.state.isFinished }
     }
 
-    private suspend fun enqueue(deckId: Long, modelId: String) {
+    suspend fun hasRunningOrEnqueuedWork(deckId: Long): Boolean {
+        return workManager.getWorkInfosForUniqueWorkFlow(extractionWorkName(deckId))
+            .first()
+            .any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
+    }
+
+    private suspend fun enqueue(deckId: Long, modelId: String, policy: ExistingWorkPolicy = ExistingWorkPolicy.APPEND_OR_REPLACE) {
         val data = Data.Builder()
             .putLong(KEY_DECK_ID, deckId)
             .putString(KEY_MODEL_ID, modelId)
@@ -67,7 +74,7 @@ class BackgroundTaskManager @Inject constructor(
         // replaces CANCELLED/FAILED chains so past failures don't silently block retries (Req12.11)
         workManager.enqueueUniqueWork(
             extractionWorkName(deckId),
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            policy,
             request
         )
     }
