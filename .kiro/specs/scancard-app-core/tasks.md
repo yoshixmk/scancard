@@ -89,30 +89,59 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "8.2", "name": "Integration tests for full Scan-to-Card flow", "status": "completed", "dependencies": [], "optional": true },
     { "id": "8.3", "name": "Performance profiling for Gemma 4 models on target devices", "status": "completed", "dependencies": [], "optional": true },
     { "id": "8.4", "name": "Verification of Quizlet TSV format", "status": "completed", "dependencies": [], "optional": false },
-    { "id": "9.1", "name": "Create CardValidator interface and implementation", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "9.2", "name": "Integrate CardValidator into ExtractCardsUseCase", "status": "pending", "dependencies": ["9.1"], "optional": false },
-    { "id": "10.1", "name": "Create ExportManager interface and implementation", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "10.2", "name": "Update ExportDataUseCase to use ExportManager", "status": "pending", "dependencies": ["10.1"], "optional": false },
-    { "id": "11.1", "name": "Create CardEditor component", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "11.2", "name": "Update DeckDetailScreen with CRUD UI", "status": "pending", "dependencies": ["11.1"], "optional": false },
-    { "id": "12.1", "name": "Create FilterType enum (ALL, NEW, LEARNING, REVIEW)", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "12.2", "name": "Create CardFilter implementation", "status": "pending", "dependencies": ["12.1"], "optional": false },
-    { "id": "12.3", "name": "Update StudyViewModel to use new FilterType", "status": "pending", "dependencies": ["12.2"], "optional": false },
-    { "id": "13.1", "name": "Create LanguagePreference enum (ENGLISH, JAPANESE)", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "13.2", "name": "Create IBilingualCardDisplay interface and implementation", "status": "pending", "dependencies": ["13.1"], "optional": false },
-    { "id": "13.3", "name": "Update Card entity with japaneseTranslation field", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "13.4", "name": "Update Study Screen UI with language toggle", "status": "pending", "dependencies": ["13.2", "13.3"], "optional": false },
-    { "id": "14.1", "name": "Create ITranslationPromptBuilder interface and implementation", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "14.2", "name": "Create IPromptValidator interface and implementation", "status": "pending", "dependencies": [], "optional": false },
-    { "id": "14.3", "name": "Integrate PromptValidator into ExtractCardsUseCase", "status": "pending", "dependencies": ["14.1", "14.2"], "optional": false },
+    { "id": "9.1", "name": "Create CardValidator interface and implementation", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "9.2", "name": "Integrate CardValidator into ExtractCardsUseCase", "status": "completed", "dependencies": ["9.1"], "optional": false },
+    { "id": "10.1", "name": "Create ExportManager interface and implementation", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "10.2", "name": "Update ExportDataUseCase to use ExportManager", "status": "completed", "dependencies": ["10.1"], "optional": false },
+    { "id": "11.1", "name": "Create CardEditor component", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "11.2", "name": "Update DeckDetailScreen with CRUD UI", "status": "completed", "dependencies": ["11.1"], "optional": false },
+    { "id": "12.1", "name": "Create FilterType enum (ALL, NEW, LEARNING, REVIEW)", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "12.2", "name": "Create CardFilter implementation", "status": "completed", "dependencies": ["12.1"], "optional": false },
+    { "id": "12.3", "name": "Update StudyViewModel to use new FilterType", "status": "completed", "dependencies": ["12.2"], "optional": false },
+    { "id": "13.1", "name": "Create LanguagePreference enum (ENGLISH, JAPANESE)", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "13.2", "name": "Create IBilingualCardDisplay interface and implementation", "status": "completed", "dependencies": ["13.1"], "optional": false },
+    { "id": "13.3", "name": "Update Card entity with japaneseTranslation field", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "13.4", "name": "Update Study Screen UI with language toggle", "status": "completed", "dependencies": ["13.2", "13.3"], "optional": false },
+    { "id": "14.1", "name": "Create ITranslationPromptBuilder interface and implementation", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "14.2", "name": "Create IPromptValidator interface and implementation", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "14.3", "name": "Integrate PromptValidator into ExtractCardsUseCase", "status": "completed", "dependencies": ["14.1", "14.2"], "optional": false },
     { "id": "15.1", "name": "Add WorkManager dependency to build.gradle.kts", "status": "completed", "dependencies": [], "optional": false },
     { "id": "15.2", "name": "Create IBackgroundTaskManager interface and implementation", "status": "completed", "dependencies": ["15.1"], "optional": false },
     { "id": "15.3", "name": "Create CardExtractionWorker", "status": "completed", "dependencies": ["15.2"], "optional": false },
     { "id": "15.4", "name": "Add system notification for task completion", "status": "completed", "dependencies": ["15.3"], "optional": false },
     { "id": "15.5", "name": "Update Extraction Screen with background processing UI", "status": "completed", "dependencies": ["15.2", "15.3", "15.4"], "optional": false },
-    { "id": "15.6", "name": "Fix CardExtractionWorker foreground service for targetSDK 35 (SystemForegroundService shortService manifest merge, ForegroundInfo SHORT_SERVICE)", "status": "completed", "dependencies": ["15.3", "15.4"], "optional": false },
-    { "id": "15.7", "name": "Add DEBUG-only E2E helpers (ScanScreen scanDummyInsertBtn, ExtractionPreview createDummyModelBtn, Gemma dummy mode <5MB)", "status": "completed", "dependencies": ["15.2"], "optional": false },
-    { "id": "15.8", "name": "Add Appium E2E backgroundExtraction.e2e.js with GMS Discard handling and POST_NOTIFICATIONS grant", "status": "completed", "dependencies": ["15.6", "15.7"], "optional": false }
+    { "id": "15.6", "name": "Fix CardExtractionWorker foreground service for targetSDK 35", "status": "completed", "dependencies": ["15.3", "15.4"], "optional": false },
+    { "id": "15.7", "name": "Add DEBUG-only E2E helpers (scanDummyInsertBtn, createDummyModelBtn, Gemma dummy mode)", "status": "completed", "dependencies": ["15.2"], "optional": false },
+    { "id": "15.8", "name": "Add Appium E2E backgroundExtraction.e2e.js", "status": "completed", "dependencies": ["15.6", "15.7"], "optional": false },
+    { "id": "16.1", "name": "Add Deck.extractionStatus + TypeConverter, version 3->4", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "16.2", "name": "Fix foreground dataSync (shortService cap)", "status": "completed", "dependencies": ["15.3"], "optional": false },
+    { "id": "16.3", "name": "BackgroundTaskManager suspend enqueue with APPEND_OR_REPLACE", "status": "completed", "dependencies": ["15.2"], "optional": false },
+    { "id": "16.4", "name": "CardExtractionWorker RUNNING + retry + FAILED", "status": "completed", "dependencies": ["15.3"], "optional": false },
+    { "id": "16.5", "name": "ExtractCardsUseCase COMPLETED after insertCards", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "16.6", "name": "ResumePendingExtractionsUseCase from Application.onCreate", "status": "completed", "dependencies": ["16.1", "16.3"], "optional": false },
+    { "id": "17.1", "name": "ExtractCardsUseCase page-by-page onProgress", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "17.2", "name": "NotificationHelper progress (deckId+100000)", "status": "completed", "dependencies": ["17.1"], "optional": false },
+    { "id": "17.3", "name": "CardExtractionWorker onProgress + setProgress", "status": "completed", "dependencies": ["17.1"], "optional": false },
+    { "id": "17.4", "name": "Gemma dummy delay 8s for shade check", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "17.5", "name": "E2E backgroundExtraction shade verification", "status": "completed", "dependencies": ["17.2", "17.3"], "optional": false },
+    { "id": "18.1", "name": "TextRecognitionManager Dispatchers.IO", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "18.2", "name": "ScanDocumentUseCase parallel OCR", "status": "completed", "dependencies": ["18.1"], "optional": false },
+    { "id": "18.3", "name": "ScanViewModel fastMode auto-extraction", "status": "completed", "dependencies": ["18.2"], "optional": false },
+    { "id": "18.4", "name": "ScanScreen/NavHost fastMode routing", "status": "completed", "dependencies": ["18.3"], "optional": false },
+    { "id": "18.5", "name": "Unit tests ScanDocumentUseCase/ScanViewModel", "status": "completed", "dependencies": ["18.2", "18.3"], "optional": false },
+    { "id": "18.6", "name": "E2E fastFlow.e2e.js fallback + @slow", "status": "completed", "dependencies": ["18.4"], "optional": false },
+    { "id": "19.1", "name": "AppDatabase exportSchema + MIGRATION_2_3/3_4", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "19.2", "name": "DatabaseModule addMigrations (no fallbackToDestructiveMigration)", "status": "completed", "dependencies": ["19.1"], "optional": false },
+    { "id": "19.3", "name": "Remove fallbackToDestructiveMigration usage", "status": "completed", "dependencies": ["19.1"], "optional": false },
+    { "id": "20.1", "name": "StudyViewModel markAsLearned/Review persistence", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "20.2", "name": "DeckDetail CardListItem status chip", "status": "completed", "dependencies": ["20.1"], "optional": false },
+    { "id": "20.3", "name": "StudyScreen status chip + button tags", "status": "completed", "dependencies": ["20.1"], "optional": false },
+    { "id": "21.1", "name": "StudyViewModel isComplete + consumeComplete", "status": "completed", "dependencies": ["20.1"], "optional": false },
+    { "id": "21.2", "name": "StudyScreen LaunchedEffect onBack", "status": "completed", "dependencies": ["21.1"], "optional": false },
+    { "id": "21.3", "name": "NavHost Study popBackStack wiring", "status": "completed", "dependencies": ["21.1"], "optional": false },
+    { "id": "22.1", "name": "BackgroundTaskManager hasRunningOrEnqueued + REPLACE resume", "status": "completed", "dependencies": ["16.3"], "optional": false },
+    { "id": "22.2", "name": "ResumePendingExtractionsUseCase BLOCKED fix", "status": "completed", "dependencies": ["22.1"], "optional": false },
+    { "id": "22.3", "name": "E2E studyAndResume.e2e.js kill+resume verification", "status": "completed", "dependencies": ["20.2", "22.2"], "optional": false }
   ],
   "waves": [
     {
@@ -280,6 +309,30 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - [x] 18.4 `ScanScreen` + `ScanCardNavHost`: change `onComplete` to `(Long, Boolean) -> Unit`; NavHost routes `fastMode=true` → `DeckDetail` (skip `ExtractionPreviewScreen`), `false` → `ExtractionPreviewScreen`
 - [x] 18.5 Unit tests: `ScanDocumentUseCaseTest` (virtual-time parallel timing + order), `ScanViewModelTest` (Ready→auto-extract, Idle→fallback)
 - [x] 18.6 E2E `specs/fastFlow.e2e.js`: fallback (=`Idle` → preview) + `@slow` auto-extraction path (DEBUG dummy model file `<5MB` ⇒ `Ready` ⇒ DeckDetail direct + progress notification still appears)
+
+### 19. Room Persistence After Kill (Requirement 19)
+
+- [x] 19.1 `AppDatabase`: `exportSchema=true`, add `MIGRATION_2_3` + `MIGRATION_3_4` (`scancard_db` survives kill/upgrade), prohibit `fallbackToDestructiveMigration`
+- [x] 19.2 `DatabaseModule`: `Room.databaseBuilder(...).addMigrations(MIGRATION_2_3, MIGRATION_3_4).build()` — `getAllDecks`/`getCardsByDeck` visible after restart
+- [x] 19.3 Remove `fallbackToDestructiveMigration()` usage; keep `schemaDirectory("$projectDir/schemas")` for future AutoMigrations
+
+### 20. Study Status Persistence and Visual Mark (Requirement 20)
+
+- [x] 20.1 `StudyViewModel`: `markAsLearned` → `LEARNING` / `markAsReviewNeeded` → `REVIEW` via `CardDao.updateCardStatus`; update survives process death and is observed via Flow
+- [x] 20.2 `DeckDetailScreen.CardListItem`: show status `AssistChip` + trailing label `cardStatus_<id>_<STATUS>` (hidden for NEW)
+- [x] 20.3 `StudyScreen`: show `AssistChip` `studyStatus_<STATUS>` for current card; buttons use `testTag="studyLearnedBtn"` / `studyReviewBtn` and no longer call `nextCard()` manually
+
+### 21. Study Completion Navigation (Requirement 21)
+
+- [x] 21.1 `StudyViewModel`: add `isComplete: StateFlow<Boolean>` + `consumeComplete()`; `markAs...` and `nextCard()` set `isComplete=true` when last card reviewed, `LaunchedEffect` in `StudyScreen` calls `onBack()`
+- [x] 21.2 `StudyScreen`: `LaunchedEffect(isComplete){ if(true) {consumeComplete(); onBack()} }` — returns to DeckDetail list automatically; filtered case keeps index, ALL case advances
+- [x] 21.3 `ScanCardNavHost`: `StudyScreen(onBack={popBackStack()})` wiring verified via E2E
+
+### 22. Background Resume Fix (Requirement 12.10–12.11)
+
+- [x] 22.1 `BackgroundTaskManager`: add `hasRunningOrEnqueuedWork()` (checks `RUNNING`/`ENQUEUED` only) and `resumeExtraction` uses `REPLACE` to clear `BLOCKED` chains; `enqueue()` now takes `policy` param (default `APPEND_OR_REPLACE`)
+- [x] 22.2 `ResumePendingExtractionsUseCase`: skip only `RUNNING`/`ENQUEUED`, force-resume `BLOCKED`/`CANCELLED`/`FAILED`/empty with `REPLACE` — fixes kill+restart resume deadlock
+- [x] 22.3 E2E verification in `studyAndResume.e2e.js`: kill→restart still shows decks/cards and resume re-enqueues
 
 ---
 

@@ -155,8 +155,8 @@ ScanCard is an Android application that enables users to photograph book pages u
 7. ANY E2E test helper that bypasses camera/LLM (e.g., "Insert Dummy Scan (E2E)", "Create Dummy Model (E2E)") SHALL be gated by `BuildConfig.DEBUG` and SHALL NOT be visible or reachable in release builds. The helpers SHALL insert a dummy scan and a <5MB dummy model file to exercise the foreground pipeline without requiring 2.6GB assets or GMS scanner.
 8. WHEN extraction succeeds, THE ExtractCardsUseCase SHALL persist extracted cards via `cardRepository.insertCards` AND set the deck's durable `extractionStatus = COMPLETED` in Room BEFORE the worker reports `Result.success()`. Extraction results SHALL survive app restarts; reopening the app SHALL NOT re-run extraction for decks whose cards are already persisted.
 9. WHEN extraction starts, THE deck's `extractionStatus` SHALL transition NONE → PENDING (at enqueue time) → RUNNING (at worker start). IF the worker fails permanently (retries exhausted), THEN the status SHALL be FAILED. IF the process dies or the job is cancelled by the system mid-run, THEN the status MAY remain RUNNING/PENDING until resume logic reconciles it.
-10. WHEN the app launches, THE ScanCardApplication SHALL scan for decks stuck in PENDING or RUNNING status and re-enqueue extraction for any of them that has no active (non-terminal) WorkManager work, restoring automatic resume after process death or system cancellation.
-11. THE BackgroundTaskManager SHALL enqueue unique work with `ExistingWorkPolicy.APPEND_OR_REPLACE` and a backoff policy so that previously CANCELLED/FAILED runs do not silently block or get dropped on retry, WHILE never cancelling an already-RUNNING extraction.
+10. WHEN the app launches, THE ScanCardApplication SHALL scan for decks stuck in PENDING or RUNNING status and re-enqueue extraction for any stuck deck that has no RUNNING/ENQUEUED WorkManager work. Decks with BLOCKED/CANCELLED/FAILED/no work SHALL be force-resumed with `ExistingWorkPolicy.REPLACE` to clear stale BLOCKED chains; decks with active RUNNING/ENQUEUED work SHALL be skipped (auto-resume).
+11. THE BackgroundTaskManager SHALL enqueue unique work with `ExistingWorkPolicy.APPEND_OR_REPLACE` for normal `startExtraction` (preserves live RUNNING) and `ExistingWorkPolicy.REPLACE` for `resumeExtraction` (clears BLOCKED chains), both with `BackoffPolicy.EXPONENTIAL 10s` so that previously CANCELLED/FAILED runs do not silently block or get dropped on retry.
 12. WHILE extraction is running, THE ScanCard SHALL post an ongoing progress notification in the notification area showing how many of the uploaded pages have been processed (`Page n of m`) with a determinate progress bar. The progress notification SHALL be posted under an app-managed notification id (`deckId + 100_000`, distinct from WorkManager's FGS notification id) because same-id updates are overwritten by WorkManager's automatic FGS re-post on every `setProgress` call; it SHALL NOT alert more than once and SHALL be replaced by the completion or error notification (same app-managed id) when extraction finishes.
 13. THE progress counter SHALL reflect real work: `ExtractCardsUseCase` SHALL process uploaded scans page-by-page (one LLM call per page) and report `(0, N)` before the first page and `(i, N)` immediately after page i finishes, WHERE N is the number of uploaded scans for the deck.
 14. THE worker SHALL additionally expose progress via WorkManager `setProgress` (`progress_current`, `progress_total`) so that in-app UI can observe the same progress without reading notifications.
@@ -177,3 +177,39 @@ ScanCard is an Android application that enables users to photograph book pages u
 - The dummy scan/model path is test-only: `ScanDocumentUseCase.insertDummyScan()` and `ExtractionPreviewScreen` create `files/gemma-4-E2B-it.litertlm` with <5MB, triggering `GemmaCardExtractor` dummy mode (1s delay, 2 cards Apple/Banana) only when `BuildConfig.DEBUG` and file size <5MB.
 - Durable state model: `Deck.extractionStatus: ExtractionStatus` (`NONE, PENDING, RUNNING, COMPLETED, FAILED`) stored in Room. This is the single source of truth for "was this deck already extracted and saved" — WorkManager state alone is not durable enough (terminal CANCELLED/FAILED states are never auto-retried).
 - Fast Mode is verified by unit tests (parallel OCR timing + auto-trigger branching) and by Appium E2E `fastFlow.e2e.js` (fallback + `@slow` auto-extraction path via DEBUG dummy model file).
+
+---
+
+### Requirement 19: Room Persistence After App Kill
+
+**User Story:** As a user, I want decks, scans, and cards to remain visible after the app is killed and restarted.
+
+#### Acceptance Criteria
+
+1. WHEN the app is killed (process death) and relaunched, THEN all `Deck`, `Scan`, `Card` rows persisted in `scancard_db` SHALL be visible via `DeckDao.getAllDecks()` / `CardDao.getCardsByDeck()` without being cleared.
+2. THE AppDatabase SHALL be built with `exportSchema=true`, version `4`, and `MIGRATION_2_3` (`isDuplicate`, `duplicateOfId`) + `MIGRATION_3_4` (`extractionStatus`) via `addMigrations()`. `fallbackToDestructiveMigration()` SHALL NOT be used on production builds.
+3. THE Room `schemaDirectory("$projectDir/schemas")` SHALL be kept so that future AutoMigrations can be added without wiping user data.
+
+---
+
+### Requirement 20: Study Status Persistence and Visual Mark
+
+**User Story:** As a user, I want my Learn/Review choices to be saved and visible as marks in the deck list.
+
+#### Acceptance Criteria
+
+1. WHEN the user taps **Learned** on a Study card, THEN `StudyCardsUseCase.markAsLearned` SHALL update `cards.status = LEARNING` via `CardDao.updateCardStatus`; WHEN tapping **Need Review**, THEN status SHALL become `REVIEW`. The update SHALL survive process death and be observable via `getCardsByDeck()` Flow.
+2. `DeckDetailScreen.CardListItem` SHALL display a status badge: `NEW` is hidden, `LEARNING`/`REVIEW` SHALL show an `AssistChip` and a trailing label with `testTag="cardStatus_<id>_<STATUS>"` and `cardStatusLabel_<id>`.
+3. `StudyScreen` SHALL display the current card's status in an `AssistChip` with `testTag="studyStatus_<STATUS>"` so that E2E can assert persistence without reading the database directly.
+
+---
+
+### Requirement 21: Study Completion Navigation
+
+**User Story:** As a user, when I finish reviewing the last card in Study, I want to return automatically to the deck list.
+
+#### Acceptance Criteria
+
+1. `StudyViewModel` SHALL expose `isComplete: StateFlow<Boolean>` that becomes `true` when the user reviews the last card (`currentIndex == size-1` before mark) or calls `nextCard()` on the last card. `consumeComplete()` SHALL reset it to `false`.
+2. WHEN `isComplete` becomes `true`, THEN `StudyScreen` SHALL call `onBack()` via `LaunchedEffect`, popping back to `DeckDetailScreen` (the deck list). On filtered views (`FilterType != ALL`), non-last reviews SHALL NOT advance the index (the filtered card leaves the list and the next card slides into place); on `ALL` filter, non-last reviews SHALL advance via `nextCard()`.
+3. THE navigation graph SHALL provide `StudyScreen(onBack = { navController.popBackStack() })` so that completion returns to the caller without creating a new back-stack entry.
