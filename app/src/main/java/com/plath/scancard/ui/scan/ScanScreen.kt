@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -16,18 +17,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
@@ -68,13 +73,32 @@ fun ScanScreen(
     
     val scanner = remember { GmsDocumentScanning.getClient(options) }
 
+    var scannerError by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val scannerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
-            scanResult?.pages?.map { it.imageUri }?.let { uris ->
-                viewModel.addPages(uris)
+        when (result.resultCode) {
+            Activity.RESULT_OK -> {
+                val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
+                val uris = scanResult?.pages?.map { it.imageUri }
+                if (!uris.isNullOrEmpty()) {
+                    scannerError = null
+                    viewModel.addPages(uris)
+                    android.util.Log.d("ScanScreen", "Scanner returned ${uris.size} pages")
+                } else {
+                    scannerError = "No pages returned from scanner"
+                    android.util.Log.w("ScanScreen", "Scanner OK but no pages: $scanResult")
+                }
+            }
+            Activity.RESULT_CANCELED -> {
+                android.util.Log.d("ScanScreen", "Scanner canceled")
+                scannerError = null
+            }
+            else -> {
+                scannerError = "Scanner failed (code=${result.resultCode})"
+                android.util.Log.w("ScanScreen", "Scanner failed with code ${result.resultCode}")
             }
         }
     }
@@ -82,16 +106,33 @@ fun ScanScreen(
     // Manual test: Reduced by 2 taps — Automatically launch DocumentScanner after transitioning to ScanScreen (becomes 1 tap)
     // Immediately launch scanner after transitioning from Home FAB / DeckDetail ScanAdd, saving the effort of pressing the conventional "Start Scanning" button.
     // Re-launch suppression: Auto-launch only for the first time with alreadyAutoLaunched; can be re-launched via button on cancellation.
-    var alreadyAutoLaunched by remember { mutableStateOf(false) }
+    // Use rememberSaveable to survive config change (rotation) — without it, recreation would auto-launch again while previous scanner overlay is still dimming, appearing as black screen.
+    var alreadyAutoLaunched by rememberSaveable { mutableStateOf(false) }
     fun launchScanner() {
-        val activity = context.findActivity() ?: return
+        scannerError = null
+        val activity = context.findActivity()
+        if (activity == null) {
+            scannerError = "Activity not found"
+            return
+        }
         scanner.getStartScanIntent(activity)
             .addOnSuccessListener { intentSender ->
-                scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+                try {
+                    scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+                } catch (e: Exception) {
+                    scannerError = "Failed to launch scanner: ${e.message}"
+                    android.util.Log.e("ScanScreen", "launch failed", e)
+                }
             }
             .addOnFailureListener { e ->
+                scannerError = "Scanner unavailable: ${e.message} — use gallery or retry"
                 android.util.Log.e("ScanScreen", "getStartScanIntent failed", e)
             }
+    }
+
+    // Show scanner errors via snackbar (prevents silent black screen)
+    LaunchedEffect(scannerError) {
+        scannerError?.let { snackbarHostState.showSnackbar(it) }
     }
 
     LaunchedEffect(Unit) {
@@ -109,6 +150,8 @@ fun ScanScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             // Edge-to-Edge: For verifying StatusBar scrim/List chapter — TopAppBar automatically handles safeDrawing
@@ -166,6 +209,7 @@ fun ScanScreen(
                 .padding(padding)
                 .consumeWindowInsets(padding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (!hasCameraPermission) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -185,8 +229,21 @@ fun ScanScreen(
                     }
                 }
             } else if (scannedPages.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
+                        if (scannerError != null) {
+                            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer), modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(scannerError ?: "", color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodySmall)
+                                    Spacer(Modifier.height(8.dp))
+                                    Button(onClick = { scannerError = null; launchScanner() }, modifier = Modifier.testTag("scanRetryBtn")) {
+                                        Icon(Icons.Default.Refresh, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Retry Scanner")
+                                    }
+                                }
+                            }
+                        }
                         // Keep manual button as fallback after auto-launch cancel/failure
                         Button(
                             onClick = { launchScanner() },
@@ -195,7 +252,8 @@ fun ScanScreen(
                             Text("Start Scanning")
                         }
                         Spacer(Modifier.height(8.dp))
-                        Text("Scanner will open automatically", style = MaterialTheme.typography.labelSmall)
+                        Text("Scanner will open automatically", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+                        Text("If screen stays dark, tap Retry or Start Scanning", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (com.plath.scancard.BuildConfig.DEBUG) {
                             Spacer(Modifier.height(12.dp))
                             OutlinedButton(
@@ -215,16 +273,37 @@ fun ScanScreen(
                         start = 8.dp, top = 8.dp, end = 8.dp,
                         bottom = 8.dp + padding.calculateBottomPadding() + 80.dp
                     ),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
                 ) {
                     items(scannedPages) { uri ->
-                        Box(modifier = Modifier.padding(4.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium)
+                        ) {
                             AsyncImage(
-                                model = uri,
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(uri)
+                                    .crossfade(true)
+                                    .build(),
                                 contentDescription = null,
-                                modifier = Modifier.aspectRatio(0.7f),
-                                contentScale = ContentScale.Crop
+                                modifier = Modifier
+                                    .aspectRatio(0.7f)
+                                    .testTag("scanThumb_${uri}"),
+                                contentScale = ContentScale.Crop,
+                                onError = { android.util.Log.w("ScanScreen", "AsyncImage load failed for $uri: ${it.result.throwable}") }
                             )
+                            // Fallback label when image fails — prevents perceived black screen
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Page", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                            }
                             IconButton(
                                 onClick = { viewModel.removePage(uri) },
                                 modifier = Modifier.align(Alignment.TopEnd)

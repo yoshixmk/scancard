@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.plath.scancard.ui.ScanCardNavHost
+import com.plath.scancard.ui.theme.ScanCardTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 import android.content.Intent
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
         setContent {
-            MaterialTheme {
+            ScanCardTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
