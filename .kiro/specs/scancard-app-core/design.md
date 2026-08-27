@@ -264,7 +264,7 @@ enum class LanguagePreference {
 - **ScanCardNavHost routing**: `ScanScreen.onComplete: (Long, Boolean) -> Unit` now carries `fastMode`. When `true`, NavHost navigates `Scan -> DeckDetail` with `popUpTo(Home)` (skipping `ExtractionPreviewScreen`); when `false`, navigates to `ExtractionPreviewScreen` as before. Progress/completion notifications remain identical (Req 18.5, channel `extraction_channel`, app-managed id `deckId+100_000`).
 
 ### 6. Data Persistence (Req 19)
-- **AppDatabase**: `@Database(version=4, exportSchema=true)` with `MIGRATION_2_3` (cards `isDuplicate`/`duplicateOfId`) and `MIGRATION_3_4` (decks `extractionStatus` TEXT DEFAULT 'NONE') via `addMigrations()`. `fallbackToDestructiveMigration()` is prohibited — DB survives kill/upgrade. `room.schemaDirectory("$projectDir/schemas")` is kept.
+- **AppDatabase**: `@Database(version=5, exportSchema=true)` with `MIGRATION_2_3`, `MIGRATION_3_4`, `MIGRATION_4_5` (idempotent `try { ALTER TABLE } catch` for existing v4 DBs missing columns) via `addMigrations()`, `setJournalMode(TRUNCATE)` to avoid WAL checkpoint loss on `force-stop`. `fallbackToDestructiveMigration()` is prohibited — `5.json` is checked in, `room.schemaDirectory` is kept.
 - **DatabaseModule**: `Room.databaseBuilder("scancard_db").addMigrations(MIGRATION_2_3, MIGRATION_3_4).build()` ensures `getAllDecks()`/`getCardsByDeck()` Flows remain populated after process death.
 
 ### 7. Study Persistence & Completion (Req 20-21)

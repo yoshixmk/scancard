@@ -130,9 +130,10 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "18.4", "name": "ScanScreen/NavHost fastMode routing", "status": "completed", "dependencies": ["18.3"], "optional": false },
     { "id": "18.5", "name": "Unit tests ScanDocumentUseCase/ScanViewModel", "status": "completed", "dependencies": ["18.2", "18.3"], "optional": false },
     { "id": "18.6", "name": "E2E fastFlow.e2e.js fallback + @slow", "status": "completed", "dependencies": ["18.4"], "optional": false },
-    { "id": "19.1", "name": "AppDatabase exportSchema + MIGRATION_2_3/3_4", "status": "completed", "dependencies": [], "optional": false },
-    { "id": "19.2", "name": "DatabaseModule addMigrations (no fallbackToDestructiveMigration)", "status": "completed", "dependencies": ["19.1"], "optional": false },
-    { "id": "19.3", "name": "Remove fallbackToDestructiveMigration usage", "status": "completed", "dependencies": ["19.1"], "optional": false },
+    { "id": "19.1", "name": "AppDatabase v5 exportSchema + MIGRATION_2_3/3_4/4_5 TRUNCATE", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "19.2", "name": "DatabaseModule addMigrations + setJournalMode TRUNCATE", "status": "completed", "dependencies": ["19.1"], "optional": false },
+    { "id": "19.3", "name": "E2E cardDisappearAfterClose (2 tests) + instrumented persistence test TDD", "status": "completed", "dependencies": ["19.1", "19.2"], "optional": false },
+    { "id": "19.4", "name": "Remove fallbackToDestructiveMigration usage", "status": "completed", "dependencies": ["19.1"], "optional": false },
     { "id": "20.1", "name": "StudyViewModel markAsLearned/Review persistence", "status": "completed", "dependencies": [], "optional": false },
     { "id": "20.2", "name": "DeckDetail CardListItem status chip", "status": "completed", "dependencies": ["20.1"], "optional": false },
     { "id": "20.3", "name": "StudyScreen status chip + button tags", "status": "completed", "dependencies": ["20.1"], "optional": false },
@@ -315,9 +316,10 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 
 ### 19. Room Persistence After Kill (Requirement 19)
 
-- [x] 19.1 `AppDatabase`: `exportSchema=true`, add `MIGRATION_2_3` + `MIGRATION_3_4` (`scancard_db` survives kill/upgrade), prohibit `fallbackToDestructiveMigration`
-- [x] 19.2 `DatabaseModule`: `Room.databaseBuilder(...).addMigrations(MIGRATION_2_3, MIGRATION_3_4).build()` — `getAllDecks`/`getCardsByDeck` visible after restart
-- [x] 19.3 Remove `fallbackToDestructiveMigration()` usage; keep `schemaDirectory("$projectDir/schemas")` for future AutoMigrations
+- [x] 19.1 `AppDatabase`: `exportSchema=true`, version `5`, `MIGRATION_2_3` + `MIGRATION_3_4` + `MIGRATION_4_5` idempotent repair, `5.json` checked in, `TRUNCATE` journal to survive `force-stop` WAL loss
+- [x] 19.2 `DatabaseModule`: `Room.databaseBuilder(...).addMigrations(...).setJournalMode(TRUNCATE).build()` — file DB, no fallback, survives kill
+- [x] 19.3 E2E `cardDisappearAfterClose.e2e.js` (2 tests) + instrumented `CardPersistenceAfterCloseTest` (file DB close/reopen) via TDD — both green
+- [x] 19.4 Remove `fallbackToDestructiveMigration()` usage; keep `schemaDirectory` for future AutoMigrations
 
 ### 20. Study Status Persistence and Visual Mark (Requirement 20)
 

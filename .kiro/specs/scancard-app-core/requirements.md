@@ -186,9 +186,9 @@ ScanCard is an Android application that enables users to photograph book pages u
 
 #### Acceptance Criteria
 
-1. WHEN the app is killed (process death) and relaunched, THEN all `Deck`, `Scan`, `Card` rows persisted in `scancard_db` SHALL be visible via `DeckDao.getAllDecks()` / `CardDao.getCardsByDeck()` without being cleared.
-2. THE AppDatabase SHALL be built with `exportSchema=true`, version `4`, and `MIGRATION_2_3` (`isDuplicate`, `duplicateOfId`) + `MIGRATION_3_4` (`extractionStatus`) via `addMigrations()`. `fallbackToDestructiveMigration()` SHALL NOT be used on production builds.
-3. THE Room `schemaDirectory("$projectDir/schemas")` SHALL be kept so that future AutoMigrations can be added without wiping user data.
+1. WHEN the app is killed (process death via `am force-stop` or swipe) and relaunched, THEN all `Deck`, `Scan`, `Card` rows persisted in `scancard_db` SHALL be visible via `DeckDao.getAllDecks()` / `CardDao.getCardsByDeck()` without being cleared. Cards that were displayed once (manual Add or dummy extraction) SHALL NOT disappear.
+2. THE AppDatabase SHALL be built with `exportSchema=true`, version `5`, and `MIGRATION_2_3` (`isDuplicate`, `duplicateOfId`) + `MIGRATION_3_4` + `MIGRATION_4_5` (idempotent repair for v4 DBs missing columns) via `addMigrations()`, `setJournalMode(TRUNCATE)` to avoid WAL loss on force-stop. `fallbackToDestructiveMigration()` SHALL NOT be used.
+3. THE Room `schemaDirectory("$projectDir/schemas")` SHALL be kept and `schemas/com.plath.scancard.data.local.AppDatabase/5.json` checked in.
 
 ---
 
