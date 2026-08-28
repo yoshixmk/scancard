@@ -75,6 +75,8 @@ fun ScanScreen(
 
     var scannerError by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    // Use rememberSaveable to survive config change (rotation) — without it, recreation would auto-launch again while previous scanner overlay is still dimming, appearing as black screen.
+    var alreadyAutoLaunched by rememberSaveable { mutableStateOf(false) }
 
     val scannerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
@@ -94,7 +96,7 @@ fun ScanScreen(
             }
             Activity.RESULT_CANCELED -> {
                 android.util.Log.d("ScanScreen", "Scanner canceled")
-                scannerError = null
+                scannerError = "Scan canceled"
             }
             else -> {
                 scannerError = "Scanner failed (code=${result.resultCode})"
@@ -106,8 +108,6 @@ fun ScanScreen(
     // Manual test: Reduced by 2 taps — Automatically launch DocumentScanner after transitioning to ScanScreen (becomes 1 tap)
     // Immediately launch scanner after transitioning from Home FAB / DeckDetail ScanAdd, saving the effort of pressing the conventional "Start Scanning" button.
     // Re-launch suppression: Auto-launch only for the first time with alreadyAutoLaunched; can be re-launched via button on cancellation.
-    // Use rememberSaveable to survive config change (rotation) — without it, recreation would auto-launch again while previous scanner overlay is still dimming, appearing as black screen.
-    var alreadyAutoLaunched by rememberSaveable { mutableStateOf(false) }
     fun launchScanner() {
         scannerError = null
         val activity = context.findActivity()
@@ -244,16 +244,24 @@ fun ScanScreen(
                                 }
                             }
                         }
-                        // Keep manual button as fallback after auto-launch cancel/failure
-                        Button(
-                            onClick = { launchScanner() },
-                            modifier = Modifier.testTag("scanStartBtn")
-                        ) {
-                            Text("Start Scanning")
+                        // Req23: Direct camera launch — show loading, not primary Start Scanning
+                        if (scannerError == null) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator(modifier = Modifier.testTag("scanOpeningIndicator"))
+                                Spacer(Modifier.height(12.dp))
+                                Text("Opening camera...", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+                                Spacer(Modifier.height(8.dp))
+                                Text("Scanner will open automatically", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+                            }
+                        } else {
+                            // Fallback only when error/canceled
+                            Button(
+                                onClick = { scannerError = null; launchScanner() },
+                                modifier = Modifier.testTag("scanStartBtn")
+                            ) {
+                                Text("Start Scanning")
+                            }
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Text("Scanner will open automatically", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
-                        Text("If screen stays dark, tap Retry or Start Scanning", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (com.plath.scancard.BuildConfig.DEBUG) {
                             Spacer(Modifier.height(12.dp))
                             OutlinedButton(
