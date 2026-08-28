@@ -227,3 +227,17 @@ ScanCard is an Android application that enables users to photograph book pages u
 3. WHEN `getStartScanIntent` fails, THEN `ScanScreen` SHALL set `scannerError="Scanner unavailable: …"` and surface it via `SnackbarHost` + retry card, allowing gallery import or manual retry.
 4. `alreadyAutoLaunched` SHALL be `rememberSaveable` so that rotation/config change does not re-launch the scanner while the previous overlay is dimming (which was perceived as black). `MainActivity` SHALL wrap content in `ScanCardTheme` and `Scaffold(containerColor=background)` with `Surface` background to avoid `DayNight` windowBackground mismatch.
 5. `AsyncImage` for each `uri` SHALL have `onError` logging and a `surfaceVariant` background + `Page` label fallback so that a failed load is visible as a placeholder rather than a black cell.
+
+---
+
+### Requirement 23: Direct Camera Launch from Top (Skip Start Scanning Screen)
+
+**User Story:** As a user, I want to tap Scan on the top screen and immediately enter the camera shooting state without an extra "Start Scanning" screen.
+
+#### Acceptance Criteria
+
+1. WHEN the user taps `HomeScreen` FAB `homeFabScan` or `DeckDetailScreen` "Scan Document", THEN `ScanScreen` SHALL directly launch `GmsDocumentScanning.getStartScanIntent` without requiring a second tap on "Start Scanning".
+2. WHEN `ScanScreen` is entered with `scannedPages.isEmpty()` and `hasCameraPermission=true` and `!isProcessing`, THEN it SHALL show a loading indicator `CircularProgressIndicator` + text "Opening camera..." (testTag `scanOpeningIndicator`) while the scanner Intent is being obtained, NOT a primary `Start Scanning` button. The `Start Scanning` button (`scanStartBtn`) SHALL only appear as fallback when `scannerError != null` or scanner was `RESULT_CANCELED`.
+3. THE auto-launch SHALL be guarded by `rememberSaveable alreadyAutoLaunched` so that rotation/config change does not re-launch while the previous overlay is dimming (prevents black screen). It SHALL trigger exactly once per fresh entry.
+4. IF `hasCameraPermission=false`, THEN permission request SHALL be shown first; immediately after grant, the scanner SHALL auto-launch without extra tap.
+5. E2E SHALL verify: `homePage.tapFabScan()` → no `scanStartBtn` required; scanner overlay appears (GMS package) or `ScanScreen` shows `scanOpeningIndicator`; after dismissing GMS, dummy insertion `scanDummyInsertBtn` is ready without tapping Start Scanning.

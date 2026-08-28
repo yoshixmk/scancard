@@ -145,7 +145,10 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "22.3", "name": "E2E studyAndResume.e2e.js kill+resume verification", "status": "completed", "dependencies": ["20.2", "22.2"], "optional": false },
     { "id": "23.1", "name": "ScanScreen post-photo visibility (retry + saveable + background)", "status": "completed", "dependencies": [], "optional": false },
     { "id": "23.2", "name": "ScanScreen thumbnails ImageRequest + MainActivity ScanCardTheme", "status": "completed", "dependencies": ["23.1"], "optional": false },
-    { "id": "23.3", "name": "E2E scanPostPhoto.e2e.js grid and retry verification", "status": "completed", "dependencies": ["23.1"], "optional": false }
+    { "id": "23.3", "name": "E2E scanPostPhoto.e2e.js grid and retry verification", "status": "completed", "dependencies": ["23.1"], "optional": false },
+    { "id": "24.1", "name": "ScanScreen empty state scanOpeningIndicator not primary scanStartBtn", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "24.2", "name": "rememberSaveable alreadyAutoLaunched auto-launch without extra tap", "status": "completed", "dependencies": ["24.1"], "optional": false },
+    { "id": "24.3", "name": "E2E directScanLaunch.e2e.js FAB direct camera", "status": "completed", "dependencies": ["24.1"], "optional": false }
   ],
   "waves": [
     {
@@ -344,6 +347,12 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - [x] 23.1 `ScanScreen`: handle `RESULT_OK`/empty/`RESULT_CANCELED`/failure with `scannerError` + `SnackbarHost` + `scanRetryBtn`, `alreadyAutoLaunched` via `rememberSaveable` to prevent rotation double-launch black overlay, `Scaffold(containerColor=background)` + `background()` on content/grid
 - [x] 23.2 `ScanScreen` thumbnails: `AsyncImage(ImageRequest.Builder(uri).crossfade)` with `surfaceVariant` background, `Page` label fallback and `onError` log — never black cell; `MainActivity` wraps in `ScanCardTheme` for correct `DayNight` windowBackground
 - [x] 23.3 E2E `scanPostPhoto.e2e.js`: dummy insert shows `Extract Cards (1)` and `scanThumb_*`, retry path shows `scanRetryBtn` when scanner unavailable
+
+### 24. Direct Camera Launch from Top (Requirement 23 — Skip Start Scanning)
+
+- [x] 24.1 `ScanScreen` empty state: show `scanOpeningIndicator` (CircularProgressIndicator + "Opening camera...") while `getStartScanIntent` is obtained, NOT primary `scanStartBtn`; button only appears as fallback when `scannerError` or `RESULT_CANCELED`
+- [x] 24.2 `ScanScreen` auto-launch guarded by `rememberSaveable alreadyAutoLaunched` + `hasCameraPermission` + `scannedPages.isEmpty()`, permission grant immediately auto-launches without extra tap
+- [x] 24.3 E2E `directScanLaunch.e2e.js`: `homeFabScan` tap shows `scanOpeningIndicator` or GMS overlay without requiring `scanStartBtn`, after GMS dismiss `scanDummyInsertBtn` ready
 
 ---
 
