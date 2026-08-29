@@ -157,10 +157,11 @@ dependencies {
     implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.compose.material:material-icons-extended")
     
-    // ML Kit
+    // ML Kit (unbundled Japanese OCR via Play Services)
     implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
+    implementation("com.google.android.gms:play-services-base:18.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0")
     
     // LiteRT LM (Modern on-device AI)

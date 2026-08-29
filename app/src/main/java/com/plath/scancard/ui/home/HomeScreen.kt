@@ -12,10 +12,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.plath.scancard.data.local.entities.Deck
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import kotlinx.coroutines.launch
 // TODO(IMP-05): Imports for Adaptive Grid migration (commented out — uncomment when enabling)
 // import androidx.compose.foundation.lazy.grid.GridCells
 // import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -62,6 +66,41 @@ fun HomeScreen(
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Create Manual Deck")
+            }
+
+            if (com.plath.scancard.BuildConfig.DEBUG) {
+                val context = LocalContext.current
+                var ocrSampleText by remember { mutableStateOf<String?>(null) }
+                val scope = rememberCoroutineScope()
+                Column(modifier = Modifier.padding(horizontal = 16.dp).testTag("debugOcrSection")) {
+                    OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                val t0 = android.os.SystemClock.elapsedRealtime()
+                                try {
+                                    val bitmap = context.assets.open("sample.jpg").use { android.graphics.BitmapFactory.decodeStream(it) }
+                                    if (bitmap == null) { ocrSampleText = "ERROR: decode failed"; return@launch }
+                                    val mgr = com.plath.scancard.data.ml.TextRecognitionManager(context)
+                                    val text = mgr.recognizeTextFromBitmap(bitmap)
+                                    val t1 = android.os.SystemClock.elapsedRealtime()
+                                    ocrSampleText = text
+                                    android.util.Log.d("HomeOcr", "mlkit ocr=${t1-t0}ms len=${text.length} ${text.take(150)}")
+                                } catch (e: Exception) {
+                                    ocrSampleText = "ERROR: ${e.message}"
+                                    android.util.Log.e("HomeOcr", "failed", e)
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().testTag("testMlkitOcrSampleBtn")
+                    ) { Text("Test ML Kit OCR Sample (E2E)") }
+                    if (ocrSampleText != null) {
+                        Text(
+                            ocrSampleText ?: "",
+                            modifier = Modifier.testTag("ocrResultText").verticalScroll(rememberScrollState()).padding(top = 8.dp),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
             }
 
             if (decks.isEmpty()) {

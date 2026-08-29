@@ -29,15 +29,27 @@ class BackgroundTaskManager @Inject constructor(
     fun extractionWorkName(deckId: Long): String = "extraction_$deckId"
 
     suspend fun startExtraction(deckId: Long, modelId: String) {
+        val wall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
+        val t0 = android.os.SystemClock.elapsedRealtime()
+        android.util.Log.d(TAG, "startExtraction wall=$wall deck=$deckId model=$modelId")
         // Set persistent status to PENDING first (Req12.9).
         // This column is the source of truth for resumption judgment upon process death.
         deckRepository.updateExtractionStatus(deckId, ExtractionStatus.PENDING)
+        val tPending = android.os.SystemClock.elapsedRealtime() - t0
 
-        if (hasActiveWork(deckId)) {
-            android.util.Log.w(TAG, "Extraction already active for deck $deckId — skip duplicate enqueue")
+        val tCheck0 = android.os.SystemClock.elapsedRealtime()
+        val active = hasActiveWork(deckId)
+        val tCheck = android.os.SystemClock.elapsedRealtime() - tCheck0
+        android.util.Log.d(TAG, "hasActiveWork=$active took=${tCheck}ms wall=$wall")
+        if (active) {
+            android.util.Log.w(TAG, "Extraction already active for deck $deckId — skip duplicate enqueue wall=$wall pending=${tPending}ms check=${tCheck}ms")
             return
         }
+        val tEnq0 = android.os.SystemClock.elapsedRealtime()
         enqueue(deckId, modelId)
+        val tEnq = android.os.SystemClock.elapsedRealtime() - tEnq0
+        val total = android.os.SystemClock.elapsedRealtime() - t0
+        android.util.Log.d(TAG, "startExtraction enqueued wall=$wall deck=$deckId total=${total}ms pending=${tPending}ms check=${tCheck}ms enqueue=${tEnq}ms")
     }
 
     suspend fun resumeExtraction(deckId: Long) {
@@ -59,6 +71,9 @@ class BackgroundTaskManager @Inject constructor(
     }
 
     private suspend fun enqueue(deckId: Long, modelId: String, policy: ExistingWorkPolicy = ExistingWorkPolicy.APPEND_OR_REPLACE) {
+        val wall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
+        val t0 = android.os.SystemClock.elapsedRealtime()
+        android.util.Log.d(TAG, "enqueue wall=$wall deck=$deckId policy=$policy model=$modelId")
         val data = Data.Builder()
             .putLong(KEY_DECK_ID, deckId)
             .putString(KEY_MODEL_ID, modelId)
@@ -77,6 +92,8 @@ class BackgroundTaskManager @Inject constructor(
             policy,
             request
         )
+        val dt = android.os.SystemClock.elapsedRealtime() - t0
+        android.util.Log.d(TAG, "enqueue done wall=$wall deck=$deckId took=${dt}ms")
     }
 
     fun getWorkInfo(deckId: Long): Flow<WorkInfo?> {
