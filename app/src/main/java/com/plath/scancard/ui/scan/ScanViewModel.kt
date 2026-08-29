@@ -72,17 +72,30 @@ class ScanViewModel @Inject constructor(
 
     // Foreground pipeline (Req3): OCR → WordGen → Persistence without WorkManager
     fun processScansWithPipeline(deckId: Long, onComplete: (Long, Boolean) -> Unit) {
+        val wall = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+        android.util.Log.d("ScanVM", "processScansWithPipeline start wall=$wall deckId=$deckId pages=${_scannedPages.value.size}")
         viewModelScope.launch {
+            val t0 = android.os.SystemClock.elapsedRealtime()
             _isProcessing.value = true
             try {
+                var tCreate = 0L
                 val targetDeckId = if (deckId <= 0) {
+                    val tc0 = android.os.SystemClock.elapsedRealtime()
                     val dateStr = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-                    manageDeckUseCase.createDeck("Scan $dateStr")
+                    val id = manageDeckUseCase.createDeck("Scan $dateStr")
+                    tCreate = android.os.SystemClock.elapsedRealtime() - tc0
+                    android.util.Log.d("ScanVM", "processScansWithPipeline createDeck id=$id took=${tCreate}ms")
+                    id
                 } else deckId
+                val tPipe0 = android.os.SystemClock.elapsedRealtime()
                 val cards = ocrWordPipeline.execute(targetDeckId, _scannedPages.value)
+                val tPipe = android.os.SystemClock.elapsedRealtime() - tPipe0
+                val total = android.os.SystemClock.elapsedRealtime() - t0
+                android.util.Log.d("ScanVM", "processScansWithPipeline done deck=$targetDeckId cards=${cards.size} pipe=${tPipe}ms createDeck=${tCreate}ms total=${total}ms wall=$wall")
                 onComplete(targetDeckId, cards.isNotEmpty())
             } catch (e: Exception) {
-                android.util.Log.e("ScanVM", "Pipeline failed", e)
+                val total = android.os.SystemClock.elapsedRealtime() - t0
+                android.util.Log.e("ScanVM", "Pipeline failed after ${total}ms wall=$wall", e)
             } finally { _isProcessing.value = false }
         }
     }
@@ -102,30 +115,46 @@ class ScanViewModel @Inject constructor(
      * as usual (2nd arg = false, Req18.4).
      */
     fun processScans(deckId: Long, onComplete: (Long, Boolean) -> Unit) {
-        android.util.Log.d("ScanVM", "Processing scans for deckId input: $deckId")
+        val wall = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+        android.util.Log.d("ScanVM", "processScans start wall=$wall deckId=$deckId pages=${_scannedPages.value.size}")
         viewModelScope.launch {
+            val t0 = android.os.SystemClock.elapsedRealtime()
             _isProcessing.value = true
             try {
+                var tCreate = 0L
                 val targetDeckId = if (deckId <= 0) {
+                    val tc0 = android.os.SystemClock.elapsedRealtime()
                     val dateStr = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
                     val newId = manageDeckUseCase.createDeck("Scan $dateStr")
-                    android.util.Log.d("ScanVM", "Created new deck with ID: $newId")
+                    tCreate = android.os.SystemClock.elapsedRealtime() - tc0
+                    android.util.Log.d("ScanVM", "Created new deck id=$newId took=${tCreate}ms wall=$wall")
                     newId
                 } else {
                     deckId
                 }
-                scanDocumentUseCase.processScannedPages(targetDeckId, _scannedPages.value)
-                android.util.Log.d("ScanVM", "Scan processing complete. Navigating with ID: $targetDeckId")
+                val tOcr0 = android.os.SystemClock.elapsedRealtime()
+                val scans = scanDocumentUseCase.processScannedPages(targetDeckId, _scannedPages.value)
+                val tOcr = android.os.SystemClock.elapsedRealtime() - tOcr0
+                android.util.Log.d("ScanVM", "processScans OCR done scans=${scans.size} took=${tOcr}ms wall=$wall deck=$targetDeckId")
 
+                val tChk0 = android.os.SystemClock.elapsedRealtime()
                 modelRepository.checkModelStatus(ModelConfig.GEMMA_4_E2B)
                 val modelReady = modelRepository.modelState.value is ModelState.Ready
+                val tChk = android.os.SystemClock.elapsedRealtime() - tChk0
+                android.util.Log.d("ScanVM", "processScans modelCheck ready=$modelReady took=${tChk}ms wall=$wall")
                 if (modelReady) {
-                    android.util.Log.d("ScanVM", "Fast mode: model ready — starting extraction directly")
+                    val tEnq0 = android.os.SystemClock.elapsedRealtime()
+                    android.util.Log.d("ScanVM", "Fast mode: model ready — starting extraction directly wall=$wall")
                     backgroundTaskManager.startExtraction(targetDeckId, ModelConfig.DEFAULT_ID)
+                    val tEnq = android.os.SystemClock.elapsedRealtime() - tEnq0
+                    android.util.Log.d("ScanVM", "processScans startExtraction done took=${tEnq}ms wall=$wall")
                 }
+                val total = android.os.SystemClock.elapsedRealtime() - t0
+                android.util.Log.d("ScanVM", "processScans done deck=$targetDeckId fastMode=$modelReady total=${total}ms wall=$wall create=${tCreate}ms ocr=${tOcr}ms")
                 onComplete(targetDeckId, modelReady)
             } catch (e: Exception) {
-                android.util.Log.e("ScanVM", "Error processing scans", e)
+                val total = android.os.SystemClock.elapsedRealtime() - t0
+                android.util.Log.e("ScanVM", "Error processing scans after ${total}ms wall=$wall", e)
             } finally {
                 _isProcessing.value = false
             }
@@ -133,7 +162,10 @@ class ScanViewModel @Inject constructor(
     }
 
     fun insertDummyScanForE2E(deckId: Long, onComplete: (Long, Boolean) -> Unit) {
+        val wall = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+        android.util.Log.d("ScanVM", "insertDummy start wall=$wall deckId=$deckId")
         viewModelScope.launch {
+            val t0 = android.os.SystemClock.elapsedRealtime()
             _isProcessing.value = true
             try {
                 val targetDeckId = if (deckId <= 0) {
@@ -146,12 +178,15 @@ class ScanViewModel @Inject constructor(
                 modelRepository.checkModelStatus(ModelConfig.GEMMA_4_E2B)
                 val modelReady = modelRepository.modelState.value is ModelState.Ready
                 if (modelReady) {
-                    android.util.Log.d("ScanVM", "Fast mode: model ready — starting extraction directly")
+                    android.util.Log.d("ScanVM", "Fast mode dummy: model ready — starting extraction wall=$wall deck=$targetDeckId")
                     backgroundTaskManager.startExtraction(targetDeckId, ModelConfig.DEFAULT_ID)
                 }
+                val total = android.os.SystemClock.elapsedRealtime() - t0
+                android.util.Log.d("ScanVM", "insertDummy done deck=$targetDeckId ready=$modelReady total=${total}ms wall=$wall")
                 onComplete(targetDeckId, modelReady)
             } catch (e: Exception) {
-                android.util.Log.e("ScanVM", "Dummy insert failed", e)
+                val total = android.os.SystemClock.elapsedRealtime() - t0
+                android.util.Log.e("ScanVM", "Dummy insert failed after ${total}ms wall=$wall", e)
             } finally {
                 _isProcessing.value = false
             }

@@ -68,21 +68,23 @@ class GemmaCardExtractor @Inject constructor(
     private var isDummyMode = false
 
     suspend fun initialize(modelPath: String) = withContext(Dispatchers.IO) {
+        val t0 = android.os.SystemClock.elapsedRealtime()
+        val wall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
         if (isDummyMode) {
-            android.util.Log.d("GemmaExtractor", "Already in dummy mode")
+            android.util.Log.d("GemmaExtractor", "Already in dummy mode wall=$wall took=${android.os.SystemClock.elapsedRealtime()-t0}ms")
             return@withContext
         }
         if (engine != null && conversation != null) {
-            android.util.Log.d("GemmaExtractor", "Already initialized")
+            android.util.Log.d("GemmaExtractor", "Already initialized wall=$wall took=${android.os.SystemClock.elapsedRealtime()-t0}ms")
             return@withContext
         }
 
         try {
-            android.util.Log.d("GemmaExtractor", "Initializing engine with path: $modelPath")
+            android.util.Log.d("GemmaExtractor", "Initializing engine wall=$wall path=$modelPath")
             // E2E dummy mode: small file (<5MB) in DEBUG avoids 2.6GB load and 30s inference, returns dummy cards quickly
             val f = java.io.File(modelPath)
             if (com.plath.scancard.BuildConfig.DEBUG && f.exists() && f.length() < 5 * 1024 * 1024) {
-                android.util.Log.d("GemmaExtractor", "Dummy mode enabled for E2E (size=${f.length()})")
+                android.util.Log.d("GemmaExtractor", "Dummy mode enabled wall=$wall size=${f.length()} took=${android.os.SystemClock.elapsedRealtime()-t0}ms")
                 isDummyMode = true
                 return@withContext
             }
@@ -92,8 +94,10 @@ class GemmaCardExtractor @Inject constructor(
                 maxNumTokens = 4096
             )
 
+            val tEngine0 = android.os.SystemClock.elapsedRealtime()
             val newEngine = Engine(engineConfig)
             newEngine.initialize()
+            val tEngine = android.os.SystemClock.elapsedRealtime() - tEngine0
             
             val samplerConfig = SamplerConfig(
                 topK = 40,
@@ -101,31 +105,43 @@ class GemmaCardExtractor @Inject constructor(
                 temperature = 0.2
             )
             
+            val tConv0 = android.os.SystemClock.elapsedRealtime()
             val newConversation = newEngine.createConversation(
                 ConversationConfig(samplerConfig = samplerConfig)
             )
+            val tConv = android.os.SystemClock.elapsedRealtime() - tConv0
             
             engine = newEngine
             conversation = newConversation
-            android.util.Log.d("GemmaExtractor", "Initialization successful")
+            val total = android.os.SystemClock.elapsedRealtime() - t0
+            android.util.Log.d("GemmaExtractor", "Initialization successful wall=$wall total=${total}ms engine=${tEngine}ms conv=${tConv}ms")
         } catch (e: Exception) {
-            android.util.Log.e("GemmaExtractor", "Initialization failed", e)
+            val total = android.os.SystemClock.elapsedRealtime() - t0
+            android.util.Log.e("GemmaExtractor", "Initialization failed after ${total}ms wall=$wall", e)
             throw e
         }
     }
 
     suspend fun extractCards(text: String): List<ExtractedCard> = withContext(Dispatchers.IO) {
+        val t0 = android.os.SystemClock.elapsedRealtime()
+        val wall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
+        android.util.Log.d("GemmaExtractor", "extractCards start wall=$wall textLen=${text.length} dummy=$isDummyMode")
         if (isDummyMode) {
             // E2E fast path: simulate 8s inference and return parsed dummy.
             // 8s: To ensure a window where E2E can reliably poll the "Page n of m" progress in
             // the notification area, considering emulator clock drift/polling intervals (Req12.12)
             kotlinx.coroutines.delay(8000)
+            val dt = android.os.SystemClock.elapsedRealtime() - t0
+            android.util.Log.d("GemmaExtractor", "extractCards dummy done wall=$wall took=${dt}ms textLen=${text.length}")
             return@withContext listOf(
                 ExtractedCard(term = "Apple", definition = "A fruit", japaneseTranslation = "apple_ja"),
                 ExtractedCard(term = "Banana", definition = "Yellow fruit", japaneseTranslation = "banana_ja")
             )
         }
-        val currentConversation = conversation ?: return@withContext emptyList()
+        val currentConversation = conversation ?: run {
+            android.util.Log.w("GemmaExtractor", "extractCards no conversation wall=$wall took=${android.os.SystemClock.elapsedRealtime()-t0}ms")
+            return@withContext emptyList()
+        }
 
         val prompt = """
             Extract flashcard pairs (term and definition) from the following text.
@@ -135,6 +151,7 @@ class GemmaCardExtractor @Inject constructor(
 
         val input = Contents.of(listOf(Content.Text(prompt)))
         
+        val tInfer0 = android.os.SystemClock.elapsedRealtime()
         val fullResponse = suspendCancellableCoroutine<String> { continuation ->
             val responseBuilder = StringBuilder()
             
@@ -159,8 +176,15 @@ class GemmaCardExtractor @Inject constructor(
                 }
             )
         }
+        val tInfer = android.os.SystemClock.elapsedRealtime() - tInfer0
+        android.util.Log.d("GemmaExtractor", "extractCards inference done wall=$wall took=${tInfer}ms respLen=${fullResponse.length}")
 
-        parser.parse(fullResponse)
+        val tParse0 = android.os.SystemClock.elapsedRealtime()
+        val parsed = parser.parse(fullResponse)
+        val tParse = android.os.SystemClock.elapsedRealtime() - tParse0
+        val total = android.os.SystemClock.elapsedRealtime() - t0
+        android.util.Log.d("GemmaExtractor", "extractCards parsed cards=${parsed.size} parse=${tParse}ms total=${total}ms wall=$wall")
+        parsed
     }
     
     fun close() {

@@ -29,16 +29,29 @@ class ScanDocumentUseCase @Inject constructor(
     // Run OCR in parallel as pages are independent (Req18.1). ML Kit's recognizer is concurrency-safe.
     // Results and DB insertion maintain page order.
     suspend fun processScannedPages(deckId: Long, pageUris: List<Uri>): List<Scan> = coroutineScope {
-        val scans: List<Scan> = pageUris.map { uri ->
+        val wall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
+        val t0 = android.os.SystemClock.elapsedRealtime()
+        android.util.Log.d("ScanDocumentUC", "processScannedPages start wall=$wall deck=$deckId pages=${pageUris.size}")
+        val scans: List<Scan> = pageUris.mapIndexed { idx, uri ->
             async {
+                val tPage0 = android.os.SystemClock.elapsedRealtime()
+                val text = textRecognitionManager.recognizeText(uri)
+                val tPage = android.os.SystemClock.elapsedRealtime() - tPage0
+                android.util.Log.d("ScanDocumentUC", "page ${idx+1}/${pageUris.size} ocr wall=$wall took=${tPage}ms len=${text.length} uri=$uri")
                 Scan(
                     deckId = deckId,
                     imagePath = uri.toString(),
-                    rawText = textRecognitionManager.recognizeText(uri)
+                    rawText = text
                 )
             }
         }.awaitAll()
+        val tOcrTotal = android.os.SystemClock.elapsedRealtime() - t0
+        android.util.Log.d("ScanDocumentUC", "ocr all pages done wall=$wall took=${tOcrTotal}ms")
+        val tInsert0 = android.os.SystemClock.elapsedRealtime()
         scans.forEach { scanRepository.insertScan(it) }
+        val tInsert = android.os.SystemClock.elapsedRealtime() - tInsert0
+        val total = android.os.SystemClock.elapsedRealtime() - t0
+        android.util.Log.d("ScanDocumentUC", "processScannedPages done wall=$wall deck=$deckId total=${total}ms ocr=${tOcrTotal}ms insert=${tInsert}ms")
         scans
     }
 }
