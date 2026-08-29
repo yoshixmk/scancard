@@ -44,7 +44,7 @@ interface ITextRecognitionManager {
 }
 ```
 
-- Impl `TextRecognitionManager`: `JapaneseTextRecognizerOptions.Builder().build()` の single client を `withContext(Dispatchers.IO)` で `InputImage.fromFilePath(context, uri)` → `client.process(image).await()`。Client は singleton で再利用。`ModuleInstall` でモデル未取得時は `requestInstall` を 1 回試行。
+- Impl `TextRecognitionManager`: `JapaneseTextRecognizerOptions.Builder().build()` の singleton client を `withContext(Dispatchers.IO)` で `downscaleIfNeeded(1080)` 後に `InputImage.fromBitmap` → `client.process(image).await()`。Uriは `loadBitmapScaled(1080)` でデコード時に縮小、Bitmapは直接縮小。`ModuleInstall` でモデル未取得時は `requestInstall` を 1 回試行。
 
 ### IWordGenerationExtractor
 

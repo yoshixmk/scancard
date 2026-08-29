@@ -36,6 +36,8 @@ import coil.request.ImageRequest
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -269,6 +271,22 @@ fun ScanScreen(
                                 modifier = Modifier.testTag("scanDummyInsertBtn")
                             ) {
                                 Text("Insert Dummy Scan (E2E)")
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            val ocrSampleText by viewModel.ocrSampleText.collectAsState()
+                            OutlinedButton(
+                                onClick = { viewModel.runMlkitOcrSample() },
+                                modifier = Modifier.testTag("testMlkitOcrSampleBtn")
+                            ) {
+                                Text("Test ML Kit OCR Sample (E2E)")
+                            }
+                            if (ocrSampleText != null) {
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    ocrSampleText ?: "",
+                                    modifier = Modifier.testTag("ocrResultText").verticalScroll(rememberScrollState()),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
                         }
                     }
