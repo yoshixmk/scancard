@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { DEFAULT_IMAGES_DIR, setupVirtualSceneFromDir, resetVirtualSceneImages } from './helpers/virtualScene.js';
 
 // Appium + WebdriverIO config for ScanCard
 // UIAutomator2 + Android, supports both testTag (resource-id) and text selectors
@@ -61,5 +62,21 @@ export const config = {
     // Appium helpers: clearState equivalent -> terminate + activate + clear data via adb if needed
     beforeTest: async () => {
         // ensure app is in foreground before each test
+    },
+
+    onPrepare: () => {
+        // Inject Virtual Scene images from appium/images (host path) via `adb emu virtualscene-image`
+        // Skips gracefully if dir empty or emulator not yet ready.
+        const dir = process.env.VIRTUAL_SCENE_IMAGES_DIR || DEFAULT_IMAGES_DIR;
+        try { setupVirtualSceneFromDir(dir); } catch (e) { console.warn('[virtualScene] onPrepare failed: ' + e.message); }
+    },
+    onComplete: () => {
+        // Restore default wall/table after whole run
+        try { resetVirtualSceneImages(); } catch (e) { console.warn('[virtualScene] onComplete reset failed: ' + e.message); }
+    },
+    afterTest: () => {
+        // Keep images across tests for speed; reset only onComplete.
+        // If per-test isolation needed, uncomment:
+        // try { resetVirtualSceneImages(); } catch {}
     }
 };
