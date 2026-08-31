@@ -1,4 +1,4 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": ["AGENTS.md", ".opencode/skills/spec-final-rule/SKILL.md"]
+  "instructions": ["AGENTS.md", ".agent/skills/spec-final-rule/SKILL.md"]
 }

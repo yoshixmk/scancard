@@ -2,18 +2,18 @@
 
 ## Introduction
 
-ScanCardの抽出パイプラインを高速化するため、OCRと単語生成を分離する。OCRは Google ML Kit Text Recognition（オフライン・高精度・高速・日本語縦書き/横書き対応・Play Services経由の unbundled 配信でアプリサイズ小）で実行し、単語（term/definition）生成のみを Gemma (LiteRT LM) に委譲する。既存の `scancard-app-core` から OCR/単語生成の責務を本specへ分離し、バックグラウンド実行の扱いも本specで定義する。`appium/images/sample.jpg` を用いたE2Eで、事前OCRが想定通り動作することを検証する。
+To accelerate the ScanCard extraction pipeline, OCR and word generation are separated. OCR runs on Google ML Kit Text Recognition (offline, high-accuracy, fast, supports Japanese vertical/horizontal writing, unbundled delivery via Play Services to keep app size small) and word (term/definition) generation is delegated to Gemma (LiteRT LM). This spec separates OCR/word-generation responsibilities from the existing `scancard-app-core` and defines the background execution model. `appium/images/sample.jpg` is used for E2E verification that pre-OCR behaves as expected.
 
 ## Glossary
 
-- **ML Kit Text Recognition**: Google ML Kit のテキスト認識。unbundled（`play-services-mlkit-text-recognition` + 言語別モデル）でPlay Services経由に動的取得、アプリバイナリに同梱しない
-- **Japanese Text Recognition**: `com.google.mlkit:text-recognition-japanese`（縦書き/横書き対応）
-- **OCR**: 画像から文字列を抽出する処理
-- **Word Generation**: OCRテキストから `term`/`definition`/`japaneseTranslation` の単語カードを生成する処理（Gemma/LiteRT LM）
-- **Pipeline**: OCR → Word Generation → Persistence の一連の流れ
-- **Sample Image**: `appium/images/sample.jpg`（ML Kit事前OCR検証用）
-- **Foreground Pipeline**: UIフォアグラウンドで完結するパイプライン（WorkManagerを使わない）
-- **Virtual Scene**: エミュレータの仮想シーン（`hw.camera.back=virtualscene`）に `images/sample.jpg` を `adb emu virtualscene-image` で投入
+- **ML Kit Text Recognition**: Google ML Kit text recognition. Unbundled (`play-services-mlkit-text-recognition` + language-specific model) — dynamically fetched via Play Services, not bundled in the APK
+- **Japanese Text Recognition**: `com.google.mlkit:text-recognition-japanese` (supports vertical/horizontal writing)
+- **OCR**: Process of extracting strings from images
+- **Word Generation**: Process of generating word cards (`term`/`definition`/`japaneseTranslation`) from OCR text (Gemma/LiteRT LM)
+- **Pipeline**: The sequence OCR → Word Generation → Persistence
+- **Sample Image**: `appium/images/sample.jpg` (for ML Kit pre-OCR verification)
+- **Foreground Pipeline**: Pipeline that completes in the UI foreground without WorkManager
+- **Virtual Scene**: Emulator virtual scene (`hw.camera.back=virtualscene`) where `images/sample.jpg` is injected via `adb emu virtualscene-image`
 
 ## Requirements
 
@@ -64,4 +64,3 @@ ScanCardの抽出パイプラインを高速化するため、OCRと単語生成
 3. THE E2E SHALL verify OCR isolation: it SHALL assert that OCR succeeds even when Gemma model state is `Idle` (no LLM), proving OCR does not depend on Gemma.
 4. THE E2E SHALL tag `mlkitOcrSample` as `@slow` if it invokes Gemma (multi-minute), otherwise as normal; both paths SHALL be runnable via `mise exec node@20 -- npx wdio run wdio.slow.conf.js --spec specs/mlkitOcrSample.e2e.js` and `wdio.conf.js`.
 5. FAILURE mode: IF OCR returns empty on `sample.jpg`, THEN E2E SHALL fail with diagnostic dump of `TextRecognition` result (`blocks`, `lines`) and SHALL NOT proceed to word generation.
-
