@@ -1,6 +1,5 @@
 package com.plath.scancard.ui.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.plath.scancard.data.local.entities.Deck
@@ -31,17 +30,10 @@ class HomeViewModel @Inject constructor(
 
     fun createDeck(title: String) {
         viewModelScope.launch {
-            val t0 = android.os.SystemClock.elapsedRealtime()
-            val wall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
-            Log.d("HomeViewModel", "createDeck start wall=$wall title=$title")
             try {
-                val id = manageDeckUseCase.createDeck(title)
-                val dt = android.os.SystemClock.elapsedRealtime() - t0
-                Log.d("HomeViewModel", "createDeck success id=$id took=${dt}ms wall=$wall title=$title")
+                manageDeckUseCase.createDeck(title)
                 _error.value = null
             } catch (e: Exception) {
-                val dt = android.os.SystemClock.elapsedRealtime() - t0
-                Log.e("HomeViewModel", "Failed to create deck after ${dt}ms wall=$wall title=$title", e)
                 _error.value = e.message ?: "Failed to create deck"
             }
         }

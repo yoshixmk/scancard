@@ -16,12 +16,8 @@ class ManageDeckUseCase @Inject constructor(
         if (title.isBlank() || title.length > 100) {
             throw IllegalArgumentException("Title must be between 1 and 100 characters")
         }
-        val t0 = android.os.SystemClock.elapsedRealtime()
         val deck = Deck(title = title)
-        val id = deckRepository.insertDeck(deck)
-        val dt = android.os.SystemClock.elapsedRealtime() - t0
-        android.util.Log.d("ManageDeckUC", "insertDeck title=$title id=$id took=${dt}ms")
-        return id
+        return deckRepository.insertDeck(deck)
     }
 
     suspend fun updateDeck(deck: Deck) {

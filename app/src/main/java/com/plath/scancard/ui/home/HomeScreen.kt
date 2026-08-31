@@ -76,18 +76,14 @@ fun HomeScreen(
                     OutlinedButton(
                         onClick = {
                             scope.launch {
-                                val t0 = android.os.SystemClock.elapsedRealtime()
                                 try {
                                     val bitmap = context.assets.open("sample.jpg").use { android.graphics.BitmapFactory.decodeStream(it) }
                                     if (bitmap == null) { ocrSampleText = "ERROR: decode failed"; return@launch }
                                     val mgr = com.plath.scancard.data.ml.TextRecognitionManager(context)
                                     val text = mgr.recognizeTextFromBitmap(bitmap)
-                                    val t1 = android.os.SystemClock.elapsedRealtime()
                                     ocrSampleText = text
-                                    android.util.Log.d("HomeOcr", "mlkit ocr=${t1-t0}ms len=${text.length} ${text.take(150)}")
                                 } catch (e: Exception) {
                                     ocrSampleText = "ERROR: ${e.message}"
-                                    android.util.Log.e("HomeOcr", "failed", e)
                                 }
                             }
                         },

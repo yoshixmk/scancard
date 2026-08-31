@@ -41,39 +41,29 @@ class CardExtractionWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        val wall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
-        val t0 = android.os.SystemClock.elapsedRealtime()
         val deckId = inputData.getLong("deckId", -1)
         val modelId = inputData.getString("modelId") ?: ModelConfig.DEFAULT_ID
-        android.util.Log.d(TAG, "doWork start wall=$wall deck=$deckId model=$modelId attempt=$runAttemptCount")
 
         if (deckId == -1L) return Result.failure()
 
         // On MIUI / Android 14+, SystemJobService performs onStopJob in 10 seconds,
         // so promote to foreground immediately after starting to prevent being killed.
-        val tFg0 = android.os.SystemClock.elapsedRealtime()
         try {
             setForeground(getForegroundInfo())
-            val tFg = android.os.SystemClock.elapsedRealtime() - tFg0
-            android.util.Log.d(TAG, "setForeground done took=${tFg}ms wall=$wall deck=$deckId")
         } catch (e: Exception) {
-            android.util.Log.w(TAG, "setForeground failed after ${android.os.SystemClock.elapsedRealtime()-tFg0}ms wall=$wall", e)
+            android.util.Log.w(TAG, "setForeground failed", e)
         }
 
-        val tStatus0 = android.os.SystemClock.elapsedRealtime()
         deckRepository.updateExtractionStatus(deckId, ExtractionStatus.RUNNING)
-        android.util.Log.d(TAG, "update RUNNING done took=${android.os.SystemClock.elapsedRealtime()-tStatus0}ms wall=$wall")
 
         val modelConfig = ModelConfig.AVAILABLE_MODELS.find { it.id == modelId }
             ?: ModelConfig.GEMMA_4_E2B
 
         return try {
-            val tExtract0 = android.os.SystemClock.elapsedRealtime()
             extractCardsUseCase.extractAndSaveCards(deckId, modelConfig) { current, total ->
                 // Progress mirror (Req12.14) + notification area display (Req12.12).
                 // Post progress notification with a different app management ID (if the
                 // same ID is used, WM reposts and overwrites the original FGS notification)
-                android.util.Log.d(TAG, "progress $current/$total wall=$wall deck=$deckId")
                 setProgress(
                     androidx.work.workDataOf(
                         "progress_current" to current,
@@ -82,13 +72,7 @@ class CardExtractionWorker @AssistedInject constructor(
                 )
                 notificationHelper.showProgressNotification(deckId, current, total)
             }
-            val tExtract = android.os.SystemClock.elapsedRealtime() - tExtract0
-            android.util.Log.d(TAG, "extractAndSaveCards done took=${tExtract}ms wall=$wall deck=$deckId")
-            val tNotify0 = android.os.SystemClock.elapsedRealtime()
             notificationHelper.showCompletionNotification(deckId)
-            val tNotify = android.os.SystemClock.elapsedRealtime() - tNotify0
-            val total = android.os.SystemClock.elapsedRealtime() - t0
-            android.util.Log.d(TAG, "doWork success wall=$wall deck=$deckId total=${total}ms extract=${tExtract}ms notify=${tNotify}ms")
             Result.success()
         } catch (e: kotlinx.coroutines.CancellationException) {
             // Rethrow to maintain WorkManager's stop/cancel semantics (Req12.10).

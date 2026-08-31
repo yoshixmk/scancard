@@ -29,59 +29,30 @@ class TextRecognitionManager @Inject constructor(
     private val recognizer = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
 
     suspend fun recognizeText(imageUri: Uri): String = withContext(Dispatchers.IO) {
-        val t0 = android.os.SystemClock.elapsedRealtime()
-        val tWall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
-        android.util.Log.d("TextRecog", "recognizeText start wall=$tWall uri=$imageUri")
         val bitmap = loadBitmapScaled(context, imageUri, 1080)
-        val tLoad = android.os.SystemClock.elapsedRealtime() - t0
         val image = if (bitmap != null) InputImage.fromBitmap(bitmap, 0) else InputImage.fromFilePath(context, imageUri)
-        val text = recognizeInternal(image)
-        val total = android.os.SystemClock.elapsedRealtime() - t0
-        android.util.Log.d("TextRecog", "recognizeText done wall=$tWall uri=$imageUri load=${tLoad}ms total=${total}ms len=${text.length}")
-        text
+        recognizeInternal(image)
     }
 
     suspend fun recognizeTextFromBitmap(bitmap: android.graphics.Bitmap): String = withContext(Dispatchers.IO) {
-        val t0 = android.os.SystemClock.elapsedRealtime()
-        val tWall = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault()).format(java.util.Date())
-        android.util.Log.d("TextRecog", "recognizeTextFromBitmap start wall=$tWall size=${bitmap.width}x${bitmap.height}")
         val scaled = downscaleIfNeeded(bitmap, 1080)
-        val tScale = android.os.SystemClock.elapsedRealtime() - t0
         val image = InputImage.fromBitmap(scaled, 0)
-        val text = recognizeInternal(image)
-        val total = android.os.SystemClock.elapsedRealtime() - t0
-        android.util.Log.d("TextRecog", "recognizeTextFromBitmap done wall=$tWall scale=${tScale}ms total=${total}ms orig=${bitmap.width}x${bitmap.height} scaled=${scaled.width}x${scaled.height} len=${text.length}")
-        text
+        recognizeInternal(image)
     }
 
     private suspend fun recognizeInternal(image: InputImage): String {
-        val t0 = android.os.SystemClock.elapsedRealtime()
         try {
-            val text = recognizer.process(image).await().text
-            val dt = android.os.SystemClock.elapsedRealtime() - t0
-            android.util.Log.d("TextRecog", "recognizeInternal success took=${dt}ms len=${text.length}")
-            return text
+            return recognizer.process(image).await().text
         } catch (e: Exception) {
-            val dt = android.os.SystemClock.elapsedRealtime() - t0
-            android.util.Log.w("TextRecog", "recognizeInternal failed after ${dt}ms: ${e.message}", e)
             if (isModelNotReady(e)) {
                 try {
-                    val tInst0 = android.os.SystemClock.elapsedRealtime()
-                    android.util.Log.d("TextRecog", "Model not ready -> ModuleInstall request")
                     val moduleInstall = ModuleInstall.getClient(context)
                     val request = ModuleInstallRequest.newBuilder()
                         .addApi(TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build()))
                         .build()
                     moduleInstall.installModules(request).await()
-                    val tInst = android.os.SystemClock.elapsedRealtime() - tInst0
-                    android.util.Log.d("TextRecog", "ModuleInstall done took=${tInst}ms, retrying recognizer")
-                    val tRetry0 = android.os.SystemClock.elapsedRealtime()
-                    val text = recognizer.process(image).await().text
-                    val tRetry = android.os.SystemClock.elapsedRealtime() - tRetry0
-                    android.util.Log.d("TextRecog", "recognizeInternal retry success took=${tRetry}ms len=${text.length}")
-                    return text
+                    return recognizer.process(image).await().text
                 } catch (retryEx: Exception) {
-                    android.util.Log.e("TextRecog", "ModuleInstall retry failed", retryEx)
                     throw MlKitModelNotReadyException("Japanese OCR model not ready after retry", retryEx)
                 }
             } else {
