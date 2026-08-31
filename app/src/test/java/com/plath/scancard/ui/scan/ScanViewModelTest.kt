@@ -5,8 +5,6 @@ import com.plath.scancard.domain.model.ModelState
 import com.plath.scancard.domain.repository.ModelRepository
 import com.plath.scancard.domain.service.BackgroundTaskManager
 import com.plath.scancard.domain.usecase.ManageDeckUseCase
-import com.plath.scancard.domain.usecase.OcrPipelineState
-import com.plath.scancard.domain.usecase.OcrWordPipelineUseCase
 import com.plath.scancard.domain.usecase.ScanDocumentUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,7 +40,6 @@ class ScanViewModelTest {
     private val modelRepository: ModelRepository = mockk()
     private val backgroundTaskManager: BackgroundTaskManager = mockk()
     private val context: Context = mockk(relaxed = true)
-    private val ocrWordPipeline: OcrWordPipelineUseCase = mockk()
 
     private lateinit var viewModel: ScanViewModel
     private val modelState = MutableStateFlow<ModelState>(ModelState.Idle)
@@ -51,7 +48,6 @@ class ScanViewModelTest {
     fun setup() {
         Dispatchers.setMain(dispatcher)
         every { modelRepository.modelState } returns modelState
-        every { ocrWordPipeline.state } returns MutableStateFlow<OcrPipelineState>(OcrPipelineState.Idle)
         coEvery { manageDeckUseCase.createDeck(any()) } returns 42L
         coEvery { scanDocumentUseCase.processScannedPages(any(), any()) } returns emptyList()
         coEvery { scanDocumentUseCase.insertDummyScan(any()) } returns 42L
@@ -62,8 +58,7 @@ class ScanViewModelTest {
             scanDocumentUseCase,
             manageDeckUseCase,
             modelRepository,
-            backgroundTaskManager,
-            ocrWordPipeline
+            backgroundTaskManager
         )
     }
 
