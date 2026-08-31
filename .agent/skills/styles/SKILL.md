@@ -88,9 +88,7 @@ Refer to the official documentation to complete specific development tasks:
 
    ```kotlin
    @Immutable
-   class JetsnackTheme(
-       // other Design system properties
-   ) {
+   class JetsnackTheme {
        companion object {
            val colors: CustomThemingWithStyles.JetsnackColors
                @Composable @ReadOnlyComposable
