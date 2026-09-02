@@ -13,7 +13,6 @@ import com.plath.scancard.data.local.dao.ScanDao
 import com.plath.scancard.data.ml.CardResponseParser
 import com.plath.scancard.domain.util.CardValidator
 import com.plath.scancard.domain.util.ExportManager
-import com.plath.scancard.domain.util.PromptValidator
 import com.plath.scancard.domain.util.TranslationPromptBuilder
 import com.plath.scancard.util.NotificationHelper
 import dagger.Module
@@ -39,10 +38,6 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideTranslationPromptBuilder(): TranslationPromptBuilder = TranslationPromptBuilder()
-
-    @Provides
-    @Singleton
-    fun providePromptValidator(): PromptValidator = PromptValidator()
     
     @Provides
     @Singleton

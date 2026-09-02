@@ -53,7 +53,6 @@ graph TD
         VM --> CF[CardFilter]
         VM --> BCD[BilingualCardDisplay]
         VM --> TPB[TranslationPromptBuilder]
-        VM --> PV[PromptValidator]
     end
     
     subgraph Background Processing
@@ -68,7 +67,6 @@ graph TD
     CF --> Repositories
     BCD --> Repositories
     TPB --> LM
-    PV --> LM
 ```
 
 ---
@@ -103,7 +101,7 @@ data class ExtractedCard(
 
 ### ITranslationPromptBuilder
 
-**Purpose**: Constructs prompts for AI translation with term enforcement.
+**Purpose**: Constructs prompts for AI translation with term enforcement. Both prompts include a JSON format example to reduce hallucination.
 
 ```kotlin
 interface ITranslationPromptBuilder {
@@ -112,20 +110,19 @@ interface ITranslationPromptBuilder {
 }
 ```
 
-### IPromptValidator
+Prompt format (both methods): `Return ONLY a JSON array of objects with "term", "definition", and "japaneseTranslation" keys. Example: [{"term":"Photosynthesis","definition":"Process by which plants convert light into chemical energy","japaneseTranslation":"光合成"}]`
 
-**Purpose**: Validates AI-generated translations for quality.
+### ICardResponseParser
+
+**Purpose**: Parses Gemma raw response into `List<ExtractedCard>` with 3 fallback strategies.
 
 ```kotlin
-interface IPromptValidator {
-    fun validate(term: String, definition: String): ValidationResult
-}
-
-sealed class ValidationResult {
-    data class Valid(val reason: String? = null) : ValidationResult()
-    data class Invalid(val reason: String) : ValidationResult()
+interface ICardResponseParser {
+    fun parse(response: String): List<ExtractedCard>
 }
 ```
+
+Strategies (in order): 1) Direct `JSONArray(response)` parse, 2) Substring `[`..`]` extraction then `JSONArray` parse, 3) Regex `term`/`definition`/`japaneseTranslation` extraction. Returns `emptyList()` if all fail.
 
 ### ICardValidator
 
@@ -217,8 +214,8 @@ enum class LanguagePreference {
 ### 1. AI & Model Management
 - **ModelManager**: AI-pack delivery (status query, `fetch`, listener-driven progress aggregation, part assembly) is defined in `.agent/specs/scancard-ai-pack`, which is the single source of truth. This spec owns only the consumer side (LiteRT inference input via `getModelPath`).
 - **GemmaCardExtractor**: Wraps LiteRT LM Engine and Conversation APIs, handles model initialization and asynchronous inference using the downloaded pack assets.
-- **TranslationPromptBuilder**: Constructs prompts for E2B translation, includes explicit instructions to use exact term in definition.
-- **PromptValidator**: Validates that generated definitions contain the original term and are not generic responses.
+- **TranslationPromptBuilder**: Constructs prompts for E2B translation, includes explicit instructions to use exact term in definition and a JSON format example `[{"term":"...","definition":"...","japaneseTranslation":"..."}]` to reduce hallucination.
+- **CardResponseParser**: Parses Gemma response via 3 strategies (direct JSONArray, bracket-substring, regex fallback).
 
 ### 2. Card Management
 - **CardValidator**: Checks for duplicate terms in the same deck before card insertion.
@@ -235,7 +232,7 @@ enum class LanguagePreference {
 - **Enqueue policy**: `startExtraction` uses `APPEND_OR_REPLACE` + `BackoffPolicy.EXPONENTIAL 10s` (preserves live RUNNING, replaces CANCELLED/FAILED). `resumeExtraction` uses `REPLACE` to clear stale `BLOCKED` chains left by `APPEND_OR_REPLACE` after kill. The pre-enqueue check uses Flow API (`getWorkInfosForUniqueWorkFlow().first()`).
 - **Cancellation semantics**: `CardExtractionWorker.doWork()` rethrows `CancellationException` so WorkManager reschedules system stops automatically. Generic failures return `Result.retry()` up to 3 attempts, then mark FAILED.
 - **Resume-on-launch**: `ScanCardApplication.onCreate` launches `ResumePendingExtractionsUseCase`. It queries `getStuckExtractionDecks()` (`PENDING`/`RUNNING`) and re-enqueues only decks with no `RUNNING`/`ENQUEUED` work (`hasRunningOrEnqueuedWork()`). `BLOCKED`/`CANCELLED`/`FAILED`/no-work decks are force-resumed with `REPLACE`, clearing the BLOCKED chain that would otherwise block forever.
-- **Progress notification**: `ExtractCardsUseCase.extractAndSaveCards(deckId, modelConfig, onProgress)` processes scans **page-by-page** (one prompt/LLM call per scan instead of one combined-text call) and invokes `onProgress(current, total)` with `(0, N)` before the first page and `(i, N)` after page i completes (`N = scans.size`). The worker's `onProgress` lambda calls `NotificationHelper.showProgressNotification(deckId, current, total)` — an ongoing notification built with `setProgress(total, current, false)`, `setOnlyAlertOnce(true)`, posted via `NotificationManager.notify(deckId + 100_000, …)`. **The app-managed id MUST differ from the FGS notification id**: WorkManager's `SystemFgDispatcher` re-posts the original foreground notification under `deckId` on every `setProgress()`/service event, silently overwriting any same-id custom text (verified on API 36 emulator: only `ONLY_ALERT_ONCE`-flagged raw posts survived). Completion/error notifications reuse `deckId + 100_000` so they replace the progress card. The worker also mirrors progress into WorkManager via `setProgress(workDataOf("progress_current" to c, "progress_total" to t))` for in-app observers. Retry loop (up to 3 improved-prompt attempts) is applied per page; accumulated pairs are deduped and inserted in a single `insertCards` at the end, preserving Req 12.8 ordering. E2E verifies visibility by physically opening the notification shade (`driver.openNotifications()`) and asserting `Page n of m` appears — dumpsys-based checks proved unreliable due to emulator clock skew between host and device.
+- **Progress notification**: `ExtractCardsUseCase.extractAndSaveCards(deckId, modelConfig, onProgress)` processes scans **page-by-page** (one prompt/LLM call per scan) and invokes `onProgress(current, total)` with `(0, N)` before the first page and `(i, N)` after page i completes (`N = scans.size`). The worker's `onProgress` lambda calls `NotificationHelper.showProgressNotification(deckId, current, total)` — an ongoing notification built with `setProgress(total, current, false)`, `setOnlyAlertOnce(true)`, posted via `NotificationManager.notify(deckId + 100_000, …)`. **The app-managed id MUST differ from the FGS notification id**: WorkManager's `SystemFgDispatcher` re-posts the original foreground notification under `deckId` on every `setProgress()`/service event, silently overwriting any same-id custom text (verified on API 36 emulator: only `ONLY_ALERT_ONCE`-flagged raw posts survived). Completion/error notifications reuse `deckId + 100_000` so they replace the progress card. The worker also mirrors progress into WorkManager via `setProgress(workDataOf("progress_current" to c, "progress_total" to t))` for in-app observers. Single prompt per page (with JSON example) is used; accumulated pairs are deduped and inserted in a single `insertCards` at the end, preserving Req 12.8 ordering. E2E verifies visibility by physically opening the notification shade (`driver.openNotifications()`) and asserting `Page n of m` appears — dumpsys-based checks proved unreliable due to emulator clock skew between host and device.
 
 ### 5. Fast Extraction Flow (Req 18 — Performance)
 
@@ -444,26 +441,6 @@ fun BilingualCardDisplay.toggleLanguage(): LanguagePreference
 
 ---
 
-### Function 5: validateTranslation()
-
-```kotlin
-fun PromptValidator.validateTranslation(
-    term: String,
-    definition: String
-): ValidationResult
-```
-
-**Preconditions:**
-- `term` is non-empty string
-- `definition` is non-null
-
-**Postconditions:**
-- Returns ValidationResult.Valid if definition contains term or is not generic
-- Returns ValidationResult.Invalid with reason if validation fails
-- Generic responses like "A topic to Explore" are flagged as invalid
-
----
-
 ### Function 6: runBackgroundExtraction()
 
 ```kotlin
@@ -497,33 +474,12 @@ INPUT: ocrText: String, deckId: Long
 OUTPUT: result: ExtractionResult
 
 BEGIN
-    // Step 1: Build translation prompt
+    // Step 1: Build translation prompt (with JSON example)
     prompt ← TranslationPromptBuilder.buildPrompt(ocrText)
     
-    // Step 2: Run AI extraction with retry logic
-    maxRetries ← 3
-    FOR attempt FROM 1 TO maxRetries DO
-        rawResponse ← GemmaCardExtractor.extract(prompt)
-        parsedCards ← Parser.parseResponse(rawResponse)
-        
-        // Step 3: Validate translations
-        allValid ← TRUE
-        FOR EACH card IN parsedCards DO
-            validation ← PromptValidator.validateTranslation(card.term, card.definition)
-            IF validation IS Invalid THEN
-                allValid ← FALSE
-                BREAK
-            END IF
-        END FOR
-        
-        IF allValid THEN
-            BREAK
-        END IF
-        
-        // Step 4: Retry with improved prompt if validation failed
-        IF attempt < maxRetries THEN
-            prompt ← TranslationPromptBuilder.buildImprovedPrompt(ocrText, card.term)
-        END IF
+    // Step 2: Run AI extraction (single attempt)
+    rawResponse ← GemmaCardExtractor.extract(prompt)
+    parsedCards ← Parser.parseResponse(rawResponse)
     END FOR
     
     // Step 5: Check for duplicates and create cards
@@ -827,12 +783,6 @@ fun StudyScreen(viewModel: StudyViewModel) {
 
 **Validates: Requirements 10.1, 10.2, 10.3**
 
-### Property 5: Translation Validation
-
-*For any* term-definition pair generated by the AI, validation SHALL pass if and only if the definition contains the term (case-insensitive) AND the definition is not a generic response.
-
-**Validates: Requirements 11.2, 11.3**
-
 ### Property 6: Background Task Completion
 
 *For any* card extraction initiated as a background task, the task SHALL complete successfully and notify the user via system notification, regardless of whether the user navigates away from the extraction screen.
@@ -853,11 +803,6 @@ fun StudyScreen(viewModel: StudyViewModel) {
 - **Response**: Show error toast, offer alternative export (save to file)
 - **Recovery**: User can retry export operation
 
-### Translation Validation Failures
-- **Condition**: AI generates generic or invalid translation
-- **Response**: Automatic retry with improved prompt (up to 3 attempts)
-- **Recovery**: If all retries fail, mark card for manual review
-
 ### Background Task Failures
 - **Condition**: App terminated during extraction
 - **Response**: WorkManager automatically resumes task on app restart
@@ -874,8 +819,7 @@ The application will use **JUnit 5** and **MockK** for unit testing of core busi
 1. **CardValidator**: Test duplicate detection with various term normalizations (trimming, case-insensitivity)
 2. **CardFilter**: Test filtering logic for all FilterType values (ALL, NEW, LEARNING, REVIEW)
 3. **ExportManager**: Verify TSV format output and special character escaping
-4. **TranslationPromptBuilder**: Validate prompt construction includes required instructions
-5. **PromptValidator**: Test validation logic for generic responses and term presence checks
+4. **TranslationPromptBuilder**: Validate prompt construction includes required instructions and JSON format example
 
 **Coverage Goals**: Minimum 80% coverage for business logic in core components.
 

@@ -136,10 +136,9 @@ Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG f
 
 #### Acceptance Criteria
 
-1. THE TranslationPromptBuilder SHALL ensure that the term content appears verbatim in the generated definition.
-2. IF the generated definition does not contain the original term or produces a generic response like "A topic to Explore", THEN THE PromptValidator SHALL flag this as an invalid translation.
-3. WHEN an invalid translation is detected, THE ScanCard SHALL retry the extraction with an improved prompt.
-4. THE improved prompt SHALL include explicit instructions to use the exact term in the definition.
+1. THE TranslationPromptBuilder SHALL ensure that the term content appears verbatim in the generated definition and SHALL include a JSON format example `[{"term":"...","definition":"...","japaneseTranslation":"..."}]` to reduce hallucination.
+2. THE improved prompt (`buildImprovedPrompt`) SHALL include explicit instructions to use the exact term in the definition and the same JSON format example.
+3. THE ExtractCardsUseCase SHALL perform a single extraction per page (no retry loop); prompt example ensures one-shot success.
 
 ---
 

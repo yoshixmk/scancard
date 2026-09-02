@@ -138,12 +138,12 @@ class FakeGemmaExtractor(
      * Fake extractCards — synchronously simulates actual conversation.sendMessageAsync +
      * suspendCancellableCoroutine equivalent. Returns emptyList() if uninitialized.
      *
-     * @param text OCR result text
+     * @param prompt Full prompt built by TranslationPromptBuilder
      * @return ExtractedCard list
      */
-    suspend fun extractCards(text: String): List<ExtractedCard> {
+    suspend fun extractCards(prompt: String): List<ExtractedCard> {
         extractCallCount++
-        lastExtractText = text
+        lastExtractText = prompt
         if (!isInitialized) return emptyList() // Actual: conversation == null -> emptyList()
 
         nextError?.let { e ->

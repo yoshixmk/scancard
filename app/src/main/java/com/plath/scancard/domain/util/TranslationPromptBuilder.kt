@@ -11,6 +11,7 @@ class TranslationPromptBuilder {
             3. japaneseTranslation: A natural Japanese translation of the definition.
             
             Return ONLY a JSON array of objects with "term", "definition", and "japaneseTranslation" keys.
+            Example: [{"term":"Photosynthesis","definition":"Process by which plants convert light into chemical energy","japaneseTranslation":"光合成"}]
             IMPORTANT: Ensure the definition is meaningful and specifically describes the term.
             Text: $ocrText
         """.trimIndent()
@@ -23,6 +24,7 @@ class TranslationPromptBuilder {
             Please ensure the definition specifically describes "$failedTerm" based on the provided context.
             
             Return ONLY a JSON array of objects with "term", "definition", and "japaneseTranslation" keys.
+            Example: [{"term":"Photosynthesis","definition":"Process by which plants convert light into chemical energy","japaneseTranslation":"光合成"}]
             Text: $ocrText
         """.trimIndent()
     }
