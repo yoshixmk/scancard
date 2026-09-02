@@ -15,25 +15,8 @@ android {
     defaultConfig {
         applicationId = "com.plath.scancard"
         minSdk = 26
-        // TODO(IMP-08): Upgrade targetSdk = 36 (AppFunctions requirement) — Value remains 35 due to JVM8 build constraints. Use the following steps to change to 36 when upgrading.
-        // Requirements: AppFunctions requires targetSdk 36+ and compileSdk 37+ (Android 16). Current compileSdk=37 is met; targetSdk is pending.
-        //       skill: .kiro/skills/appfunctions/SKILL.md Prerequisites / references/context.md reference.
-        // Upgrade procedure:
-        //   1. Change this line to targetSdk = 36 (change value only, remove this comment)
-        //   2. Confirm compileSdk=37 is maintained
-        //   3. Run ./gradlew :app:assembleDebug on JVM17 + AGP 9.3.1 environment and verify SUCCESS
-        //   4. Installation verification on Android 16+ (API 36) emu/device: adb shell getprop ro.build.version.sdk is 36 or higher
-        //   5. Verify AppFunctions registration with adb shell cmd app_function list-app-functions (see docs/appfunctions-discovery.md 8-6)
-        // Note — targetSdk 35->36 Behavior Changes (verify with Release Notes):
-        //   - Notifications (POST_NOTIFICATIONS): Introduced in 33+, but note stricter notification channel importance and foreground service notifications in 36.
-        //     Re-verify flows for BackgroundTaskManager / NotificationHelper / ExtractionPreviewScreen (permission request). Check WorkManager notification fallback when permission is not granted.
-        //   - Storage/Media: READ_EXTERNAL_STORAGE(maxSdkVersion=32) / READ_MEDIA_* maintained. Handle 36-added permissions or PhotoPicker extensions if any. This app delegates to SAF/Clipboard.
-        //   - Edge-to-Edge: Mandatory in 35+, continues in 36. Re-screenshot to verify MainActivity.enableEdgeToEdge() + WindowInsets consumption (IMP-03).
-        //   - ForegroundService: foregroundServiceType mandatory in 34+. Currently only FOREGROUND_SERVICE declared; minimal impact due to WorkManager use, but specify type if using FGS in future.
-        //   - Privacy/Security: 36 privacy changes (Health Connect, stricter Intent filters, etc.) don't target this app, but ensure Play Console Target API requirements are met.
-        //   - AppFunctions: Schema registration to AppSearch won't occur below targetSdk 36, so Gemini/Agent won't discover it. Verify KSP outputs of service/ScanCardAppFunctionService.kt after upgrade.
-        targetSdk = 35
-        versionCode = 1
+        targetSdk = 36
+        versionCode = 2
         versionName = "1.0"
 
         testInstrumentationRunner = "com.plath.scancard.HiltTestRunner"
@@ -285,10 +268,10 @@ dependencies {
 
     // IMP-01 done: deps implemented (mockk 1.13.13 etc) - see .kiro/skills/testing-setup
 
-    // TODO(IMP-08): AppFunctions dependencies — Commented out due to JVM8 gradle constraints; enable when upgrading targetSdk to 36
-    // Requirements: targetSdk 36+ / compileSdk 37+ / KSP / Hilt. See .kiro/skills/appfunctions/references/implementation-configuration.md Step 1.
+    // TODO(IMP-08): AppFunctions dependencies — targetSdk 36 satisfied, enable with JVM17 + AGP 9.3.2
+    // Requirements: targetSdk 36+ / compileSdk 37+ / KSP / Hilt. (targetSdk=36, compileSdk=37 met)
     // Procedure:
-    //   1. Upgrade targetSdk to 36 in app/build.gradle.kts:14 (see TODO(IMP-08) comment at the top)
+    //   1. [Done] targetSdk 36 in app/build.gradle.kts
     //   2. Uncomment the following 2 lines and Sync (latest alpha10+ from maven.google.com recommended; alpha01 is legacy):
     //      implementation("androidx.appfunctions:appfunctions:1.0.0-alpha01")
     //      ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha01")

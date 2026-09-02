@@ -110,7 +110,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "15.3", "name": "Create CardExtractionWorker", "status": "completed", "dependencies": ["15.2"], "optional": false },
     { "id": "15.4", "name": "Add system notification for task completion", "status": "completed", "dependencies": ["15.3"], "optional": false },
     { "id": "15.5", "name": "Update Extraction Screen with background processing UI", "status": "completed", "dependencies": ["15.2", "15.3", "15.4"], "optional": false },
-    { "id": "15.6", "name": "Fix CardExtractionWorker foreground service for targetSDK 35", "status": "completed", "dependencies": ["15.3", "15.4"], "optional": false },
+    { "id": "15.6", "name": "Fix CardExtractionWorker foreground service for targetSDK 36", "status": "completed", "dependencies": ["15.3", "15.4"], "optional": false },
     { "id": "15.7", "name": "Add DEBUG-only E2E helpers (scanDummyInsertBtn, createDummyModelBtn, Gemma dummy mode)", "status": "completed", "dependencies": ["15.2"], "optional": false },
     { "id": "15.8", "name": "Add Appium E2E backgroundExtraction.e2e.js", "status": "completed", "dependencies": ["15.6", "15.7"], "optional": false },
     { "id": "16.1", "name": "Add Deck.extractionStatus + TypeConverter, version 3->4", "status": "completed", "dependencies": [], "optional": false },
@@ -287,7 +287,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - [x] 15.3 Create CardExtractionWorker (`getForegroundInfo()` + `setForeground()` at `doWork()` start, `ForegroundInfo` deckId)
 - [x] 15.4 Add system notification for task completion (`NotificationHelper` foreground + completion, channel `extraction_channel`)
 - [x] 15.5 Update Extraction Screen with background processing UI
-- [x] 15.6 Fix foreground service for targetSDK 35: `AndroidManifest.xml` merge `<service SystemForegroundService foregroundServiceType="shortService">`, `FOREGROUND_SERVICE_SHORT_SERVICE` permission, `CardExtractionWorker` `SHORT_SERVICE` on `UPSIDE_DOWN_CAKE+` (verified on emulator-5554 API 36, `backgroundExtraction.e2e.js` 43.8s PASS)
+- [x] 15.6 Fix foreground service for targetSDK 36: `AndroidManifest.xml` merge `<service SystemForegroundService foregroundServiceType="dataSync">`, `FOREGROUND_SERVICE_DATA_SYNC` permission, `CardExtractionWorker` `DATA_SYNC` on `UPSIDE_DOWN_CAKE+` (verified on emulator-5554 API 36, `backgroundExtraction.e2e.js` 43.8s PASS)
 - [x] 15.7 DEBUG-only E2E helpers (NOT in release): `ScanScreen.kt:199,245` `scanDummyInsertBtn` + `ScanViewModel.insertDummyScanForE2E()` + `ScanDocumentUseCase.insertDummyScan()` + `ExtractionPreviewScreen` `createDummyModelBtn` (Idle+DEBUG) + `GemmaCardExtractor` dummy mode (<5MB → 1s 2 cards), all gated by `BuildConfig.DEBUG`
 - [x] 15.8 Appium E2E `specs/backgroundExtraction.e2e.js`: GMS `Discard` dialog handling, `clearStateAndLaunch` grants `CAMERA`+`POST_NOTIFICATIONS`, verifies `2 Cards` and `Dummy mode enabled` with no `Work cancelled`
 
