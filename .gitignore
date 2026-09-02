@@ -1,6 +1,8 @@
 # built application files
 *.apk
+*.aab
 *.ap_
+*.bundle
 
 # Mac files
 .DS_Store
@@ -69,3 +71,6 @@ appium/wdio-logs/
 
 # Project specific ignores
 improvement.md
+all_kt_files.txt
+deps.txt
+app/release/
