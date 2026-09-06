@@ -57,11 +57,16 @@ class ModelManager @Inject constructor(
                     }
                 }
                 .addOnFailureListener { e ->
+                    val msg = e.message ?: "Failed to check status"
+                    // PACK_UNAVAILABLE(-2) = pack自体がPlay上に存在しない (.aabに未同梱が最多原因)
+                    val hint = if (msg.contains("-2") || msg.contains("PACK_UNAVAILABLE")) {
+                        "$msg (pack未配信: .aabにassetPacksが含まれているか、Play Consoleの配布トラックを確認)"
+                    } else msg
                     if (com.plath.scancard.BuildConfig.DEBUG) {
-                        android.util.Log.w("ModelManager", "AiPack unavailable in DEBUG (assetPacks disabled) -> Idle: ${e.message}")
+                        android.util.Log.w("ModelManager", "AiPack unavailable in DEBUG (assetPacks disabled) -> Idle: $hint")
                         _modelState.value = ModelState.Idle
                     } else {
-                        _modelState.value = ModelState.Error(e.message ?: "Failed to check status")
+                        _modelState.value = ModelState.Error(hint)
                     }
                 }
         } catch (e: Exception) {

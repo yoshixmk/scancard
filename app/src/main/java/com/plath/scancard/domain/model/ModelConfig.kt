@@ -30,14 +30,14 @@ data class ModelConfig(
             aiPackName = "gemma_ai_pack"
         )
 
-        // Previous generation Gemma 2
+        // Previous generation Gemma 2 (same AI Packに同梱。別pack名にすると PACK_UNAVAILABLE(-2) になる)
         val GEMMA_2_2B = ModelConfig(
             id = "gemma-2-2b",
             name = "Gemma 2 2B (Legacy)",
             description = "Proven 2B model, very low resource usage.",
             sizeGb = 1.6,
             fileName = "gemma-2-2b-it-cpu-int4.bin",
-            aiPackName = "gemma_2_2b_pack"
+            aiPackName = "gemma_ai_pack"
         )
         
         val AVAILABLE_MODELS = listOf(GEMMA_4_E2B, GEMMA_4_E4B, GEMMA_2_2B)

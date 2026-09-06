@@ -25,7 +25,8 @@ android {
         }
     }
 
-    // assetPacks.add(":gemma-ai-pack") // Comment out for faster local dev/testing
+    // AI Pack配信に必須: コメントアウトすると .aab にpackが含まれず Play上で PACK_UNAVAILABLE(-2) になる
+    assetPacks.add(":gemma-ai-pack")
 
     buildTypes {
         release {
