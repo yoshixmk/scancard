@@ -2,13 +2,13 @@
 
 ## Overview
 
-ScanCard is an Android application that enables users to photograph book pages using the device camera, perform automatic document correction, and extract flashcard term/definition pairs using on-device LLMs (Gemma 4 family) via the **LiteRT LM SDK**.
+ScanCard is an Android application that enables users to photograph book pages using the device camera, perform automatic document correction, and extract flashcard term/definition pairs using the on-device LLM (Gemma 4 E2B) via the **LiteRT LM SDK**.
 
 ### Key Capabilities
 
 1. **Batch Scanning**: ML Kit Document Scanner integration.
 2. **On-Device OCR**: ML Kit Text Recognition (Japanese/English).
-3. **Multi-Model AI**: Support for Gemma 4 (E2B, E4B) via LiteRT LM.
+3. **Single-Model AI**: Gemma 4 E2B only via LiteRT LM to reduce app size.
 4. **Google Play AI Delivery**: Models are delivered on-demand as **AI Packs**, avoiding third-party authentication.
 5. **3D Study**: Interactive flashcard study with animations.
 6. **Local Persistence**: Room database for decks, cards, and scans.

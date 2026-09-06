@@ -2,12 +2,12 @@
 
 ## Introduction
 
-ScanCard is an Android application that enables users to photograph book pages using the device camera, perform automatic document correction, and extract flashcard term/definition pairs using on-device LLMs (Gemma 4 family) - all in fully offline mode after initial setup via Google Play.
+ScanCard is an Android application that enables users to photograph book pages using the device camera, perform automatic document correction, and extract flashcard term/definition pairs using the on-device LLM (Gemma 4 E2B) - all in fully offline mode after initial setup via Google Play.
 
 ## Glossary
 
 - **ScanCard**: The Android application being developed
-- **Gemma 4**: On-device LLM model family (E2B, E4B) for flashcard extraction.
+- **Gemma 4**: On-device LLM model (E2B only) for flashcard extraction.
 - **Play for On-device AI**: Google's official infrastructure for delivering machine learning models on-demand via the Play Store.
 - **AI Pack**: A downloadable bundle containing AI models, delivered securely through Google Play.
 - **Deck**: A collection of flashcards organized by book title or chapter.
@@ -23,8 +23,8 @@ ScanCard is an Android application that enables users to photograph book pages u
 
 ## Hardware Requirements
 
-- **Minimum RAM**: 4GB (E2B) / 8GB (E4B).
-- **Storage**: Minimum 3GB - 6GB free space depending on selected model.
+- **Minimum RAM**: 4GB (E2B).
+- **Storage**: Minimum 3GB free space for the E2B model.
 - **Android Version**: API 26 (Android 8.0) or higher.
 
 ---
@@ -37,7 +37,7 @@ ScanCard is an Android application that enables users to photograph book pages u
 
 #### Acceptance Criteria
 
-1. THE ScanCard SHALL provide a selection of AI models from the Gemma 4 family (E2B, E4B).
+1. THE ScanCard SHALL provide the Gemma 4 E2B model for extraction.
 2. THE ScanCard SHALL display the name, description, and estimated storage size of each model.
 3. THE ScanCard SHALL use **Google Play AI Delivery** to download and manage model files (AI Packs) on-demand.
 4. THE ScanCard SHALL NOT require external authentication (like Hugging Face PAT) for model access, relying instead on system-level delivery via the Play Store.

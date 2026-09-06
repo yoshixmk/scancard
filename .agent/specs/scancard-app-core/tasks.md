@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation plan covers the development of the ScanCard Android application, which enables users to photograph book pages, extract flashcard term/definition pairs using on-device LLMs (Gemma 4 family), and study using interactive 3D flashcard animations. The plan is organized into numbered tasks with clear dependencies to ensure smooth implementation progression.
+This implementation plan covers the development of the ScanCard Android application, which enables users to photograph book pages, extract flashcard term/definition pairs using the on-device LLM (Gemma 4 E2B), and study using interactive 3D flashcard animations. The plan is organized into numbered tasks with clear dependencies to ensure smooth implementation progression.
 
 The implementation follows a modular architecture with distinct layers: Data Layer (Room database), Domain Layer (Use Cases), Model Management (Google Play AI Delivery & LiteRT), and Presentation Layer (Jetpack Compose UI).
 

@@ -72,7 +72,6 @@ appium/wdio-logs/
 # Project specific ignores
 # AI Pack model binaries are large: keep them out of git, place locally before bundleRelease
 gemma-ai-pack/src/main/assets/*.litertlm
-gemma-ai-pack/src/main/assets/*.bin
 !gemma-ai-pack/src/main/assets/README.txt
 improvement.md
 all_kt_files.txt
