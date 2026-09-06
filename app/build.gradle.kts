@@ -16,7 +16,7 @@ android {
         applicationId = "com.plath.scancard"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
+        versionCode = 3
         versionName = "1.0"
 
         testInstrumentationRunner = "com.plath.scancard.HiltTestRunner"
@@ -26,7 +26,9 @@ android {
     }
 
     // AI Pack配信に必須: コメントアウトすると .aab にpackが含まれず Play上で PACK_UNAVAILABLE(-2) になる
+    // Gemma 4 E2B (2.6GB) は Play 1.5GB/pack 上限のため 2 分割配信
     assetPacks.add(":gemma-ai-pack")
+    assetPacks.add(":gemma-ai-pack-2")
 
     buildTypes {
         release {

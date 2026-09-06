@@ -19,3 +19,4 @@ dependencyResolutionManagement {
 rootProject.name = "ScanCard"
 include(":app")
 include(":gemma-ai-pack")
+include(":gemma-ai-pack-2")

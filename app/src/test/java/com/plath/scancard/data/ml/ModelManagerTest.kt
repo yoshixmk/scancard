@@ -34,7 +34,7 @@ class ModelManagerTest {
 
     @Test
     fun `checkModelStatus with AiPack failure in DEBUG should be Idle not Error`() {
-        every { aiPackManager.getPackStates(listOf(config.aiPackName)) } returns Tasks.forException(RuntimeException("AssetPackService onError(-1)"))
+        every { aiPackManager.getPackStates(config.aiPackNames) } returns Tasks.forException(RuntimeException("AssetPackService onError(-1)"))
 
         manager = ModelManager(context)
         manager.aiPackManager = aiPackManager
@@ -47,7 +47,7 @@ class ModelManagerTest {
 
     @Test
     fun `downloadModel with fetch failure in DEBUG should be Idle`() {
-        every { aiPackManager.fetch(listOf(config.aiPackName)) } returns Tasks.forException(RuntimeException("Download failed -1"))
+        every { aiPackManager.fetch(config.aiPackNames) } returns Tasks.forException(RuntimeException("Download failed -1"))
 
         manager = ModelManager(context)
         manager.aiPackManager = aiPackManager
@@ -60,11 +60,25 @@ class ModelManagerTest {
 
     @Test
     fun `isModelDownloaded should not throw when getPackLocation fails`() {
-        every { aiPackManager.getPackLocation(config.aiPackName) } throws RuntimeException("not found")
+        every { aiPackManager.getPackLocation(any()) } throws RuntimeException("not found")
 
         manager = ModelManager(context)
         manager.aiPackManager = aiPackManager
         val result = manager.isModelDownloaded(config)
         assertFalse(result)
+    }
+
+    @Test
+    fun `assembleParts concatenates split files in order`() {
+        manager = ModelManager(context)
+        manager.aiPackManager = aiPackManager
+        val tmpDir = (context.filesDir as File).also { it.mkdirs() }
+        val part0 = File(tmpDir, "p0.bin").apply { writeBytes(byteArrayOf(1, 2, 3)) }
+        val part1 = File(tmpDir, "p1.bin").apply { writeBytes(byteArrayOf(4, 5)) }
+        val out = File(tmpDir, "assembled.bin").apply { if (exists()) delete() }
+
+        val result = manager.assembleParts(listOf(part0, part1), out)
+        assertNotNull(result)
+        assertArrayEquals(byteArrayOf(1, 2, 3, 4, 5), out.readBytes())
     }
 }

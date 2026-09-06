@@ -26,28 +26,41 @@ class ModelManager @Inject constructor(
 
 
     fun checkModelStatus(config: ModelConfig) {
-        // Developer Fallback: Only enabled in DEBUG builds
-        if (com.plath.scancard.BuildConfig.DEBUG) {
-            if (File(context.filesDir, config.fileName).exists()) {
-                android.util.Log.d("ModelManager", "Manual model file detected in filesDir. Marking as Ready.")
-                _modelState.value = ModelState.Ready
-                return
-            }
+        // Assembled file (release concat result) or DEBUG dummy counts as Ready in any build.
+        if (File(context.filesDir, config.fileName).exists()) {
+            android.util.Log.d("ModelManager", "Assembled/manual model file detected in filesDir. Marking as Ready.")
+            _modelState.value = ModelState.Ready
+            return
         }
 
         try {
-            getAiPackManager().getPackStates(listOf(config.aiPackName))
+            getAiPackManager().getPackStates(config.aiPackNames)
                 .addOnSuccessListener { result ->
-                    val state = result.packStates()[config.aiPackName]
-                    when (state?.status()) {
-                        AiPackStatus.COMPLETED -> _modelState.value = ModelState.Ready
-                        AiPackStatus.DOWNLOADING -> {
-                            val progress = state.bytesDownloaded().toFloat() / state.totalBytesToDownload().coerceAtLeast(1)
-                            _modelState.value = ModelState.Downloading(progress)
+                    val states = config.aiPackNames.mapNotNull { result.packStates()[it] }
+                    if (states.size != config.aiPackNames.size) {
+                        _modelState.value = ModelState.Idle
+                        return@addOnSuccessListener
+                    }
+                    val statuses = states.map { it.status() }
+                    when {
+                        statuses.all { it == AiPackStatus.COMPLETED } -> {
+                            // Lazy assemble: report Ready, actual concat happens in getModelPath().
+                            // If parts are present, try assemble now so next getModelPath is instant.
+                            val assembled = tryAssembleSplitModel(config)
+                            if (assembled != null || hasAllPartFiles(config)) {
+                                _modelState.value = ModelState.Ready
+                            } else {
+                                _modelState.value = ModelState.Ready
+                            }
                         }
-                        AiPackStatus.FAILED -> {
+                        statuses.any { it == AiPackStatus.DOWNLOADING || it == AiPackStatus.PENDING } -> {
+                            val done = states.sumOf { it.bytesDownloaded() }.toFloat()
+                            val total = states.sumOf { it.totalBytesToDownload() }.coerceAtLeast(1).toFloat()
+                            _modelState.value = ModelState.Downloading((done / total).coerceIn(0f, 1f))
+                        }
+                        statuses.any { it == AiPackStatus.FAILED } -> {
                             if (com.plath.scancard.BuildConfig.DEBUG) {
-                                android.util.Log.w("ModelManager", "AiPack FAILED in DEBUG (assetPacks disabled) -> Idle: ${config.aiPackName}")
+                                android.util.Log.w("ModelManager", "AiPack FAILED in DEBUG (assetPacks disabled) -> Idle: ${config.aiPackNames}")
                                 _modelState.value = ModelState.Idle
                             } else {
                                 _modelState.value = ModelState.Error("Pack status check failed")
@@ -76,12 +89,9 @@ class ModelManager @Inject constructor(
     }
 
     fun isModelDownloaded(config: ModelConfig): Boolean {
-        if (com.plath.scancard.BuildConfig.DEBUG) {
-            if (File(context.filesDir, config.fileName).exists()) return true
-        }
+        if (File(context.filesDir, config.fileName).exists()) return true
         return try {
-            val location = getAiPackManager().getPackLocation(config.aiPackName)
-            location != null
+            hasAllPartFiles(config)
         } catch (e: Exception) {
             android.util.Log.w("ModelManager", "getPackLocation failed -> not downloaded: ${e.message}")
             false
@@ -89,23 +99,75 @@ class ModelManager @Inject constructor(
     }
 
     fun getModelPath(config: ModelConfig): String {
-        if (com.plath.scancard.BuildConfig.DEBUG) {
-            val manualFile = File(context.filesDir, config.fileName)
-            if (manualFile.exists()) return manualFile.absolutePath
-        }
+        val manualFile = File(context.filesDir, config.fileName)
+        if (manualFile.exists()) return manualFile.absolutePath
         return try {
-            val location = getAiPackManager().getPackLocation(config.aiPackName)
-            val assetsPath = location?.assetsPath() ?: ""
-            File(assetsPath, config.fileName).absolutePath
+            tryAssembleSplitModel(config)?.absolutePath ?: ""
         } catch (e: Exception) {
             android.util.Log.w("ModelManager", "getModelPath failed: ${e.message}")
             ""
         }
     }
 
+    /** Returns assembled file if present or successfully concatenated, else null. */
+    internal fun tryAssembleSplitModel(config: ModelConfig): File? {
+        val out = File(context.filesDir, config.fileName)
+        if (out.exists()) return out
+        val parts = config.aiPackNames.mapIndexedNotNull { index, packName ->
+            val location = try {
+                getAiPackManager().getPackLocation(packName)
+            } catch (_: Exception) { null } ?: return null
+            val assetsPath = location.assetsPath() ?: return null
+            val partName = config.partFileNames.getOrNull(index) ?: return null
+            val f = File(assetsPath, partName)
+            if (!f.exists()) return null
+            f
+        }
+        if (parts.size != config.aiPackNames.size) return null
+        return assembleParts(parts, out)
+    }
+
+    private fun hasAllPartFiles(config: ModelConfig): Boolean {
+        config.aiPackNames.forEachIndexed { index, packName ->
+            val location = getAiPackManager().getPackLocation(packName) ?: return false
+            val assetsPath = location.assetsPath() ?: return false
+            val partName = config.partFileNames.getOrNull(index) ?: return false
+            if (!File(assetsPath, partName).exists()) return false
+        }
+        return true
+    }
+
+    internal fun assembleParts(parts: List<File>, out: File): File? {
+        val tmp = File(out.parent, "${out.name}.tmp")
+        try {
+            tmp.outputStream().buffered(8 * 1024 * 1024).use { output ->
+                parts.forEach { part ->
+                    part.inputStream().buffered(8 * 1024 * 1024).use { input ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+            val expected = parts.sumOf { it.length() }
+            if (tmp.length() != expected) {
+                android.util.Log.w("ModelManager", "Assembled size mismatch: ${tmp.length()} vs $expected")
+                tmp.delete()
+                return null
+            }
+            if (!tmp.renameTo(out)) {
+                tmp.copyTo(out, overwrite = true)
+                tmp.delete()
+            }
+            return out
+        } catch (e: Exception) {
+            android.util.Log.w("ModelManager", "assembleParts failed: ${e.message}")
+            tmp.delete()
+            return null
+        }
+    }
+
     fun downloadModel(config: ModelConfig) {
         try {
-            getAiPackManager().fetch(listOf(config.aiPackName))
+            getAiPackManager().fetch(config.aiPackNames)
                 .addOnSuccessListener {
                     _modelState.value = ModelState.Downloading(0f)
                 }

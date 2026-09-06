@@ -64,7 +64,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "2.2", "name": "Create Room DAOs with Flow support", "status": "completed", "dependencies": [], "optional": false },
     { "id": "2.3", "name": "Create AppDatabase class and Hilt providers", "status": "completed", "dependencies": [], "optional": false },
     { "id": "2.4", "name": "Implement Repositories (Deck, Card, Scan)", "status": "completed", "dependencies": [], "optional": false },
-    { "id": "3.1", "name": "Setup :gemma-ai-pack module with com.android.ai-pack plugin", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "3.1", "name": "Setup :gemma-ai-pack + :gemma-ai-pack-2 split modules (1.5GB/pack limit) with com.android.ai-pack plugin", "status": "completed", "dependencies": [], "optional": false },
     { "id": "3.2", "name": "Integrate com.google.android.play:ai-delivery SDK", "status": "completed", "dependencies": [], "optional": false },
     { "id": "3.3", "name": "Implement ModelManager using AiPackManager with DEBUG build fallback", "status": "completed", "dependencies": [], "optional": false },
     { "id": "3.4", "name": "Create ModelConfig for Gemma 4 (Universal/CPU variants)", "status": "completed", "dependencies": [], "optional": false },

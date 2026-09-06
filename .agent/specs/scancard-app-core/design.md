@@ -81,9 +81,9 @@ graph TD
 
 ```kotlin
 interface IModelManager {
-    suspend fun getModelState(aiPackName: String): ModelState
-    suspend fun downloadModel(aiPackName: String): Flow<DownloadProgress>
-    suspend fun deleteModel(aiPackName: String): Boolean
+    suspend fun getModelState(aiPackNames: List<String>): ModelState
+    suspend fun downloadModel(aiPackNames: List<String>): Flow<DownloadProgress>
+    suspend fun deleteModel(aiPackNames: List<String>): Boolean
 }
 
 enum class ModelState {
@@ -234,7 +234,7 @@ enum class LanguagePreference {
 ## Core Components
 
 ### 1. AI & Model Management
-- **ModelManager**: Interfaces with `AiPackManager` to track AI Pack states (`PENDING`, `DOWNLOADING`, `COMPLETED`) and trigger downloads.
+- **ModelManager**: Interfaces with `AiPackManager` to track both split AI Packs (`gemma_ai_pack`, `gemma_ai_pack_2`) states (`PENDING`, `DOWNLOADING`, `COMPLETED`), triggers `fetch(aiPackNames)` on-demand, aggregates progress across packs, and concatenates `gemma-4-E2B-it.litertlm.part0/part1` into `filesDir/gemma-4-E2B-it.litertlm` (size-verified stream copy) before inference. An existing assembled file counts as `Ready`.
 - **GemmaCardExtractor**: Wraps LiteRT LM Engine and Conversation APIs, handles model initialization and asynchronous inference using the downloaded pack assets.
 - **TranslationPromptBuilder**: Constructs prompts for E2B translation, includes explicit instructions to use exact term in definition.
 - **PromptValidator**: Validates that generated definitions contain the original term and are not generic responses.
@@ -301,7 +301,8 @@ data class ModelConfig(
     val description: String,
     val sizeGb: Double,
     val fileName: String,
-    val aiPackName: String
+    val aiPackNames: List<String>,
+    val partFileNames: List<String>
 )
 ```
 

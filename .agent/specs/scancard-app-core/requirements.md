@@ -42,6 +42,7 @@ ScanCard is an Android application that enables users to photograph book pages u
 3. THE ScanCard SHALL use **Google Play AI Delivery** to download and manage model files (AI Packs) on-demand.
 4. THE ScanCard SHALL NOT require external authentication (like Hugging Face PAT) for model access, relying instead on system-level delivery via the Play Store.
 5. WHILE a download is in progress, THE ScanCard SHALL display a percentage-based progress indicator provided by the AiPackManager.
+6. THE ScanCard SHALL split the Gemma 4 E2B model (2.6GB) into 2 on-demand AI Packs (`gemma_ai_pack`, `gemma_ai_pack_2`), each under the Play 1.5GB/pack compressed limit, and THE ModelManager SHALL concatenate the parts into `filesDir/gemma-4-E2B-it.litertlm` before inference.
 
 ---
 
