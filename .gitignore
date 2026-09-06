@@ -78,8 +78,6 @@ gemma-ai-pack/src/main/assets/*.part1
 gemma-ai-pack-2/src/main/assets/*.litertlm
 gemma-ai-pack-2/src/main/assets/*.part0
 gemma-ai-pack-2/src/main/assets/*.part1
-!gemma-ai-pack/src/main/assets/README.txt
-!gemma-ai-pack-2/src/main/assets/README.txt
 improvement.md
 all_kt_files.txt
 deps.txt
