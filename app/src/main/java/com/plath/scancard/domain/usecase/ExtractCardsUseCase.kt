@@ -32,26 +32,31 @@ class ExtractCardsUseCase @Inject constructor(
         modelConfig: ModelConfig,
         onProgress: suspend (current: Int, total: Int) -> Unit = { _, _ -> }
     ) {
+        val scans = scanRepository.getScansByDeck(deckId).first()
+        val combinedText = scans.joinToString("\n") { it.rawText }
+
+        if (combinedText.isBlank()) {
+            // Even if the extraction target is empty, the deck status must be set to completed
+            // to avoid infinite resumption loops (Req12.8). No model init or LLM call.
+            deckRepository.updateExtractionStatus(deckId, ExtractionStatus.COMPLETED)
+            return
+        }
+
         val modelPath = modelRepository.getModelPath(modelConfig)
             ?: throw IllegalStateException("Model ${modelConfig.name} not found. Please download it first.")
 
         cardExtractor.initialize(modelPath)
         try {
-            val scans = scanRepository.getScansByDeck(deckId).first()
-            val combinedText = scans.joinToString("\n") { it.rawText }
-
-            if (combinedText.isBlank()) {
-                // Even if the extraction target is empty, the deck status must be set to completed
-                // to avoid infinite resumption loops (Req12.8).
-                deckRepository.updateExtractionStatus(deckId, ExtractionStatus.COMPLETED)
-                return
-            }
-
             val total = scans.size
             val extractedPairs = mutableListOf<ExtractedCard>()
             onProgress(0, total)
 
             for ((index, scan) in scans.withIndex()) {
+                // Blank pages (covers, dividers) skip LLM but still advance progress.
+                if (scan.rawText.isBlank()) {
+                    onProgress(index + 1, total)
+                    continue
+                }
                 val prompt = promptBuilder.buildPrompt(scan.rawText)
                 val pagePairs = cardExtractor.extractCards(prompt)
                 extractedPairs += pagePairs
