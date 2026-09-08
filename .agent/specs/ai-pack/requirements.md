@@ -2,7 +2,7 @@
 
 ## Introduction
 
-ScanCard delivers the on-device LLM (Gemma 4 E2B, 2.6GB) via Google Play AI Delivery as two on-demand AI Packs. `ModelManager` owns the pack lifecycle (status query, download, progress aggregation, part assembly), `ModelRepository` exposes it as `StateFlow<ModelState>`, and `ExtractionPreviewScreen` renders Idle / Downloading(%) / Ready / Error. This spec is the single source of truth for AI-pack behavior; `scancard-app-core` Requirement 4 is an overview only.
+ScanCard delivers the on-device LLM (Gemma 4 E2B, 2.6GB) via Google Play AI Delivery as two on-demand AI Packs. `ModelManager` owns the pack lifecycle (status query, download, progress aggregation, part assembly), `ModelRepository` exposes it as `StateFlow<ModelState>`, and `ExtractionPreviewScreen` renders Idle / Downloading(%) / Ready / Error. This spec is the single source of truth for AI-pack behavior; `app-core` Requirement 4 is an overview only.
 
 ## Glossary
 
