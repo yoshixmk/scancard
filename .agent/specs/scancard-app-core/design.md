@@ -77,29 +77,10 @@ graph TD
 
 ### IModelManager
 
-**Purpose**: Manages AI model lifecycle and download states via Google Play AI Delivery.
+**Purpose**: Manages AI model lifecycle and download states via Google Play AI Delivery. The authoritative contract (pack names, status mapping, progress formula, assembly, DEBUG fallback) is defined in `.agent/specs/scancard-ai-pack`; this document keeps only the role overview.
 
-```kotlin
-interface IModelManager {
-    suspend fun getModelState(aiPackNames: List<String>): ModelState
-    suspend fun downloadModel(aiPackNames: List<String>): Flow<DownloadProgress>
-    suspend fun deleteModel(aiPackNames: List<String>): Boolean
-}
-
-enum class ModelState {
-    NOT_DOWNLOADED,
-    PENDING,
-    DOWNLOADING,
-    COMPLETED,
-    FAILED
-}
-
-data class DownloadProgress(
-    val bytesDownloaded: Long,
-    val totalBytes: Long,
-    val percentage: Int
-)
-```
+- `ModelRepository` exposes `modelState: StateFlow<ModelState>` with `checkModelStatus` / `downloadModel` / `getModelPath` / `getAvailableModels`.
+- UI observes `ModelState` (`Idle`, `Downloading(progress)`, `Ready`, `Error`) and renders the `ExtractionPreviewScreen` download contract.
 
 ### IGemmaCardExtractor
 
@@ -234,7 +215,7 @@ enum class LanguagePreference {
 ## Core Components
 
 ### 1. AI & Model Management
-- **ModelManager**: Interfaces with `AiPackManager` to track both split AI Packs (`gemma_ai_pack`, `gemma_ai_pack_2`) states (`PENDING`, `DOWNLOADING`, `COMPLETED`), triggers `fetch(aiPackNames)` on-demand, aggregates progress across packs, and concatenates `gemma-4-E2B-it.litertlm.part0/part1` into `filesDir/gemma-4-E2B-it.litertlm` (size-verified stream copy) before inference. An existing assembled file counts as `Ready`.
+- **ModelManager**: AI-pack delivery (status query, `fetch`, listener-driven progress aggregation, part assembly) is defined in `.agent/specs/scancard-ai-pack`, which is the single source of truth. This spec owns only the consumer side (LiteRT inference input via `getModelPath`).
 - **GemmaCardExtractor**: Wraps LiteRT LM Engine and Conversation APIs, handles model initialization and asynchronous inference using the downloaded pack assets.
 - **TranslationPromptBuilder**: Constructs prompts for E2B translation, includes explicit instructions to use exact term in definition.
 - **PromptValidator**: Validates that generated definitions contain the original term and are not generic responses.
@@ -294,17 +275,7 @@ enum class LanguagePreference {
 
 ### Model Configuration (`ModelConfig`)
 
-```kotlin
-data class ModelConfig(
-    val id: String,
-    val name: String,
-    val description: String,
-    val sizeGb: Double,
-    val fileName: String,
-    val aiPackNames: List<String>,
-    val partFileNames: List<String>
-)
-```
+The canonical pack definition (`GEMMA_4_E2B` pack/part names, file name, size) is defined in `.agent/specs/scancard-ai-pack`. `ModelConfig` carries `id`, `name`, `description`, `sizeGb`, `fileName`, `aiPackNames`, and `partFileNames`.
 
 ### Flashcard with E2B Translation (`Card`)
 

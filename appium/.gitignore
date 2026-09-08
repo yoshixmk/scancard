@@ -3,3 +3,4 @@ wdio-logs/
 allure-results/
 coverage/
 .env.local
+videos/

@@ -213,6 +213,8 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - [x] 2.4 Implement Repositories (Deck, Card, Scan)
 
 ### 3. Model Management (Google Play AI Packs & Dev Fallback)
+
+Authoritative AI-pack plan: `.agent/specs/scancard-ai-pack/tasks.md`. Entries below remain as the app-core execution record.
 - [x] 3.1 Setup `:gemma-ai-pack` module with `com.android.ai-pack` plugin
 - [x] 3.2 Integrate `com.google.android.play:ai-delivery` SDK
 - [x] 3.3 Implement ModelManager using `AiPackManager` with DEBUG build fallback

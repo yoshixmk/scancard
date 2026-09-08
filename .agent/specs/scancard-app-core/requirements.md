@@ -44,6 +44,8 @@ ScanCard is an Android application that enables users to photograph book pages u
 5. WHILE a download is in progress, THE ScanCard SHALL display a percentage-based progress indicator provided by the AiPackManager.
 6. THE ScanCard SHALL split the Gemma 4 E2B model (2.6GB) into 2 on-demand AI Packs (`gemma_ai_pack`, `gemma_ai_pack_2`), each under the Play 1.5GB/pack compressed limit, and THE ModelManager SHALL concatenate the parts into `filesDir/gemma-4-E2B-it.litertlm` before inference.
 
+Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG fallback, UI contract) are defined in `.agent/specs/scancard-ai-pack`, which is the single source of truth for AI-pack behavior.
+
 ---
 
 ### Requirement 5: Automatic Flashcard Extraction
