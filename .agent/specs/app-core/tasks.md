@@ -29,8 +29,8 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 6. **Bilingual Display**: Task 13.1 (LanguagePreference enum) → Task 13.3 (Card entity update) → Task 13.2 (IBilingualCardDisplay) → Task 13.4 (Update Study Screen)
    - Entity update and enum must precede the interface implementation
 
-7. **Translation Prompt System**: Task 14.1 (ITranslationPromptBuilder) → Task 14.2 (IPromptValidator) → Task 14.3 (Integrate into ExtractCardsUseCase)
-   - Both prompt builder and validator needed before use case integration
+7. **Translation Prompt System**: Task 14.1 (ITranslationPromptBuilder) → Task 14.2 (Remove PromptValidator) → Task 14.3 (Single-prompt ExtractCardsUseCase)
+   - Translation prompt with JSON format example is used for one-shot extraction; no validator retry.
 
 8. **Background Processing**: Task 15.1 (WorkManager dependency) → Task 15.2 (IBackgroundTaskManager) → Task 15.3 (CardExtractionWorker) → Task 15.4 (System notification) → Task 15.5 (Update Extraction Screen)
    - Sequential: dependency → manager → worker → notification → UI
@@ -46,7 +46,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 | 12.3 | 12.2 | StudyViewModel needs CardFilter |
 | 13.2 | 13.1, 13.3 | IBilingualCardDisplay needs LanguagePreference and Card entity |
 | 13.4 | 13.2, 13.3 | Study Screen needs bilingual interface and entity support |
-| 14.3 | 14.1, 14.2 | ExtractCardsUseCase needs prompt builder and validator |
+| 14.3 | 14.1, 14.2 | ExtractCardsUseCase uses single-prompt builder without validator |
 | 15.2 | 15.1 | BackgroundTaskManager needs WorkManager dependency |
 | 15.3 | 15.2 | CardExtractionWorker uses BackgroundTaskManager |
 | 15.4 | 15.3 | Notification triggered by worker completion |
@@ -56,7 +56,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 {
   "tasks": [
     { "id": "1.1", "name": "Create Gradle wrapper and project structure", "status": "completed", "dependencies": [], "optional": false },
-    { "id": "1.2", "name": "Create app module build configuration (AGP 9.3, Kotlin 2.2)", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "1.2", "name": "Create app module build configuration (AGP 9.4.0, Kotlin 2.4.10)", "status": "completed", "dependencies": [], "optional": false },
     { "id": "1.3", "name": "Create AndroidManifest.xml and initial resources", "status": "completed", "dependencies": [], "optional": false },
     { "id": "1.4", "name": "Setup Hilt and Base Application class", "status": "completed", "dependencies": [], "optional": false },
     { "id": "1.5", "name": "Implement Edge-to-Edge support (Android 15+)", "status": "completed", "dependencies": [], "optional": false },
@@ -67,7 +67,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "3.1", "name": "Setup :gemma-ai-pack + :gemma-ai-pack-2 split modules (1.5GB/pack limit) with com.android.ai-pack plugin", "status": "completed", "dependencies": [], "optional": false },
     { "id": "3.2", "name": "Integrate com.google.android.play:ai-delivery SDK", "status": "completed", "dependencies": [], "optional": false },
     { "id": "3.3", "name": "Implement ModelManager using AiPackManager with DEBUG build fallback", "status": "completed", "dependencies": [], "optional": false },
-    { "id": "3.4", "name": "Create ModelConfig for Gemma 4 (Universal/CPU variants)", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "3.4", "name": "Create ModelConfig for Gemma 4 E2B only (single-model policy)", "status": "completed", "dependencies": [], "optional": false },
     { "id": "4.1", "name": "Implement ML Kit Document Scanner integration", "status": "completed", "dependencies": [], "optional": false },
     { "id": "4.2", "name": "Implement ML Kit Text Recognition (Japanese/English)", "status": "completed", "dependencies": [], "optional": false },
     { "id": "4.3", "name": "Implement GemmaCardExtractor (LiteRT LM Engine/Conversation)", "status": "completed", "dependencies": [], "optional": false },
@@ -103,8 +103,8 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "13.3", "name": "Update Card entity with japaneseTranslation field", "status": "completed", "dependencies": [], "optional": false },
     { "id": "13.4", "name": "Update Study Screen UI with language toggle", "status": "completed", "dependencies": ["13.2", "13.3"], "optional": false },
     { "id": "14.1", "name": "Create ITranslationPromptBuilder interface and implementation", "status": "completed", "dependencies": [], "optional": false },
-    { "id": "14.2", "name": "Create IPromptValidator interface and implementation", "status": "completed", "dependencies": [], "optional": false },
-    { "id": "14.3", "name": "Integrate PromptValidator into ExtractCardsUseCase", "status": "completed", "dependencies": ["14.1", "14.2"], "optional": false },
+    { "id": "14.2", "name": "Remove PromptValidator (single-prompt extraction, JSON example one-shot)", "status": "completed", "dependencies": [], "optional": false },
+    { "id": "14.3", "name": "Single-prompt extraction in ExtractCardsUseCase (no retry loop, try/finally close)", "status": "completed", "dependencies": ["14.1", "14.2"], "optional": false },
     { "id": "15.1", "name": "Add WorkManager dependency to build.gradle.kts", "status": "completed", "dependencies": [], "optional": false },
     { "id": "15.2", "name": "Create IBackgroundTaskManager interface and implementation", "status": "completed", "dependencies": ["15.1"], "optional": false },
     { "id": "15.3", "name": "Create CardExtractionWorker", "status": "completed", "dependencies": ["15.2"], "optional": false },
@@ -183,7 +183,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 - Tasks marked with [ ] are pending implementation; tasks marked with [x] are completed
 - Background processing (Task 15) uses WorkManager for reliability - tasks survive app termination
 - Bilingual support requires database migration to add `japaneseTranslation` field to Card entity
-- Translation validation uses retry logic (up to 3 attempts) to improve AI output quality
+- Translation uses single-prompt extraction (no retry loop); JSON format example ensures one-shot success
 
 ### Testing Requirements
 
@@ -201,7 +201,7 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 
 ### 1. Project Setup and Configuration
 - [x] 1.1 Create Gradle wrapper and project structure
-- [x] 1.2 Create app module build configuration (AGP 9.3, Kotlin 2.2)
+- [x] 1.2 Create app module build configuration (AGP 9.4.0, Kotlin 2.4.10)
 - [x] 1.3 Create AndroidManifest.xml and initial resources
 - [x] 1.4 Setup Hilt and Base Application class
 - [x] 1.5 Implement Edge-to-Edge support (Android 15+)
@@ -214,11 +214,11 @@ The following dependency graph defines the execution order for all tasks. Tasks 
 
 ### 3. Model Management (Google Play AI Packs & Dev Fallback)
 
-Authoritative AI-pack plan: `.agent/specs/scancard-ai-pack/tasks.md`. Entries below remain as the app-core execution record.
+Authoritative AI-pack plan: `.agent/specs/ai-pack/tasks.md`. Entries below remain as the app-core execution record.
 - [x] 3.1 Setup `:gemma-ai-pack` module with `com.android.ai-pack` plugin
 - [x] 3.2 Integrate `com.google.android.play:ai-delivery` SDK
 - [x] 3.3 Implement ModelManager using `AiPackManager` with DEBUG build fallback
-- [x] 3.4 Create ModelConfig for Gemma 4 (Universal/CPU variants)
+- [x] 3.4 Create ModelConfig for Gemma 4 E2B only (single-model policy)
 
 ### 4. Integration - ML Kit and LiteRT
 - [x] 4.1 Implement ML Kit Document Scanner integration
@@ -280,8 +280,8 @@ Authoritative AI-pack plan: `.agent/specs/scancard-ai-pack/tasks.md`. Entries be
 
 ### 14. Translation Prompt Improvement (Requirement 11)
 - [x] 14.1 Create ITranslationPromptBuilder interface and implementation
-- [x] 14.2 Create IPromptValidator interface and implementation
-- [x] 14.3 Integrate PromptValidator into ExtractCardsUseCase
+- [x] 14.2 Remove PromptValidator (single-prompt extraction, JSON example one-shot)
+- [x] 14.3 Single-prompt extraction in ExtractCardsUseCase (no retry loop, try/finally close)
 
 ### 15. Background Processing for Card Extraction (Requirement 12)
 - [x] 15.1 Add WorkManager dependency to build.gradle.kts
@@ -304,7 +304,7 @@ Authoritative AI-pack plan: `.agent/specs/scancard-ai-pack/tasks.md`. Entries be
 
 ### 17. Extraction Progress Notification (Requirement 12.12–12.14)
 
-- [x] 17.1 `ExtractCardsUseCase`: process scans page-by-page (one LLM call per page, per-page retry loop), add `onProgress: suspend (current: Int, total: Int) -> Unit` reporting `(0,N)` before first page and `(i,N)` after each page
+- [x] 17.1 `ExtractCardsUseCase`: process scans page-by-page (single prompt per page, no retry loop), add `onProgress: suspend (current: Int, total: Int) -> Unit` reporting `(0,N)` before first page and `(i,N)` after each page
 - [x] 17.2 `NotificationHelper.showProgressNotification(deckId, current, total)`: ongoing determinate notification (`setProgress`, `setOnlyAlertOnce`) posted under an app-managed id (`deckId + 100_000`) — same-id updates get overwritten by WorkManager's FGS re-post on every `setProgress` (verified on emulator)
 - [x] 17.3 `CardExtractionWorker`: pass an `onProgress` lambda that posts the progress notification and mirrors it via WorkManager `setProgress` (`progress_current`/`progress_total`)
 - [x] 17.4 `GemmaCardExtractor` dummy mode delay 1s → 8s (E2E shade-check window despite clock skew)

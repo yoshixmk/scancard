@@ -75,7 +75,7 @@ graph TD
 
 ### IModelManager
 
-**Purpose**: Manages AI model lifecycle and download states via Google Play AI Delivery. The authoritative contract (pack names, status mapping, progress formula, assembly, DEBUG fallback) is defined in `.agent/specs/scancard-ai-pack`; this document keeps only the role overview.
+**Purpose**: Manages AI model lifecycle and download states via Google Play AI Delivery. The authoritative contract (pack names, status mapping, progress formula, assembly, DEBUG fallback) is defined in `.agent/specs/ai-pack`; this document keeps only the role overview.
 
 - `ModelRepository` exposes `modelState: StateFlow<ModelState>` with `checkModelStatus` / `downloadModel` / `getModelPath` / `getAvailableModels`.
 - UI observes `ModelState` (`Idle`, `Downloading(progress)`, `Ready`, `Error`) and renders the `ExtractionPreviewScreen` download contract.
@@ -212,7 +212,7 @@ enum class LanguagePreference {
 ## Core Components
 
 ### 1. AI & Model Management
-- **ModelManager**: AI-pack delivery (status query, `fetch`, listener-driven progress aggregation, part assembly) is defined in `.agent/specs/scancard-ai-pack`, which is the single source of truth. This spec owns only the consumer side (LiteRT inference input via `getModelPath`).
+- **ModelManager**: AI-pack delivery (status query, `fetch`, listener-driven progress aggregation, part assembly) is defined in `.agent/specs/ai-pack`, which is the single source of truth. This spec owns only the consumer side (LiteRT inference input via `getModelPath`).
 - **GemmaCardExtractor**: Wraps LiteRT LM Engine and Conversation APIs, handles model initialization and asynchronous inference using the downloaded pack assets.
 - **TranslationPromptBuilder**: Constructs prompts for E2B translation, includes explicit instructions to use exact term in definition and a JSON format example `[{"term":"...","definition":"...","japaneseTranslation":"..."}]` to reduce hallucination.
 - **CardResponseParser**: Parses Gemma response via 3 strategies (direct JSONArray, bracket-substring, regex fallback).
@@ -272,7 +272,7 @@ enum class LanguagePreference {
 
 ### Model Configuration (`ModelConfig`)
 
-The canonical pack definition (`GEMMA_4_E2B` pack/part names, file name, size) is defined in `.agent/specs/scancard-ai-pack`. `ModelConfig` carries `id`, `name`, `description`, `sizeGb`, `fileName`, `aiPackNames`, and `partFileNames`.
+The canonical pack definition (`GEMMA_4_E2B` pack/part names, file name, size) is defined in `.agent/specs/ai-pack`. `ModelConfig` carries `id`, `name`, `description`, `sizeGb`, `fileName`, `aiPackNames`, and `partFileNames`.
 
 ### Flashcard with E2B Translation (`Card`)
 
