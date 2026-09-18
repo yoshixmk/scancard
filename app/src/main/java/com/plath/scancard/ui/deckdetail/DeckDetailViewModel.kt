@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.plath.scancard.data.local.entities.Card
 import com.plath.scancard.data.local.entities.Deck
+import com.plath.scancard.domain.model.ModelConfig
+import com.plath.scancard.domain.service.BackgroundTaskManager
 import com.plath.scancard.domain.usecase.ManageDeckUseCase
 import com.plath.scancard.domain.usecase.StudyCardsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +21,7 @@ import javax.inject.Inject
 class DeckDetailViewModel @Inject constructor(
     private val manageDeckUseCase: ManageDeckUseCase,
     private val studyCardsUseCase: StudyCardsUseCase,
+    private val backgroundTaskManager: BackgroundTaskManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -67,6 +70,17 @@ class DeckDetailViewModel @Inject constructor(
     fun deleteCard(card: Card) {
         viewModelScope.launch {
             studyCardsUseCase.deleteCard(card)
+        }
+    }
+
+    /**
+     * Manual re-extraction for decks with no cards (e.g. single-prompt LLM
+     * returned nothing). Idempotent: exact duplicates are skipped on re-run,
+     * and [BackgroundTaskManager.startExtraction] no-ops while work is active.
+     */
+    fun retryExtraction() {
+        viewModelScope.launch {
+            backgroundTaskManager.startExtraction(deckId, ModelConfig.DEFAULT_ID)
         }
     }
 }

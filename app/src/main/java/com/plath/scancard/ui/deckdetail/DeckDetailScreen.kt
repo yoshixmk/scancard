@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -127,6 +128,27 @@ fun DeckDetailScreen(
                 modifier = Modifier.padding(horizontal = 16.dp).testTag("deckDetailCardCount"),
                 style = MaterialTheme.typography.labelLarge
             )
+
+            if (cards.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "No cards yet — extraction may have produced nothing.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = { viewModel.retryExtraction() },
+                        modifier = Modifier.testTag("deckDetailRetryExtractionBtn")
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Retry extraction")
+                    }
+                }
+            }
 
             // TODO(IMP-05 5-5): Proposal to replace LazyColumn with Adaptive Grid/StaggeredGrid (commented out for staged application)
             // Currently remains as LazyColumn to maintain IMP-03 contentPadding. Candidate for

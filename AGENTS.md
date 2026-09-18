@@ -7,7 +7,8 @@
 - Automate E2E (`appium/specs/*.e2e.js`) as a replacement for manual verification and run `@slow` only via `wdio.slow.conf.js`.
 
 ## Build / Test
-- Ensure `./gradlew :app:compileDebugKotlin :app:testDebugUnitTest` passes on AGP 9.3.1 / Kotlin 2.x / Gradle 9.x / JDK17+ (current: JDK25).
+- Ensure `./gradlew :app:compileDebugKotlin :app:testDebugUnitTest` passes on AGP 9.4.0 / Kotlin 2.x / Gradle 9.x / JDK17+ (current: JDK25).
+- Run builds via the `gradle-check` skill (`.agent/skills/gradle-check/SKILL.md`).
 - Do not use `fallbackToDestructiveMigration()` (guarantee production DB persistence).
 
 ## Reference

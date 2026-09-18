@@ -108,7 +108,7 @@ class GemmaCardExtractor @Inject constructor(
         }
     }
 
-    suspend fun extractCards(text: String): List<ExtractedCard> = withContext(Dispatchers.IO) {
+    suspend fun extractCards(prompt: String): List<ExtractedCard> = withContext(Dispatchers.IO) {
         if (isDummyMode) {
             // E2E fast path: simulate 8s inference and return parsed dummy.
             // 8s: To ensure a window where E2E can reliably poll the "Page n of m" progress in
@@ -122,12 +122,6 @@ class GemmaCardExtractor @Inject constructor(
         val currentConversation = conversation ?: run {
             return@withContext emptyList()
         }
-
-        val prompt = """
-            Extract flashcard pairs (term and definition) from the following text.
-            Return ONLY a JSON array of objects with "term" and "definition" keys.
-            Text: $text
-        """.trimIndent()
 
         val input = Contents.of(listOf(Content.Text(prompt)))
         

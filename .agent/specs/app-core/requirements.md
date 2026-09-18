@@ -44,7 +44,7 @@ ScanCard is an Android application that enables users to photograph book pages u
 5. WHILE a download is in progress, THE ScanCard SHALL display a percentage-based progress indicator provided by the AiPackManager.
 6. THE ScanCard SHALL split the Gemma 4 E2B model (2.6GB) into 2 on-demand AI Packs (`gemma_ai_pack`, `gemma_ai_pack_2`), each under the Play 1.5GB/pack compressed limit, and THE ModelManager SHALL concatenate the parts into `filesDir/gemma-4-E2B-it.litertlm` before inference.
 
-Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG fallback, UI contract) are defined in `.agent/specs/scancard-ai-pack`, which is the single source of truth for AI-pack behavior.
+Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG fallback, UI contract) are defined in `.agent/specs/ai-pack`, which is the single source of truth for AI-pack behavior.
 
 ---
 
@@ -136,10 +136,9 @@ Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG f
 
 #### Acceptance Criteria
 
-1. THE TranslationPromptBuilder SHALL ensure that the term content appears verbatim in the generated definition.
-2. IF the generated definition does not contain the original term or produces a generic response like "A topic to Explore", THEN THE PromptValidator SHALL flag this as an invalid translation.
-3. WHEN an invalid translation is detected, THE ScanCard SHALL retry the extraction with an improved prompt.
-4. THE improved prompt SHALL include explicit instructions to use the exact term in the definition.
+1. THE TranslationPromptBuilder SHALL ensure that the term content appears verbatim in the generated definition and SHALL include a JSON format example `[{"term":"...","definition":"...","japaneseTranslation":"..."}]` to reduce hallucination.
+2. THE improved prompt (`buildImprovedPrompt`) SHALL include explicit instructions to use the exact term in the definition and the same JSON format example.
+3. THE ExtractCardsUseCase SHALL perform a single extraction per page (no retry loop); prompt example ensures one-shot success.
 
 ---
 
@@ -163,6 +162,7 @@ Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG f
 12. WHILE extraction is running, THE ScanCard SHALL post an ongoing progress notification in the notification area showing how many of the uploaded pages have been processed (`Page n of m`) with a determinate progress bar. The progress notification SHALL be posted under an app-managed notification id (`deckId + 100_000`, distinct from WorkManager's FGS notification id) because same-id updates are overwritten by WorkManager's automatic FGS re-post on every `setProgress` call; it SHALL NOT alert more than once and SHALL be replaced by the completion or error notification (same app-managed id) when extraction finishes.
 13. THE progress counter SHALL reflect real work: `ExtractCardsUseCase` SHALL process uploaded scans page-by-page (one LLM call per page) and report `(0, N)` before the first page and `(i, N)` immediately after page i finishes, WHERE N is the number of uploaded scans for the deck.
 14. THE worker SHALL additionally expose progress via WorkManager `setProgress` (`progress_current`, `progress_total`) so that in-app UI can observe the same progress without reading notifications.
+15. WHEN a deck has no cards, THE DeckDetailScreen SHALL offer manual re-extraction (`Retry extraction`, `deckDetailRetryExtractionBtn`) via `BackgroundTaskManager.startExtraction(deckId, ModelConfig.DEFAULT_ID)`. Re-running SHALL be idempotent (exact duplicates skipped) and SHALL never auto-run on reopen.
 
 ### Requirement 18: Fast Extraction Flow (Performance Optimization)
 
