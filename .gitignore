@@ -69,6 +69,9 @@ appium/node_modules/
 appium/wdio-logs/
 /.artifacts/
 
+# Gradle daemon JVM config (user-specific)
+gradle/gradle-daemon-jvm.properties
+
 # Project specific ignores
 # AI Pack model binaries are large: keep them out of git, place locally before bundleRelease
 # Gemma 4 E2B (2.6GB) is split into 2 packs to stay under Play 1.5GB/pack limit

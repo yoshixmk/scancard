@@ -1,0 +1,288 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Enable R8 in build.gradle.kts": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876551930
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876589468
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877161434
+      }
+    ],
+    "2.1 Add keepattributes for annotations and signatures": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552010
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877177379
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877312403
+      }
+    ],
+    "2.2 Keep Application and Activity classes": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552048
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877179435
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877314736
+      }
+    ],
+    "2.3 Keep domain and data models": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552092
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877179402
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877321247
+      }
+    ],
+    "2.4 Add Hilt-specific rules": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552126
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877179702
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877321272
+      }
+    ],
+    "2.5 Add Room-specific rules": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552177
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877179655
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877322192
+      }
+    ],
+    "2.6 Add WorkManager rules": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552211
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877185735
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877322166
+      }
+    ],
+    "2.7 Add LiteRT LM (Gemma) keep rules": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552248
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877185805
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877333049
+      }
+    ],
+    "2.8 Add Kotlin and Compose rules": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552285
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877185759
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877333030
+      }
+    ],
+    "3.1 Run release build": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552318
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877349823
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877801577
+      }
+    ],
+    "3.2 Verify mapping.txt generation": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552355
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877808413
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877818649
+      }
+    ],
+    "4.1 Install and launch obfuscated APK": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552388
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877842411
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788878528769
+      }
+    ],
+    "4.2 Verify database operations": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552423
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788878963042
+      }
+    ],
+    "4.3 Verify Hilt dependency injection": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552458
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788878963007
+      }
+    ],
+    "4.4 Verify ML Kit functionality": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552497
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788878963083
+      }
+    ],
+    "5.1 Compare APK sizes": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788876552538
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788878539916
+      },
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788878935757
+      }
+    ],
+    "3. Verify Build Success": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788877818687
+      }
+    ],
+    "5. Verify Google Play Optimization": [
+      {
+        "executionId": "acb8a248-01a6-43a0-9e5c-9f8c6f2288ae",
+        "chatSessionId": "sess_27f894d9-3f88-49e7-b438-fcaf073e0191",
+        "timestamp": 1788878935818
+      }
+    ],
+    "3.3 Run R8 config analysis": [
+      {
+        "executionId": "344dfda1-4455-4eba-bb08-bfbd010825ba",
+        "chatSessionId": "sess_6936eecb-3831-4378-9e90-2c8799d4889e",
+        "timestamp": 1789696343119
+      },
+      {
+        "executionId": "344dfda1-4455-4eba-bb08-bfbd010825ba",
+        "chatSessionId": "sess_6936eecb-3831-4378-9e90-2c8799d4889e",
+        "timestamp": 1789697111014
+      }
+    ]
+  }
+}
