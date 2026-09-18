@@ -43,6 +43,7 @@ class CardExtractionWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val deckId = inputData.getLong("deckId", -1)
         val modelId = inputData.getString("modelId") ?: ModelConfig.DEFAULT_ID
+        val scanIds = inputData.getLongArray("scanIds")?.toList() ?: emptyList()
 
         if (deckId == -1L) return Result.failure()
 
@@ -60,7 +61,7 @@ class CardExtractionWorker @AssistedInject constructor(
             ?: ModelConfig.GEMMA_4_E2B
 
         return try {
-            extractCardsUseCase.extractAndSaveCards(deckId, modelConfig) { current, total ->
+            extractCardsUseCase.extractAndSaveCards(deckId, modelConfig, scanIds) { current, total ->
                 // Progress mirror (Req12.14) + notification area display (Req12.12).
                 // Post progress notification with a different app management ID (if the
                 // same ID is used, WM reposts and overwrites the original FGS notification)

@@ -100,4 +100,20 @@ class ExtractCardsUseCaseTest {
             deckRepository.updateExtractionStatus(7, ExtractionStatus.COMPLETED)
         }
     }
+
+    @Test
+    fun `scanIds scope extraction to new pages only`() = runTest {
+        coEvery { scanRepository.getScansByDeck(7) } returns
+            flowOf(listOf(scan(1, "Old: page"), scan(2, "New: page")))
+        coEvery { modelRepository.getModelPath(any()) } returns "/tmp/model"
+        coEvery { cardExtractor.extractCards(match { it.contains("New: page") }) } returns
+            listOf(ExtractedCard("New", "page", "new_ja"))
+        coEvery { cardValidator.findDuplicate(any(), any()) } returns null
+
+        useCase().extractAndSaveCards(7, ModelConfig.GEMMA_4_E2B, scanIds = listOf(2L))
+
+        coVerify(exactly = 1) { cardExtractor.extractCards(any()) }
+        coVerify { cardRepository.insertCards(match { it.size == 1 && it[0].term == "New" }) }
+        coVerify { deckRepository.updateExtractionStatus(7, ExtractionStatus.COMPLETED) }
+    }
 }

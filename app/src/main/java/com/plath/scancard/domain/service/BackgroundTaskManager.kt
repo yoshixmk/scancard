@@ -28,7 +28,7 @@ class BackgroundTaskManager @Inject constructor(
 
     fun extractionWorkName(deckId: Long): String = "extraction_$deckId"
 
-    suspend fun startExtraction(deckId: Long, modelId: String) {
+    suspend fun startExtraction(deckId: Long, modelId: String, scanIds: List<Long> = emptyList()) {
         // Set persistent status to PENDING first (Req12.9).
         // This column is the source of truth for resumption judgment upon process death.
         deckRepository.updateExtractionStatus(deckId, ExtractionStatus.PENDING)
@@ -37,7 +37,7 @@ class BackgroundTaskManager @Inject constructor(
         if (active) {
             return
         }
-        enqueue(deckId, modelId)
+        enqueue(deckId, modelId, scanIds = scanIds)
     }
 
     suspend fun resumeExtraction(deckId: Long) {
@@ -58,10 +58,11 @@ class BackgroundTaskManager @Inject constructor(
             .any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
     }
 
-    private suspend fun enqueue(deckId: Long, modelId: String, policy: ExistingWorkPolicy = ExistingWorkPolicy.APPEND_OR_REPLACE) {
+    private suspend fun enqueue(deckId: Long, modelId: String, policy: ExistingWorkPolicy = ExistingWorkPolicy.APPEND_OR_REPLACE, scanIds: List<Long> = emptyList()) {
         val data = Data.Builder()
             .putLong(KEY_DECK_ID, deckId)
             .putString(KEY_MODEL_ID, modelId)
+            .putLongArray(KEY_SCAN_IDS, scanIds.toLongArray())
             .build()
 
         val request = OneTimeWorkRequestBuilder<CardExtractionWorker>()
@@ -88,6 +89,7 @@ class BackgroundTaskManager @Inject constructor(
         private const val TAG = "BackgroundTaskManager"
         const val KEY_DECK_ID = "deckId"
         const val KEY_MODEL_ID = "modelId"
+        const val KEY_SCAN_IDS = "scanIds"
         private const val BACKOFF_DELAY_MS = 10_000L
     }
 }

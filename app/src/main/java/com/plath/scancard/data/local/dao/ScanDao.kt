@@ -14,7 +14,7 @@ interface ScanDao {
     fun getScansByDeck(deckId: Long): Flow<List<Scan>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertScan(scan: Scan)
+    suspend fun insertScan(scan: Scan): Long
 
     @Delete
     suspend fun deleteScan(scan: Scan)

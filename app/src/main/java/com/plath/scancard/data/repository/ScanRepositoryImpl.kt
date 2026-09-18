@@ -10,6 +10,6 @@ class ScanRepositoryImpl @Inject constructor(
     private val scanDao: ScanDao
 ) : ScanRepository {
     override fun getScansByDeck(deckId: Long): Flow<List<Scan>> = scanDao.getScansByDeck(deckId)
-    override suspend fun insertScan(scan: Scan) = scanDao.insertScan(scan)
+    override suspend fun insertScan(scan: Scan): Long = scanDao.insertScan(scan)
     override suspend fun deleteScan(scan: Scan) = scanDao.deleteScan(scan)
 }

@@ -30,9 +30,13 @@ class ExtractCardsUseCase @Inject constructor(
     suspend fun extractAndSaveCards(
         deckId: Long,
         modelConfig: ModelConfig,
+        // Non-empty: process only these scans (add-by-scan must not reprocess older pages).
+        // Empty (retry/preview/resume): process all deck scans as before.
+        scanIds: List<Long> = emptyList(),
         onProgress: suspend (current: Int, total: Int) -> Unit = { _, _ -> }
     ) {
-        val scans = scanRepository.getScansByDeck(deckId).first()
+        val deckScans = scanRepository.getScansByDeck(deckId).first()
+        val scans = if (scanIds.isEmpty()) deckScans else deckScans.filter { it.id in scanIds }
         val combinedText = scans.joinToString("\n") { it.rawText }
 
         if (combinedText.isBlank()) {

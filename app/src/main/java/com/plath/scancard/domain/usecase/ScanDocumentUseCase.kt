@@ -26,7 +26,8 @@ class ScanDocumentUseCase @Inject constructor(
     }
 
     // Run OCR in parallel as pages are independent (Req18.1). ML Kit's recognizer is concurrency-safe.
-    // Results and DB insertion maintain page order.
+    // Results and DB insertion maintain page order. Returned scans carry DB-assigned ids
+    // so callers can scope extraction to just these pages.
     suspend fun processScannedPages(deckId: Long, pageUris: List<Uri>): List<Scan> = coroutineScope {
         val scans: List<Scan> = pageUris.mapIndexed { _, uri ->
             async {
@@ -38,7 +39,6 @@ class ScanDocumentUseCase @Inject constructor(
                 )
             }
         }.awaitAll()
-        scans.forEach { scanRepository.insertScan(it) }
-        scans
+        scans.map { it.copy(id = scanRepository.insertScan(it)) }
     }
 }

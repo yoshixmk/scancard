@@ -5,6 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface ScanRepository {
     fun getScansByDeck(deckId: Long): Flow<List<Scan>>
-    suspend fun insertScan(scan: Scan)
+    suspend fun insertScan(scan: Scan): Long
     suspend fun deleteScan(scan: Scan)
 }

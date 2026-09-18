@@ -51,7 +51,7 @@ class ScanViewModelTest {
         coEvery { manageDeckUseCase.createDeck(any()) } returns 42L
         coEvery { scanDocumentUseCase.processScannedPages(any(), any()) } returns emptyList()
         coEvery { scanDocumentUseCase.insertDummyScan(any()) } returns 42L
-        coEvery { backgroundTaskManager.startExtraction(any(), any()) } returns Unit
+        coEvery { backgroundTaskManager.startExtraction(any(), any(), any()) } returns Unit
         every { modelRepository.checkModelStatus(any()) } returns Unit
         viewModel = ScanViewModel(
             context,
@@ -75,7 +75,7 @@ class ScanViewModelTest {
         viewModel.processScans(0L) { deckId, fastMode -> completed = deckId to fastMode }
 
         coVerify(exactly = 1) {
-            backgroundTaskManager.startExtraction(42L, "gemma-4-e2b")
+            backgroundTaskManager.startExtraction(42L, "gemma-4-e2b", emptyList())
         }
         assertThat(completed).isEqualTo(42L to true)
     }
@@ -87,7 +87,23 @@ class ScanViewModelTest {
 
         viewModel.processScans(0L) { deckId, fastMode -> completed = deckId to fastMode }
 
-        coVerify(exactly = 0) { backgroundTaskManager.startExtraction(any(), any()) }
+        coVerify(exactly = 0) { backgroundTaskManager.startExtraction(any(), any(), any()) }
         assertThat(completed).isEqualTo(42L to false)
+    }
+
+    @Test
+    fun `extraction scoped to new scan ids and pages cleared`() = runTest(dispatcher) {
+        modelState.value = ModelState.Ready
+        val page: android.net.Uri = mockk()
+        viewModel.addPages(listOf(page))
+        coEvery { scanDocumentUseCase.processScannedPages(any(), any()) } returns
+            listOf(com.plath.scancard.data.local.entities.Scan(id = 5, deckId = 42, imagePath = "x", rawText = "t"))
+
+        viewModel.processScans(0L) { _, _ -> }
+
+        coVerify(exactly = 1) {
+            backgroundTaskManager.startExtraction(42L, "gemma-4-e2b", listOf(5L))
+        }
+        assertThat(viewModel.scannedPages.value).isEmpty()
     }
 }
