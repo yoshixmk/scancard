@@ -356,7 +356,7 @@ Authoritative AI-pack plan: `.agent/specs/ai-pack/tasks.md`. Entries below remai
 - [x] 24.1 `ScanScreen` empty state: show `scanOpeningIndicator` (CircularProgressIndicator + "Opening camera...") while `getStartScanIntent` is obtained, NOT primary `scanStartBtn`; button only appears as fallback when `scannerError` or `RESULT_CANCELED`
 - [x] 24.2 `ScanScreen` auto-launch guarded by `rememberSaveable alreadyAutoLaunched` + `hasCameraPermission` + `scannedPages.isEmpty()`, permission grant immediately auto-launches without extra tap
 - [x] 24.3 E2E `directScanLaunch.e2e.js`: `homeFabScan` tap shows `scanOpeningIndicator` or GMS overlay without requiring `scanStartBtn`, after GMS dismiss `scanDummyInsertBtn` ready
-- [x] 24.4 `DeckDetailScreen` empty-deck `Retry extraction` (`deckDetailRetryExtractionBtn`) → `DeckDetailViewModel.retryExtraction()` → `startExtraction(deckId, DEFAULT_ID)`; idempotent re-run, never auto-runs on reopen (Req 12.15)
+- [x] 24.4 `DeckDetailScreen`: while `RUNNING`/`PENDING`, show loading row below card count (`deckDetailExtractionLoading`, "Extracting cards…") with or without cards and hide retry button; `Retry extraction` (`deckDetailRetryExtractionBtn`) only when no cards and idle → `DeckDetailViewModel.retryExtraction()` → `startExtraction(deckId, DEFAULT_ID)`; idempotent re-run, never auto-runs on reopen (Req 12.15)
 
 ---
 
