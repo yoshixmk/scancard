@@ -16,16 +16,4 @@ class TranslationPromptBuilder {
             Text: $ocrText
         """.trimIndent()
     }
-
-    fun buildImprovedPrompt(ocrText: String, failedTerm: String): String {
-        return """
-            Extract flashcard pairs from the following text.
-            I noticed the previous attempt for "$failedTerm" was too generic. 
-            Please ensure the definition specifically describes "$failedTerm" based on the provided context.
-            
-            Return ONLY a JSON array of objects with "term", "definition", and "japaneseTranslation" keys.
-            Example: [{"term":"Photosynthesis","definition":"Process by which plants convert light into chemical energy","japaneseTranslation":"光合成"}]
-            Text: $ocrText
-        """.trimIndent()
-    }
 }

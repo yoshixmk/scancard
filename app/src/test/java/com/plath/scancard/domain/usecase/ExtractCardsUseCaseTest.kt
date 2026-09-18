@@ -77,5 +77,27 @@ class ExtractCardsUseCaseTest {
         assertThat(progress).containsExactly(0 to 2, 1 to 2, 2 to 2).inOrder()
         coVerify { cardRepository.insertCards(match { it.size == 1 && it[0].term == "Apple" }) }
         coVerify { deckRepository.updateExtractionStatus(7, ExtractionStatus.COMPLETED) }
+        coVerify { cardExtractor.close() }
+    }
+
+    @Test
+    fun `LLM failure closes extractor without completing`() = runTest {
+        coEvery { scanRepository.getScansByDeck(7) } returns
+            flowOf(listOf(scan(1, "Apple: A fruit")))
+        coEvery { modelRepository.getModelPath(any()) } returns "/tmp/model"
+        coEvery { cardExtractor.extractCards(any()) } throws RuntimeException("LLM error")
+
+        var thrown: Throwable? = null
+        try {
+            useCase().extractAndSaveCards(7, ModelConfig.GEMMA_4_E2B)
+        } catch (e: RuntimeException) {
+            thrown = e
+        }
+
+        assertThat(thrown).hasMessageThat().isEqualTo("LLM error")
+        coVerify { cardExtractor.close() }
+        coVerify(exactly = 0) {
+            deckRepository.updateExtractionStatus(7, ExtractionStatus.COMPLETED)
+        }
     }
 }

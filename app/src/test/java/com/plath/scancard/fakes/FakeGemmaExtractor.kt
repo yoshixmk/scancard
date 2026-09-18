@@ -27,7 +27,7 @@ import com.plath.scancard.data.ml.ExtractedCard
  *     @Test fun extractCards_success() = runTest {
  *         fakeExtractor.setNextCards(listOf(ExtractedCard("Hello", "Greeting")))
  *         fakeExtractor.initialize("/fake/model/path") // Immediately succeeds as it's a Fake
- *         val result = fakeExtractor.extractCards("Hello means Greeting")
+ *         val result = fakeExtractor.extractCards("... Text: Hello means Greeting")
  *         assertThat(result).hasSize(1) // Truth
  *         assertThat(result[0].term).isEqualTo("Hello")
  *     }
@@ -63,7 +63,7 @@ class FakeGemmaExtractor(
         private set
     var lastModelPath: String? = null
         private set
-    var lastExtractText: String? = null
+    var lastExtractPrompt: String? = null
         private set
 
     // Cards to return in the next extractCards (success case)
@@ -143,7 +143,7 @@ class FakeGemmaExtractor(
      */
     suspend fun extractCards(prompt: String): List<ExtractedCard> {
         extractCallCount++
-        lastExtractText = prompt
+        lastExtractPrompt = prompt
         if (!isInitialized) return emptyList() // Actual: conversation == null -> emptyList()
 
         nextError?.let { e ->
@@ -185,7 +185,7 @@ class FakeGemmaExtractor(
         extractCallCount = 0
         closeCallCount = 0
         lastModelPath = null
-        lastExtractText = null
+        lastExtractPrompt = null
         nextCards = null
         nextRawResponse = null
         nextError = null
