@@ -320,6 +320,7 @@ Authoritative AI-pack plan: `.agent/specs/ai-pack/tasks.md`. Entries below remai
 - [x] 18.5 Unit tests: `ScanDocumentUseCaseTest` (virtual-time parallel timing + order), `ScanViewModelTest` (Ready→auto-extract, Idle→fallback)
 - [x] 18.6 E2E `specs/fastFlow.e2e.js`: fallback (=`Idle` → preview) + `@slow` auto-extraction path (DEBUG dummy model file `<5MB` ⇒ `Ready` ⇒ DeckDetail direct + progress notification still appears)
 - [x] 18.7 Scan-scoped extraction (Req 12.16): `insertScan(): Long` (DAO/Repository) → `processScannedPages` returns id-carrying scans → `processScans` snapshots+clears `scannedPages`, passes `scanIds` to `startExtraction` → Worker inputData → `ExtractCardsUseCase` filters (empty = all scans); unit tests for id order, scoping, pages-cleared
+- [x] 18.8 Term-based extraction dedup (Req 6.4): same normalized term with different definitions keeps only the first occurrence (batch `seenTerms` + saved-card `findDuplicate`); extraction skips silently, warning UI stays manual-add-only
 
 ### 19. Room Persistence After Kill (Requirement 19)
 

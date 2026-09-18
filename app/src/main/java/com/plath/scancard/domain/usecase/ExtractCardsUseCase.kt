@@ -67,13 +67,19 @@ class ExtractCardsUseCase @Inject constructor(
                 onProgress(index + 1, total)
             }
             
+            val seenTerms = mutableSetOf<String>()
             val cards = extractedPairs.mapNotNull { pair ->
-                // Duplicate check
-                val existing = cardValidator.findDuplicate(deckId, pair.term)
-                if (existing != null && existing.definition == pair.definition) {
-                    return@mapNotNull null // Skip exact duplicates
+                // Duplicate key is the normalized term only (design.md:765).
+                // Same term with a different definition (e.g. "Kotlin: aaa" vs
+                // "Kotlin: bbb") is still a duplicate — keep the first occurrence.
+                val normalizedTerm = pair.term.trim().lowercase()
+                if (!seenTerms.add(normalizedTerm)) {
+                    return@mapNotNull null // Duplicate within this extraction batch
                 }
-                
+                if (cardValidator.findDuplicate(deckId, pair.term) != null) {
+                    return@mapNotNull null // Duplicate of an already saved card
+                }
+
                 Card(
                     deckId = deckId,
                     term = pair.term,

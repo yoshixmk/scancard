@@ -75,7 +75,7 @@ class DeckDetailViewModel @Inject constructor(
 
     /**
      * Manual re-extraction for decks with no cards (e.g. single-prompt LLM
-     * returned nothing). Idempotent: exact duplicates are skipped on re-run,
+     * returned nothing). Idempotent: term duplicates are skipped on re-run,
      * and [BackgroundTaskManager.startExtraction] no-ops while work is active.
      */
     fun retryExtraction() {

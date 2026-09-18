@@ -232,7 +232,7 @@ enum class LanguagePreference {
 - **Enqueue policy**: `startExtraction` uses `APPEND_OR_REPLACE` + `BackoffPolicy.EXPONENTIAL 10s` (preserves live RUNNING, replaces CANCELLED/FAILED). `resumeExtraction` uses `REPLACE` to clear stale `BLOCKED` chains left by `APPEND_OR_REPLACE` after kill. The pre-enqueue check uses Flow API (`getWorkInfosForUniqueWorkFlow().first()`).
 - **Cancellation semantics**: `CardExtractionWorker.doWork()` rethrows `CancellationException` so WorkManager reschedules system stops automatically. Generic failures return `Result.retry()` up to 3 attempts, then mark FAILED.
 - **Resume-on-launch**: `ScanCardApplication.onCreate` launches `ResumePendingExtractionsUseCase`. It queries `getStuckExtractionDecks()` (`PENDING`/`RUNNING`) and re-enqueues only decks with no `RUNNING`/`ENQUEUED` work (`hasRunningOrEnqueuedWork()`). `BLOCKED`/`CANCELLED`/`FAILED`/no-work decks are force-resumed with `REPLACE`, clearing the BLOCKED chain that would otherwise block forever.
-- **Manual re-extraction**: `DeckDetailScreen` shows `Retry extraction` (`deckDetailRetryExtractionBtn`) only when the deck has no cards and is not extracting; `DeckDetailViewModel.retryExtraction()` calls `BackgroundTaskManager.startExtraction(deckId, DEFAULT_ID)` (no-op while work is active). Re-run is idempotent via exact-duplicate skip and never auto-runs on reopen. While `extractionStatus` is `RUNNING`/`PENDING`, a loading row (`deckDetailExtractionLoading` + "Extracting cards…") appears below the card count whether or not cards already exist; the Room-backed `deck` flow hides it automatically on status change.
+- **Manual re-extraction**: `DeckDetailScreen` shows `Retry extraction` (`deckDetailRetryExtractionBtn`) only when the deck has no cards and is not extracting; `DeckDetailViewModel.retryExtraction()` calls `BackgroundTaskManager.startExtraction(deckId, DEFAULT_ID)` (no-op while work is active). Re-run is idempotent via normalized-term duplicate skip (same term with a different definition is still a duplicate, both within the batch and against saved cards) and never auto-runs on reopen. While `extractionStatus` is `RUNNING`/`PENDING`, a loading row (`deckDetailExtractionLoading` + "Extracting cards…") appears below the card count whether or not cards already exist; the Room-backed `deck` flow hides it automatically on status change.
 - **Progress notification**: `ExtractCardsUseCase.extractAndSaveCards(deckId, modelConfig, onProgress)` processes scans **page-by-page** (one prompt/LLM call per scan) and invokes `onProgress(current, total)` with `(0, N)` before the first page and `(i, N)` after page i completes (`N = scans.size`). The worker's `onProgress` lambda calls `NotificationHelper.showProgressNotification(deckId, current, total)` — an ongoing notification built with `setProgress(total, current, false)`, `setOnlyAlertOnce(true)`, posted via `NotificationManager.notify(deckId + 100_000, …)`. **The app-managed id MUST differ from the FGS notification id**: WorkManager's `SystemFgDispatcher` re-posts the original foreground notification under `deckId` on every `setProgress()`/service event, silently overwriting any same-id custom text (verified on API 36 emulator: only `ONLY_ALERT_ONCE`-flagged raw posts survived). Completion/error notifications reuse `deckId + 100_000` so they replace the progress card. The worker also mirrors progress into WorkManager via `setProgress(workDataOf("progress_current" to c, "progress_total" to t))` for in-app observers. Single prompt per page (with JSON example) is used; accumulated pairs are deduped and inserted in a single `insertCards` at the end, preserving Req 12.8 ordering. E2E verifies visibility by physically opening the notification shade (`driver.openNotifications()`) and asserting `Page n of m` appears — dumpsys-based checks proved unreliable due to emulator clock skew between host and device.
 
 ### 5. Fast Extraction Flow (Req 18 — Performance)
@@ -483,21 +483,21 @@ BEGIN
     parsedCards ← Parser.parseResponse(rawResponse)
     END FOR
     
-    // Step 5: Check for duplicates and create cards
+    // Step 5: Check for duplicates and create cards (background: silent skip, no UI)
     finalCards ← EMPTY_LIST
+    seenTerms ← EMPTY_SET
     FOR EACH card IN parsedCards DO
-        duplicate ← CardValidator.checkDuplicate(deckId, card.term)
-        
-        IF duplicate IS NOT NULL THEN
-            userChoice ← UI.showDuplicateWarning(duplicate)
-            IF userChoice IS KEEP THEN
-                card.isDuplicate ← TRUE
-                card.duplicateOfId ← duplicate.existingCard.id
-            ELSE
-                CONTINUE  // Skip duplicate
-            END IF
+        normalized ← trim(lowercase(card.term))
+        IF normalized IN seenTerms THEN
+            CONTINUE  // Same-term duplicate within this batch — first occurrence kept
         END IF
-        
+        seenTerms.add(normalized)
+        duplicate ← CardValidator.checkDuplicate(deckId, card.term)
+
+        IF duplicate IS NOT NULL THEN
+            CONTINUE  // Duplicate of a saved card — skip silently (Req 6.4)
+        END IF
+
         finalCards.add(card)
     END FOR
     
@@ -515,7 +515,7 @@ END
 
 **Postconditions:**
 - result contains list of created cards
-- Duplicate warnings shown for any duplicate terms
+- Same-term duplicates skipped silently (first occurrence kept, Req 6.4); duplicate warning UI applies to manual add only
 - All valid cards persisted to database
 
 **Loop Invariants:**
@@ -665,33 +665,31 @@ workManager.getWorkInfoByIdLiveData(workRequest.id).observe(this) { workInfo ->
 }
 ```
 
-### Example 2: Duplicate Card Handling
+### Example 2: Duplicate Card Handling (manual add — extraction skips silently per Req 6.4)
 
 ```kotlin
-suspend fun handleCardExtraction(deckId: Long, ocrText: String) {
-    val cards = gemmaExtractor.extractCards(ocrText)
-    
-    cards.forEach { card ->
-        val duplicateWarning = cardValidator.checkDuplicate(deckId, card.term)
-        
-        if (duplicateWarning != null) {
-            val userChoice = showDuplicateDialog(duplicateWarning)
-            when (userChoice) {
-                UserChoice.KEEP -> {
-                    card.isDuplicate = true
-                    card.duplicateOfId = duplicateWarning.existingCard.id
-                    cardRepository.insert(card)
-                }
-                UserChoice.SKIP -> {
-                    // Skip adding duplicate
-                }
-                UserChoice.VIEW_BOTH -> {
-                    showComparisonView(duplicateWarning.existingCard, card)
-                }
+suspend fun handleManualAddCard(deckId: Long, term: String, definition: String) {
+    val card = Card(deckId = deckId, term = term, definition = definition)
+
+    val duplicateWarning = cardValidator.checkDuplicate(deckId, card.term)
+
+    if (duplicateWarning != null) {
+        val userChoice = showDuplicateDialog(duplicateWarning)
+        when (userChoice) {
+            UserChoice.KEEP -> {
+                card.isDuplicate = true
+                card.duplicateOfId = duplicateWarning.existingCard.id
+                cardRepository.insert(card)
             }
-        } else {
-            cardRepository.insert(card)
+            UserChoice.SKIP -> {
+                // Skip adding duplicate
+            }
+            UserChoice.VIEW_BOTH -> {
+                showComparisonView(duplicateWarning.existingCard, card)
+            }
         }
+    } else {
+        cardRepository.insert(card)
     }
 }
 ```
