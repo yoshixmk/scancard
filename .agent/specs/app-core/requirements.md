@@ -65,10 +65,10 @@ Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG f
 
 #### Acceptance Criteria
 
-1. WHEN a new card is extracted, THE CardValidator SHALL check for existing terms with identical text in the same deck.
-2. IF a duplicate term is found, THEN THE ScanCard SHALL display a warning to the user with the option to keep or skip the duplicate.
+1. WHEN a new card is extracted or added, THE CardValidator SHALL check for existing cards with identical normalized term text (trimmed, lowercased) in the same deck.
+2. IF a duplicate term is found during manual add, THEN THE ScanCard SHALL display a warning to the user with the option to keep or skip the duplicate. During background extraction, duplicates SHALL be skipped silently without a warning.
 3. WHEN the user chooses to keep the duplicate, THE ScanCard SHALL add the card with a visual indicator distinguishing it from the original.
-4. IF multiple cards with the same term have different definitions, THEN THE ScanCard SHALL display both definitions together for comparison.
+4. IF multiple extracted candidates share the same term with different definitions, THEN THE ScanCard SHALL keep only the first occurrence (its definition and translation) and skip the rest — both within the extraction batch and against already saved cards.
 
 ---
 
@@ -162,7 +162,8 @@ Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG f
 12. WHILE extraction is running, THE ScanCard SHALL post an ongoing progress notification in the notification area showing how many of the uploaded pages have been processed (`Page n of m`) with a determinate progress bar. The progress notification SHALL be posted under an app-managed notification id (`deckId + 100_000`, distinct from WorkManager's FGS notification id) because same-id updates are overwritten by WorkManager's automatic FGS re-post on every `setProgress` call; it SHALL NOT alert more than once and SHALL be replaced by the completion or error notification (same app-managed id) when extraction finishes.
 13. THE progress counter SHALL reflect real work: `ExtractCardsUseCase` SHALL process uploaded scans page-by-page (one LLM call per page) and report `(0, N)` before the first page and `(i, N)` immediately after page i finishes, WHERE N is the number of uploaded scans for the deck.
 14. THE worker SHALL additionally expose progress via WorkManager `setProgress` (`progress_current`, `progress_total`) so that in-app UI can observe the same progress without reading notifications.
-15. WHEN a deck has no cards, THE DeckDetailScreen SHALL offer manual re-extraction (`Retry extraction`, `deckDetailRetryExtractionBtn`) via `BackgroundTaskManager.startExtraction(deckId, ModelConfig.DEFAULT_ID)`. Re-running SHALL be idempotent (exact duplicates skipped) and SHALL never auto-run on reopen.
+15. WHEN a deck has no cards and it is NOT extracting, THE DeckDetailScreen SHALL offer manual re-extraction (`Retry extraction`, `deckDetailRetryExtractionBtn`) via `BackgroundTaskManager.startExtraction(deckId, ModelConfig.DEFAULT_ID)`. Re-running SHALL be idempotent (term duplicates skipped: same normalized term with a different definition is still a duplicate, first occurrence kept) and SHALL never auto-run on reopen. WHILE `extractionStatus` is `RUNNING` or `PENDING`, THE DeckDetailScreen SHALL show a loading row (small `CircularProgressIndicator`, `deckDetailExtractionLoading`, "Extracting cards…" text) below the card count whether or not cards already exist, and SHALL hide the `Retry extraction` button.
+16. WHEN new pages are scanned into a deck, THE extraction SHALL process only the newly added scans: `ScanDocumentUseCase.processScannedPages` SHALL return scans with DB-assigned ids, `ScanViewModel.processScans` SHALL pass those ids to `BackgroundTaskManager.startExtraction(deckId, modelId, scanIds)`, and `ExtractCardsUseCase` SHALL filter to `scanIds` when non-empty (empty = retry/preview/resume processes all deck scans). `processScans` SHALL snapshot and clear `scannedPages` immediately so stale pages never leak into the next session.
 
 ### Requirement 18: Fast Extraction Flow (Performance Optimization)
 
@@ -244,3 +245,4 @@ Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG f
 3. THE auto-launch SHALL be guarded by `rememberSaveable alreadyAutoLaunched` so that rotation/config change does not re-launch while the previous overlay is dimming (prevents black screen). It SHALL trigger exactly once per fresh entry.
 4. IF `hasCameraPermission=false`, THEN permission request SHALL be shown first; immediately after grant, the scanner SHALL auto-launch without extra tap.
 5. E2E SHALL verify: `homePage.tapFabScan()` → no `scanStartBtn` required; scanner overlay appears (GMS package) or `ScanScreen` shows `scanOpeningIndicator`; after dismissing GMS, dummy insertion `scanDummyInsertBtn` is ready without tapping Start Scanning.
+6. WHILE `getStartScanIntent` is in flight (including "Add More" from the thumbnail grid), `ScanScreen` SHALL show a full-screen launching overlay (`CircularProgressIndicator`, testTag `scanLaunchingIndicator`, "Opening camera...") until the scanner result returns or launch fails.

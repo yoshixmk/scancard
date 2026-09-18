@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.plath.scancard.data.local.entities.Card as FlashCard
+import com.plath.scancard.domain.model.ExtractionStatus
 // TODO(IMP-05 5-5): Imports for StaggeredGrid / Grid Adaptive proposal (commented out — uncomment when enabling)
 // import androidx.compose.foundation.lazy.grid.GridCells
 // import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -129,7 +130,26 @@ fun DeckDetailScreen(
                 style = MaterialTheme.typography.labelLarge
             )
 
-            if (cards.isEmpty()) {
+            val isExtracting = deck?.extractionStatus == ExtractionStatus.RUNNING ||
+                deck?.extractionStatus == ExtractionStatus.PENDING
+            if (isExtracting) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp).testTag("deckDetailExtractionLoading"),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Extracting cards…",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            if (cards.isEmpty() && !isExtracting) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally

@@ -76,6 +76,7 @@ fun ScanScreen(
     val scanner = remember { GmsDocumentScanning.getClient(options) }
 
     var scannerError by remember { mutableStateOf<String?>(null) }
+    var isLaunchingScanner by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     // Use rememberSaveable to survive config change (rotation) — without it, recreation would auto-launch again while previous scanner overlay is still dimming, appearing as black screen.
     var alreadyAutoLaunched by rememberSaveable { mutableStateOf(false) }
@@ -83,6 +84,7 @@ fun ScanScreen(
     val scannerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
+        isLaunchingScanner = false
         when (result.resultCode) {
             Activity.RESULT_OK -> {
                 val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
@@ -112,9 +114,11 @@ fun ScanScreen(
     // Re-launch suppression: Auto-launch only for the first time with alreadyAutoLaunched; can be re-launched via button on cancellation.
     fun launchScanner() {
         scannerError = null
+        isLaunchingScanner = true
         val activity = context.findActivity()
         if (activity == null) {
             scannerError = "Activity not found"
+            isLaunchingScanner = false
             return
         }
         scanner.getStartScanIntent(activity)
@@ -123,11 +127,13 @@ fun ScanScreen(
                     scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
                 } catch (e: Exception) {
                     scannerError = "Failed to launch scanner: ${e.message}"
+                    isLaunchingScanner = false
                     android.util.Log.e("ScanScreen", "launch failed", e)
                 }
             }
             .addOnFailureListener { e ->
                 scannerError = "Scanner unavailable: ${e.message} — use gallery or retry"
+                isLaunchingScanner = false
                 android.util.Log.e("ScanScreen", "getStartScanIntent failed", e)
             }
     }
@@ -355,6 +361,22 @@ fun ScanScreen(
                                 Text("Insert Dummy Scan (E2E)")
                             }
                         }
+                    }
+                }
+            }
+            // Scanner launch (camera opening) has no system feedback — cover the gap
+            // including "Add More" from the thumbnail grid.
+            if (isLaunchingScanner && !isProcessing) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(modifier = Modifier.testTag("scanLaunchingIndicator"))
+                        Spacer(Modifier.height(12.dp))
+                        Text("Opening camera...", style = MaterialTheme.typography.titleMedium)
                     }
                 }
             }

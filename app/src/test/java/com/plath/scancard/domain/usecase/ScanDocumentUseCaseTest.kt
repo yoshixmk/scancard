@@ -63,12 +63,14 @@ class ScanDocumentUseCaseTest {
         val pages = listOf(mockUri(0), mockUri(1), mockUri(2))
         coEvery { textRecognitionManager.recognizeText(any()) } returns "ocr"
         val inserted = slot<Scan>()
-        coEvery { scanRepository.insertScan(capture(inserted)) } returns Unit
+        coEvery { scanRepository.insertScan(capture(inserted)) } returnsMany listOf(101L, 102L, 103L)
 
         val scans = useCase().processScannedPages(deckId = 7, pageUris = pages)
 
         coVerify(exactly = pages.size) { scanRepository.insertScan(any()) }
         assertThat(scans).hasSize(pages.size)
         assertThat(inserted.captured.deckId).isEqualTo(7L)
+        // Returned scans carry DB-assigned ids in page order for extraction scoping.
+        assertThat(scans.map { it.id }).containsExactly(101L, 102L, 103L).inOrder()
     }
 }

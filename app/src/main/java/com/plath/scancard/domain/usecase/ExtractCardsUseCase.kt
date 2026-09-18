@@ -30,9 +30,13 @@ class ExtractCardsUseCase @Inject constructor(
     suspend fun extractAndSaveCards(
         deckId: Long,
         modelConfig: ModelConfig,
+        // Non-empty: process only these scans (add-by-scan must not reprocess older pages).
+        // Empty (retry/preview/resume): process all deck scans as before.
+        scanIds: List<Long> = emptyList(),
         onProgress: suspend (current: Int, total: Int) -> Unit = { _, _ -> }
     ) {
-        val scans = scanRepository.getScansByDeck(deckId).first()
+        val deckScans = scanRepository.getScansByDeck(deckId).first()
+        val scans = if (scanIds.isEmpty()) deckScans else deckScans.filter { it.id in scanIds }
         val combinedText = scans.joinToString("\n") { it.rawText }
 
         if (combinedText.isBlank()) {
@@ -63,13 +67,19 @@ class ExtractCardsUseCase @Inject constructor(
                 onProgress(index + 1, total)
             }
             
+            val seenTerms = mutableSetOf<String>()
             val cards = extractedPairs.mapNotNull { pair ->
-                // Duplicate check
-                val existing = cardValidator.findDuplicate(deckId, pair.term)
-                if (existing != null && existing.definition == pair.definition) {
-                    return@mapNotNull null // Skip exact duplicates
+                // Duplicate key is the normalized term only (design.md:765).
+                // Same term with a different definition (e.g. "Kotlin: aaa" vs
+                // "Kotlin: bbb") is still a duplicate — keep the first occurrence.
+                val normalizedTerm = pair.term.trim().lowercase()
+                if (!seenTerms.add(normalizedTerm)) {
+                    return@mapNotNull null // Duplicate within this extraction batch
                 }
-                
+                if (cardValidator.findDuplicate(deckId, pair.term) != null) {
+                    return@mapNotNull null // Duplicate of an already saved card
+                }
+
                 Card(
                     deckId = deckId,
                     term = pair.term,

@@ -77,17 +77,23 @@ class ScanViewModel @Inject constructor(
         viewModelScope.launch {
             _isProcessing.value = true
             try {
+                // Snapshot and clear immediately: the ViewModel can outlive the session
+                // (same back-stack entry reused), and stale pages must never leak into
+                // the next scan or be inserted twice.
+                val pages = _scannedPages.value
+                _scannedPages.value = emptyList()
                 val targetDeckId = if (deckId <= 0) {
                     val dateStr = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
                     manageDeckUseCase.createDeck("Scan $dateStr")
                 } else {
                     deckId
                 }
-                scanDocumentUseCase.processScannedPages(targetDeckId, _scannedPages.value)
+                val scans = scanDocumentUseCase.processScannedPages(targetDeckId, pages)
                 modelRepository.checkModelStatus(ModelConfig.GEMMA_4_E2B)
                 val modelReady = modelRepository.modelState.value is ModelState.Ready
                 if (modelReady) {
-                    backgroundTaskManager.startExtraction(targetDeckId, ModelConfig.DEFAULT_ID)
+                    // Scope extraction to just-added pages: older deck scans are not reprocessed.
+                    backgroundTaskManager.startExtraction(targetDeckId, ModelConfig.DEFAULT_ID, scans.map { it.id })
                 }
                 onComplete(targetDeckId, modelReady)
             } catch (e: Exception) {
