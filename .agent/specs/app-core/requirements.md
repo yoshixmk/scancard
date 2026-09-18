@@ -162,6 +162,7 @@ Details (pack packaging, status mapping, progress aggregation, assembly, DEBUG f
 12. WHILE extraction is running, THE ScanCard SHALL post an ongoing progress notification in the notification area showing how many of the uploaded pages have been processed (`Page n of m`) with a determinate progress bar. The progress notification SHALL be posted under an app-managed notification id (`deckId + 100_000`, distinct from WorkManager's FGS notification id) because same-id updates are overwritten by WorkManager's automatic FGS re-post on every `setProgress` call; it SHALL NOT alert more than once and SHALL be replaced by the completion or error notification (same app-managed id) when extraction finishes.
 13. THE progress counter SHALL reflect real work: `ExtractCardsUseCase` SHALL process uploaded scans page-by-page (one LLM call per page) and report `(0, N)` before the first page and `(i, N)` immediately after page i finishes, WHERE N is the number of uploaded scans for the deck.
 14. THE worker SHALL additionally expose progress via WorkManager `setProgress` (`progress_current`, `progress_total`) so that in-app UI can observe the same progress without reading notifications.
+15. WHEN a deck has no cards, THE DeckDetailScreen SHALL offer manual re-extraction (`Retry extraction`, `deckDetailRetryExtractionBtn`) via `BackgroundTaskManager.startExtraction(deckId, ModelConfig.DEFAULT_ID)`. Re-running SHALL be idempotent (exact duplicates skipped) and SHALL never auto-run on reopen.
 
 ### Requirement 18: Fast Extraction Flow (Performance Optimization)
 

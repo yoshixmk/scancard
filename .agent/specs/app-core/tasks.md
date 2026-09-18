@@ -148,7 +148,8 @@ The following dependency graph defines the execution order for all tasks. Tasks 
     { "id": "23.3", "name": "E2E scanPostPhoto.e2e.js grid and retry verification", "status": "completed", "dependencies": ["23.1"], "optional": false },
     { "id": "24.1", "name": "ScanScreen empty state scanOpeningIndicator not primary scanStartBtn", "status": "completed", "dependencies": [], "optional": false },
     { "id": "24.2", "name": "rememberSaveable alreadyAutoLaunched auto-launch without extra tap", "status": "completed", "dependencies": ["24.1"], "optional": false },
-    { "id": "24.3", "name": "E2E directScanLaunch.e2e.js FAB direct camera", "status": "completed", "dependencies": ["24.1"], "optional": false }
+    { "id": "24.3", "name": "E2E directScanLaunch.e2e.js FAB direct camera", "status": "completed", "dependencies": ["24.1"], "optional": false },
+    { "id": "24.4", "name": "DeckDetail manual re-extraction (retry button + ViewModel + Req12.15)", "status": "completed", "dependencies": ["16.3"], "optional": false }
   ],
   "waves": [
     {
@@ -355,6 +356,7 @@ Authoritative AI-pack plan: `.agent/specs/ai-pack/tasks.md`. Entries below remai
 - [x] 24.1 `ScanScreen` empty state: show `scanOpeningIndicator` (CircularProgressIndicator + "Opening camera...") while `getStartScanIntent` is obtained, NOT primary `scanStartBtn`; button only appears as fallback when `scannerError` or `RESULT_CANCELED`
 - [x] 24.2 `ScanScreen` auto-launch guarded by `rememberSaveable alreadyAutoLaunched` + `hasCameraPermission` + `scannedPages.isEmpty()`, permission grant immediately auto-launches without extra tap
 - [x] 24.3 E2E `directScanLaunch.e2e.js`: `homeFabScan` tap shows `scanOpeningIndicator` or GMS overlay without requiring `scanStartBtn`, after GMS dismiss `scanDummyInsertBtn` ready
+- [x] 24.4 `DeckDetailScreen` empty-deck `Retry extraction` (`deckDetailRetryExtractionBtn`) → `DeckDetailViewModel.retryExtraction()` → `startExtraction(deckId, DEFAULT_ID)`; idempotent re-run, never auto-runs on reopen (Req 12.15)
 
 ---
 
